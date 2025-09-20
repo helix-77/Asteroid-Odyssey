@@ -1,0 +1,79 @@
+{
+  "strategies": [
+    {
+      "id": "kinetic_impactor",
+      "name": "Kinetic Impactor",
+      "description": "Ram spacecraft into asteroid to change its trajectory",
+      "delta_v": 0.002,
+      "lead_time": 10,
+      "cost": 500000000,
+      "success_rate": 0.85,
+      "mass_required": 1500,
+      "technology_readiness": 8,
+      "advantages": ["Proven technology", "Relatively low cost", "Fast deployment"],
+      "disadvantages": ["Limited effectiveness on large asteroids", "Risk of fragmentation", "Single-use mission"],
+      "mission_duration": 2.5,
+      "energy_requirement": "Medium"
+    },
+    {
+      "id": "gravity_tractor",
+      "name": "Gravity Tractor",
+      "description": "Use spacecraft gravity to slowly pull asteroid off course",
+      "delta_v": 0.0001,
+      "lead_time": 20,
+      "cost": 800000000,
+      "success_rate": 0.95,
+      "mass_required": 3000,
+      "technology_readiness": 6,
+      "advantages": ["Very precise control", "No risk of fragmentation", "Scalable effect"],
+      "disadvantages": ["Requires very long lead time", "High cost", "Complex mission operations"],
+      "mission_duration": 5.0,
+      "energy_requirement": "Low"
+    },
+    {
+      "id": "nuclear_pulse",
+      "name": "Nuclear Pulse",
+      "description": "Detonate nuclear device near asteroid to vaporize surface material",
+      "delta_v": 0.01,
+      "lead_time": 5,
+      "cost": 1200000000,
+      "success_rate": 0.9,
+      "mass_required": 2000,
+      "technology_readiness": 7,
+      "advantages": ["Very high effectiveness", "Works on large asteroids", "Short lead time acceptable"],
+      "disadvantages": ["Political/legal challenges", "Risk of fragmentation", "Radiation concerns"],
+      "mission_duration": 1.5,
+      "energy_requirement": "Very High"
+    },
+    {
+      "id": "solar_sail",
+      "name": "Solar Sail Deflector",
+      "description": "Attach large solar sail to asteroid to use solar pressure",
+      "delta_v": 0.0005,
+      "lead_time": 15,
+      "cost": 600000000,
+      "success_rate": 0.75,
+      "mass_required": 500,
+      "technology_readiness": 5,
+      "advantages": ["Continuous thrust", "No fuel required", "Environmentally clean"],
+      "disadvantages": ["Complex deployment", "Limited to smaller asteroids", "Weather dependent"],
+      "mission_duration": 8.0,
+      "energy_requirement": "None"
+    },
+    {
+      "id": "ion_beam",
+      "name": "Ion Beam Shepherd",
+      "description": "Use ion beam to ablate asteroid surface and create thrust",
+      "delta_v": 0.001,
+      "lead_time": 12,
+      "cost": 900000000,
+      "success_rate": 0.8,
+      "mass_required": 2500,
+      "technology_readiness": 4,
+      "advantages": ["Precise control", "Scalable thrust", "No physical contact required"],
+      "disadvantages": ["Unproven technology", "High power requirements", "Complex targeting system"],
+      "mission_duration": 4.0,
+      "energy_requirement": "High"
+    }
+  ]
+}

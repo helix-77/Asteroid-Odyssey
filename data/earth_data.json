@@ -1,0 +1,79 @@
+{
+  "regions": [
+    {
+      "name": "Coastal Cities",
+      "coordinates": [[40.7128, -74.006], [34.0522, -118.2437], [25.7617, -80.1918], [37.7749, -122.4194]],
+      "elevation": 5,
+      "population": 250000000,
+      "tsunami_risk": "high",
+      "infrastructure_value": 5.2e12,
+      "vulnerability_factors": {
+        "population_density": "very_high",
+        "economic_importance": "critical",
+        "evacuation_difficulty": "high"
+      }
+    },
+    {
+      "name": "Mountain Regions",
+      "coordinates": [[39.7392, -104.9903], [46.8772, -96.7898], [35.2271, -80.8431]],
+      "elevation": 1500,
+      "population": 45000000,
+      "tsunami_risk": "none",
+      "infrastructure_value": 1.8e12,
+      "vulnerability_factors": {
+        "population_density": "low",
+        "economic_importance": "moderate",
+        "evacuation_difficulty": "low"
+      }
+    },
+    {
+      "name": "Agricultural Plains",
+      "coordinates": [[41.2524, -95.998], [39.8283, -98.5795], [32.7767, -96.797]],
+      "elevation": 400,
+      "population": 120000000,
+      "tsunami_risk": "none",
+      "infrastructure_value": 2.1e12,
+      "vulnerability_factors": {
+        "population_density": "medium",
+        "economic_importance": "high",
+        "evacuation_difficulty": "medium"
+      }
+    },
+    {
+      "name": "Island Nations",
+      "coordinates": [[21.3099, -157.8581], [18.2208, -66.5901], [25.0343, -77.3963]],
+      "elevation": 2,
+      "population": 15000000,
+      "tsunami_risk": "extreme",
+      "infrastructure_value": 8.5e11,
+      "vulnerability_factors": {
+        "population_density": "high",
+        "economic_importance": "moderate",
+        "evacuation_difficulty": "extreme"
+      }
+    }
+  ],
+  "impact_zones": {
+    "urban": {
+      "casualty_multiplier": 2.5,
+      "economic_multiplier": 3.0,
+      "infrastructure_density": "very_high"
+    },
+    "suburban": {
+      "casualty_multiplier": 1.2,
+      "economic_multiplier": 1.5,
+      "infrastructure_density": "medium"
+    },
+    "rural": {
+      "casualty_multiplier": 0.3,
+      "economic_multiplier": 0.8,
+      "infrastructure_density": "low"
+    },
+    "ocean": {
+      "casualty_multiplier": 0.1,
+      "economic_multiplier": 0.2,
+      "infrastructure_density": "none",
+      "tsunami_generation": true
+    }
+  }
+}

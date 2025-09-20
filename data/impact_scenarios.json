@@ -1,0 +1,109 @@
+{
+  "scenarios": [
+    {
+      "asteroid_id": "2025-XX1",
+      "location": {
+        "lat": 40.7128,
+        "lon": -74.006,
+        "name": "New York City",
+        "population": 8400000,
+        "elevation": 10
+      },
+      "impact": {
+        "energy": 2.5e15,
+        "tnt_equivalent": 597,
+        "crater": {
+          "diameter": 1850,
+          "depth": 380
+        },
+        "effects": {
+          "fireball_radius": 2.3,
+          "airblast_radius": 15.6,
+          "thermal_radiation": 8.9,
+          "seismic_magnitude": 5.8
+        },
+        "casualties": {
+          "immediate": 125000,
+          "injured": 450000,
+          "displaced": 2000000
+        },
+        "economic_impact": 2.4e12,
+        "environmental": {
+          "dust_cloud_duration": 30,
+          "temperature_drop": 2.1,
+          "affected_agriculture": 150000
+        }
+      }
+    },
+    {
+      "asteroid_id": "2025-AB2",
+      "location": {
+        "lat": 35.6762,
+        "lon": 139.6503,
+        "name": "Tokyo",
+        "population": 13960000,
+        "elevation": 40
+      },
+      "impact": {
+        "energy": 8.7e14,
+        "tnt_equivalent": 208,
+        "crater": {
+          "diameter": 1200,
+          "depth": 240
+        },
+        "effects": {
+          "fireball_radius": 1.8,
+          "airblast_radius": 12.3,
+          "thermal_radiation": 6.7,
+          "seismic_magnitude": 5.2
+        },
+        "casualties": {
+          "immediate": 89000,
+          "injured": 320000,
+          "displaced": 1500000
+        },
+        "economic_impact": 1.8e12,
+        "environmental": {
+          "dust_cloud_duration": 20,
+          "temperature_drop": 1.5,
+          "affected_agriculture": 95000
+        }
+      }
+    },
+    {
+      "asteroid_id": "2025-EF4",
+      "location": {
+        "lat": 51.5074,
+        "lon": -0.1278,
+        "name": "London",
+        "population": 9000000,
+        "elevation": 35
+      },
+      "impact": {
+        "energy": 4.2e15,
+        "tnt_equivalent": 1003,
+        "crater": {
+          "diameter": 2400,
+          "depth": 480
+        },
+        "effects": {
+          "fireball_radius": 3.1,
+          "airblast_radius": 18.9,
+          "thermal_radiation": 11.2,
+          "seismic_magnitude": 6.1
+        },
+        "casualties": {
+          "immediate": 180000,
+          "injured": 650000,
+          "displaced": 2800000
+        },
+        "economic_impact": 3.2e12,
+        "environmental": {
+          "dust_cloud_duration": 45,
+          "temperature_drop": 2.8,
+          "affected_agriculture": 220000
+        }
+      }
+    }
+  ]
+}
