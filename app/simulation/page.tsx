@@ -1,34 +1,45 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { ImpactCalculator } from "@/components/simulation/impact-calculator"
-import { ImpactTimeline } from "@/components/simulation/impact-timeline"
-import { DamageAssessment } from "@/components/simulation/damage-assessment"
-import { AdvancedEarth3D } from "@/components/3d/advanced-earth-3d"
-import type { Asteroid } from "@/lib/types"
-import asteroidData from "@/data/asteroids.json"
+import { useState } from "react";
+import { ImpactCalculator } from "@/components/simulation/impact-calculator";
+import { ImpactTimeline } from "@/components/simulation/impact-timeline";
+import { DamageAssessment } from "@/components/simulation/damage-assessment";
+import AdvancedEarth3D from "@/components/3d/advanced-earth-3d";
+import type { Asteroid } from "@/lib/types";
+import asteroidData from "@/data/asteroids.json";
 
 export default function SimulationPage() {
-  const [selectedAsteroid, setSelectedAsteroid] = useState<Asteroid | null>(null)
-  const [impactResults, setImpactResults] = useState<any>(null)
-  const [isTimelinePlaying, setIsTimelinePlaying] = useState(false)
-  const [targetLocation, setTargetLocation] = useState({ lat: 40.7128, lng: -74.006, name: "New York City" })
+  const [selectedAsteroid, setSelectedAsteroid] = useState<Asteroid | null>(
+    null
+  );
+  const [impactResults, setImpactResults] = useState<any>(null);
+  const [isTimelinePlaying, setIsTimelinePlaying] = useState(false);
+  const [targetLocation, setTargetLocation] = useState({
+    lat: 40.7128,
+    lng: -74.006,
+    name: "New York City",
+  });
 
   const handleAsteroidSelect = (asteroid: Asteroid) => {
-    setSelectedAsteroid(asteroid)
-    setImpactResults(null)
-  }
+    setSelectedAsteroid(asteroid);
+    setImpactResults(null);
+  };
 
   const handleSimulationResults = (results: any) => {
-    setImpactResults(results)
-  }
+    setImpactResults(results);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-blue-900 to-slate-900">
       <div className="container mx-auto p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">Impact Simulation Center</h1>
-          <p className="text-blue-200">Analyze potential asteroid impacts and their devastating effects on Earth</p>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Impact Simulation Center
+          </h1>
+          <p className="text-blue-200">
+            Analyze potential asteroid impacts and their devastating effects on
+            Earth
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -47,7 +58,9 @@ export default function SimulationPage() {
                         : "border-white/20 bg-white/5 hover:bg-white/10"
                     }`}
                   >
-                    <div className="font-medium text-white">{asteroid.name}</div>
+                    <div className="font-medium text-white">
+                      {asteroid.name}
+                    </div>
                     <div className="text-sm text-blue-200">
                       {asteroid.diameter}m • {asteroid.composition}
                     </div>
@@ -56,16 +69,24 @@ export default function SimulationPage() {
               </div>
             </div>
 
-            <ImpactCalculator selectedAsteroid={selectedAsteroid} onSimulate={handleSimulationResults} />
+            <ImpactCalculator
+              selectedAsteroid={selectedAsteroid}
+              onSimulate={handleSimulationResults}
+            />
           </div>
 
           {/* 3D Visualization */}
           <div className="lg:col-span-2">
-            <div className="bg-black rounded-lg overflow-hidden" style={{ height: "600px" }}>
+            <div
+              className="bg-black rounded-lg overflow-hidden"
+              style={{ height: "600px" }}
+            >
               <AdvancedEarth3D
-                selectedAsteroid={selectedAsteroid}
-                impactResults={impactResults}
-                targetLocation={targetLocation}
+                selectedAsteroid={selectedAsteroid?.id || null}
+                simulationMode="impact"
+                showOrbits={true}
+                showLabels={true}
+                timeScale={1}
               />
             </div>
           </div>
@@ -78,9 +99,12 @@ export default function SimulationPage() {
             onPlayStateChange={setIsTimelinePlaying}
           />
 
-          <DamageAssessment impactResults={impactResults} targetLocation={targetLocation} />
+          <DamageAssessment
+            impactResults={impactResults}
+            targetLocation={targetLocation}
+          />
         </div>
       </div>
     </div>
-  )
+  );
 }

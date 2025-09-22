@@ -1,25 +1,35 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { calculateImpactEffects } from "@/lib/calculations/impact"
-import type { Asteroid } from "@/lib/types"
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  calculateImpact,
+  type ImpactParameters,
+} from "@/lib/calculations/impact";
+import type { Asteroid } from "@/lib/types";
 
 interface ImpactCalculatorProps {
-  selectedAsteroid: Asteroid | null
-  onSimulate: (results: any) => void
+  selectedAsteroid: Asteroid | null;
+  onSimulate: (results: any) => void;
 }
 
-export function ImpactCalculator({ selectedAsteroid, onSimulate }: ImpactCalculatorProps) {
-  const [impactAngle, setImpactAngle] = useState([45])
-  const [impactVelocity, setImpactVelocity] = useState([20])
-  const [targetLocation, setTargetLocation] = useState({ lat: 40.7128, lng: -74.006, name: "New York City" })
-  const [isSimulating, setIsSimulating] = useState(false)
-  const [results, setResults] = useState<any>(null)
+export function ImpactCalculator({
+  selectedAsteroid,
+  onSimulate,
+}: ImpactCalculatorProps) {
+  const [impactAngle, setImpactAngle] = useState([45]);
+  const [impactVelocity, setImpactVelocity] = useState([20]);
+  const [targetLocation, setTargetLocation] = useState({
+    lat: 40.7128,
+    lng: -74.006,
+    name: "New York City",
+  });
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [results, setResults] = useState<any>(null);
 
   const locations = [
     { lat: 40.7128, lng: -74.006, name: "New York City" },
@@ -27,51 +37,66 @@ export function ImpactCalculator({ selectedAsteroid, onSimulate }: ImpactCalcula
     { lat: 35.6762, lng: 139.6503, name: "Tokyo" },
     { lat: -33.8688, lng: 151.2093, name: "Sydney" },
     { lat: 48.8566, lng: 2.3522, name: "Paris" },
-  ]
+  ];
 
   const runSimulation = async () => {
-    if (!selectedAsteroid) return
+    if (!selectedAsteroid) return;
 
-    setIsSimulating(true)
+    setIsSimulating(true);
 
     // Simulate calculation delay
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    const impactResults = calculateImpactEffects(
-      selectedAsteroid.diameter,
-      selectedAsteroid.density,
-      impactVelocity[0] * 1000, // Convert km/s to m/s
-      impactAngle[0],
-      targetLocation,
-    )
+    // Calculate asteroid mass from diameter and density
+    const radius = selectedAsteroid.diameter / 2;
+    const volume = (4 / 3) * Math.PI * Math.pow(radius, 3);
+    const asteroidMass = volume * selectedAsteroid.density;
 
-    setResults(impactResults)
-    onSimulate(impactResults)
-    setIsSimulating(false)
-  }
+    const impactParams: ImpactParameters = {
+      asteroidMass,
+      velocity: impactVelocity[0] * 1000, // Convert km/s to m/s
+      angle: impactAngle[0],
+      density: selectedAsteroid.density,
+      diameter: selectedAsteroid.diameter,
+    };
+
+    // Estimate population data for target location (simplified)
+    const locationData = {
+      populationDensity: 8000, // people per km²
+      totalPopulation: 8500000, // approximate for major cities
+      gdpPerCapita: 65000,
+      infrastructureValue: 1e12,
+    };
+
+    const impactResults = calculateImpact(impactParams, locationData);
+
+    setResults(impactResults);
+    onSimulate(impactResults);
+    setIsSimulating(false);
+  };
 
   const getThreatLevel = () => {
-    if (!selectedAsteroid) return "unknown"
-    if (selectedAsteroid.diameter > 1000) return "extinction"
-    if (selectedAsteroid.diameter > 500) return "global"
-    if (selectedAsteroid.diameter > 100) return "regional"
-    return "local"
-  }
+    if (!selectedAsteroid) return "unknown";
+    if (selectedAsteroid.diameter > 1000) return "extinction";
+    if (selectedAsteroid.diameter > 500) return "global";
+    if (selectedAsteroid.diameter > 100) return "regional";
+    return "local";
+  };
 
   const getThreatColor = (level: string) => {
     switch (level) {
       case "extinction":
-        return "bg-red-600"
+        return "bg-red-600";
       case "global":
-        return "bg-orange-600"
+        return "bg-orange-600";
       case "regional":
-        return "bg-yellow-600"
+        return "bg-yellow-600";
       case "local":
-        return "bg-blue-600"
+        return "bg-blue-600";
       default:
-        return "bg-gray-600"
+        return "bg-gray-600";
     }
-  }
+  };
 
   return (
     <Card className="h-full">
@@ -79,13 +104,17 @@ export function ImpactCalculator({ selectedAsteroid, onSimulate }: ImpactCalcula
         <CardTitle className="flex items-center justify-between">
           Impact Calculator
           {selectedAsteroid && (
-            <Badge className={getThreatColor(getThreatLevel())}>{getThreatLevel().toUpperCase()} THREAT</Badge>
+            <Badge className={getThreatColor(getThreatLevel())}>
+              {getThreatLevel().toUpperCase()} THREAT
+            </Badge>
           )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {!selectedAsteroid ? (
-          <div className="text-center text-muted-foreground py-8">Select an asteroid to begin impact simulation</div>
+          <div className="text-center text-muted-foreground py-8">
+            Select an asteroid to begin impact simulation
+          </div>
         ) : (
           <>
             {/* Asteroid Info */}
@@ -93,7 +122,9 @@ export function ImpactCalculator({ selectedAsteroid, onSimulate }: ImpactCalcula
               <h4 className="font-semibold">{selectedAsteroid.name}</h4>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>Diameter: {selectedAsteroid.diameter}m</div>
-                <div>Mass: {(selectedAsteroid.mass / 1e12).toFixed(2)}T tons</div>
+                <div>
+                  Mass: {(selectedAsteroid.mass / 1e12).toFixed(2)}T tons
+                </div>
                 <div>Density: {selectedAsteroid.density} kg/m³</div>
                 <div>Type: {selectedAsteroid.composition}</div>
               </div>
@@ -102,7 +133,9 @@ export function ImpactCalculator({ selectedAsteroid, onSimulate }: ImpactCalcula
             {/* Impact Parameters */}
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Impact Angle: {impactAngle[0]}°</label>
+                <label className="text-sm font-medium">
+                  Impact Angle: {impactAngle[0]}°
+                </label>
                 <Slider
                   value={impactAngle}
                   onValueChange={setImpactAngle}
@@ -114,7 +147,9 @@ export function ImpactCalculator({ selectedAsteroid, onSimulate }: ImpactCalcula
               </div>
 
               <div>
-                <label className="text-sm font-medium">Impact Velocity: {impactVelocity[0]} km/s</label>
+                <label className="text-sm font-medium">
+                  Impact Velocity: {impactVelocity[0]} km/s
+                </label>
                 <Slider
                   value={impactVelocity}
                   onValueChange={setImpactVelocity}
@@ -131,8 +166,10 @@ export function ImpactCalculator({ selectedAsteroid, onSimulate }: ImpactCalcula
                   className="w-full mt-2 p-2 border rounded"
                   value={targetLocation.name}
                   onChange={(e) => {
-                    const location = locations.find((l) => l.name === e.target.value)
-                    if (location) setTargetLocation(location)
+                    const location = locations.find(
+                      (l) => l.name === e.target.value
+                    );
+                    if (location) setTargetLocation(location);
                   }}
                 >
                   {locations.map((location) => (
@@ -145,14 +182,20 @@ export function ImpactCalculator({ selectedAsteroid, onSimulate }: ImpactCalcula
             </div>
 
             {/* Simulation Button */}
-            <Button onClick={runSimulation} disabled={isSimulating} className="w-full">
+            <Button
+              onClick={runSimulation}
+              disabled={isSimulating}
+              className="w-full"
+            >
               {isSimulating ? "Simulating Impact..." : "Run Impact Simulation"}
             </Button>
 
             {/* Simulation Progress */}
             {isSimulating && (
               <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">Calculating impact effects...</div>
+                <div className="text-sm text-muted-foreground">
+                  Calculating impact effects...
+                </div>
                 <Progress value={66} className="w-full" />
               </div>
             )}
@@ -179,12 +222,16 @@ export function ImpactCalculator({ selectedAsteroid, onSimulate }: ImpactCalcula
 
                   <div className="bg-yellow-50 p-3 rounded">
                     <div className="font-medium">Energy Released</div>
-                    <div className="text-2xl font-bold text-yellow-600">{results.energyMegatons.toFixed(1)} MT</div>
+                    <div className="text-2xl font-bold text-yellow-600">
+                      {results.energyMegatons.toFixed(1)} MT
+                    </div>
                   </div>
 
                   <div className="bg-blue-50 p-3 rounded">
                     <div className="font-medium">Seismic Magnitude</div>
-                    <div className="text-2xl font-bold text-blue-600">{results.seismicMagnitude.toFixed(1)}</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {results.seismicMagnitude.toFixed(1)}
+                    </div>
                   </div>
                 </div>
 
@@ -197,5 +244,5 @@ export function ImpactCalculator({ selectedAsteroid, onSimulate }: ImpactCalcula
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

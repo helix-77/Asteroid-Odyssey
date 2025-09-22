@@ -1,32 +1,45 @@
-"use client"
+"use client";
 
-import { useRef, useState, useEffect, Suspense } from "react"
-import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { OrbitControls, Sphere, Text } from "@react-three/drei"
-import type * as THREE from "three"
-import { motion, AnimatePresence } from "framer-motion"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Slider } from "@/components/ui/slider"
-import { Search, Filter, X, AlertTriangle, Shield, Target, Settings } from "lucide-react"
-import neoData from "@/data/neo_sample.json"
-import React from "react"
+import { useRef, useState, useEffect, Suspense } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { OrbitControls, Sphere, Text } from "@react-three/drei";
+import type * as THREE from "three";
+import { motion, AnimatePresence } from "framer-motion";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Slider } from "@/components/ui/slider";
+import {
+  Search,
+  Filter,
+  X,
+  AlertTriangle,
+  Shield,
+  Target,
+  Settings,
+} from "lucide-react";
+import neoData from "@/data/neo_sample.json";
+import React from "react";
 
 interface NEOData {
-  name: string
-  neo_reference_id: string
-  absolute_magnitude_h: number
-  is_potentially_hazardous_asteroid: boolean
-  est_diameter_min_m: number
-  est_diameter_max_m: number
-  closest_approach_date: string
-  miss_distance_km: string
-  relative_velocity_km_s: string
-  orbiting_body: string
+  name: string;
+  neo_reference_id: string;
+  absolute_magnitude_h: number;
+  is_potentially_hazardous_asteroid: boolean;
+  est_diameter_min_m: number;
+  est_diameter_max_m: number;
+  closest_approach_date: string;
+  miss_distance_km: string;
+  relative_velocity_km_s: string;
+  orbiting_body: string;
 }
 
 function Planet({
@@ -34,25 +47,36 @@ function Planet({
   radius,
   color,
   name,
-}: { position: [number, number, number]; radius: number; color: string; name: string }) {
-  const meshRef = useRef<THREE.Mesh>(null)
+}: {
+  position: [number, number, number];
+  radius: number;
+  color: string;
+  name: string;
+}) {
+  const meshRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.rotation.y += 0.01
+      meshRef.current.rotation.y += 0.01;
     }
-  })
+  });
 
   return (
     <group position={position}>
       <Sphere ref={meshRef} args={[radius, 32, 32]}>
         <meshStandardMaterial color={color} />
       </Sphere>
-      <Text position={[0, radius + 0.5, 0]} fontSize={0.3} color="white" anchorX="center" anchorY="middle">
+      <Text
+        position={[0, radius + 0.5, 0]}
+        fontSize={0.3}
+        color="white"
+        anchorX="center"
+        anchorY="middle"
+      >
         {name}
       </Text>
     </group>
-  )
+  );
 }
 
 function AsteroidPoint({
@@ -62,30 +86,33 @@ function AsteroidPoint({
   isSelected,
   scale = 1,
 }: {
-  asteroid: NEOData
-  position: [number, number, number]
-  onClick: () => void
-  isSelected: boolean
-  scale?: number
+  asteroid: NEOData;
+  position: [number, number, number];
+  onClick: () => void;
+  isSelected: boolean;
+  scale?: number;
 }) {
-  const meshRef = useRef<THREE.Mesh>(null)
-  const [hovered, setHovered] = useState(false)
+  const meshRef = useRef<THREE.Mesh>(null);
+  const [hovered, setHovered] = useState(false);
 
-  const hazardColor = asteroid.is_potentially_hazardous_asteroid ? "#ef4444" : "#22c55e"
-  const size = Math.max(0.02, Math.min(0.1, asteroid.est_diameter_max_m / 10000)) * scale
+  const hazardColor = asteroid.is_potentially_hazardous_asteroid
+    ? "#ef4444"
+    : "#22c55e";
+  const size =
+    Math.max(0.02, Math.min(0.1, asteroid.est_diameter_max_m / 10000)) * scale;
 
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.rotation.x += 0.02
-      meshRef.current.rotation.y += 0.02
+      meshRef.current.rotation.x += 0.02;
+      meshRef.current.rotation.y += 0.02;
 
       // Glow effect for hazardous asteroids
       if (asteroid.is_potentially_hazardous_asteroid) {
-        const intensity = 0.5 + Math.sin(state.clock.elapsedTime * 2) * 0.3
-        meshRef.current.scale.setScalar(size * (1 + intensity * 0.2))
+        const intensity = 0.5 + Math.sin(state.clock.elapsedTime * 2) * 0.3;
+        meshRef.current.scale.setScalar(size * (1 + intensity * 0.2));
       }
     }
-  })
+  });
 
   return (
     <Sphere
@@ -102,7 +129,7 @@ function AsteroidPoint({
         emissiveIntensity={hovered || isSelected ? 0.5 : 0.2}
       />
     </Sphere>
-  )
+  );
 }
 
 function SolarSystemScene({
@@ -111,24 +138,28 @@ function SolarSystemScene({
   selectedAsteroid,
   cameraZoom,
 }: {
-  asteroids: NEOData[]
-  onAsteroidClick: (asteroid: NEOData) => void
-  selectedAsteroid: NEOData | null
-  cameraZoom: number
+  asteroids: NEOData[];
+  onAsteroidClick: (asteroid: NEOData) => void;
+  selectedAsteroid: NEOData | null;
+  cameraZoom: number;
 }) {
-  const { camera } = useThree()
+  const { camera } = useThree();
 
   useEffect(() => {
-    camera.position.set(0, 8, 15)
-    camera.lookAt(0, 0, 0)
-  }, [camera])
+    camera.position.set(0, 8, 15);
+    camera.lookAt(0, 0, 0);
+  }, [camera]);
 
   const asteroidPositions = asteroids.map((asteroid, index) => {
-    const angle = (index / asteroids.length) * Math.PI * 2
-    const distance = 4 + Math.random() * 10
-    const height = (Math.random() - 0.5) * 3
-    return [Math.cos(angle) * distance, height, Math.sin(angle) * distance] as [number, number, number]
-  })
+    const angle = (index / asteroids.length) * Math.PI * 2;
+    const distance = 4 + Math.random() * 10;
+    const height = (Math.random() - 0.5) * 3;
+    return [Math.cos(angle) * distance, height, Math.sin(angle) * distance] as [
+      number,
+      number,
+      number
+    ];
+  });
 
   return (
     <>
@@ -147,7 +178,9 @@ function SolarSystemScene({
             asteroid={asteroid}
             position={asteroidPositions[index]}
             onClick={() => onAsteroidClick(asteroid)}
-            isSelected={selectedAsteroid?.neo_reference_id === asteroid.neo_reference_id}
+            isSelected={
+              selectedAsteroid?.neo_reference_id === asteroid.neo_reference_id
+            }
             scale={cameraZoom}
           />
         </group>
@@ -155,20 +188,24 @@ function SolarSystemScene({
 
       <OrbitControls enablePan={true} enableZoom={true} enableRotate={true} />
     </>
-  )
+  );
 }
 
 function AsteroidPopup({
   asteroid,
   onClose,
 }: {
-  asteroid: NEOData
-  onClose: () => void
+  asteroid: NEOData;
+  onClose: () => void;
 }) {
-  const [activeTab, setActiveTab] = useState("info")
+  const [activeTab, setActiveTab] = useState("info");
 
-  const hazardLevel = asteroid.is_potentially_hazardous_asteroid ? "HIGH" : "LOW"
-  const hazardColor = asteroid.is_potentially_hazardous_asteroid ? "destructive" : "success"
+  const hazardLevel = asteroid.is_potentially_hazardous_asteroid
+    ? "HIGH"
+    : "LOW";
+  const hazardColor = asteroid.is_potentially_hazardous_asteroid
+    ? "destructive"
+    : "success";
 
   return (
     <AnimatePresence>
@@ -189,7 +226,9 @@ function AsteroidPopup({
           <div className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-2xl font-bold text-white">{asteroid.name}</h2>
+                <h2 className="text-2xl font-bold text-white">
+                  {asteroid.name}
+                </h2>
                 <p className="text-gray-300">ID: {asteroid.neo_reference_id}</p>
               </div>
               <div className="flex items-center gap-2">
@@ -210,40 +249,56 @@ function AsteroidPopup({
               <TabsContent value="info" className="mt-4 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <Card className="p-4 glass-morphism">
-                    <h3 className="font-semibold text-white mb-2">Physical Properties</h3>
+                    <h3 className="font-semibold text-white mb-2">
+                      Physical Properties
+                    </h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-300">Diameter:</span>
                         <span className="text-white font-semibold">
-                          {Math.round(asteroid.est_diameter_min_m)}-{Math.round(asteroid.est_diameter_max_m)}m
+                          {Math.round(asteroid.est_diameter_min_m)}-
+                          {Math.round(asteroid.est_diameter_max_m)}m
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-300">Magnitude:</span>
-                        <span className="text-white font-semibold">{asteroid.absolute_magnitude_h}</span>
+                        <span className="text-white font-semibold">
+                          {asteroid.absolute_magnitude_h}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-300">Velocity:</span>
-                        <span className="text-white font-semibold">{asteroid.relative_velocity_km_s} km/s</span>
+                        <span className="text-white font-semibold">
+                          {asteroid.relative_velocity_km_s} km/s
+                        </span>
                       </div>
                     </div>
                   </Card>
 
                   <Card className="p-4 glass-morphism">
-                    <h3 className="font-semibold text-white mb-2">Orbital Data</h3>
+                    <h3 className="font-semibold text-white mb-2">
+                      Orbital Data
+                    </h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-300">Orbiting:</span>
-                        <span className="text-white font-semibold">{asteroid.orbiting_body}</span>
+                        <span className="text-white font-semibold">
+                          {asteroid.orbiting_body}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-300">Closest Approach:</span>
-                        <span className="text-white font-semibold">{asteroid.closest_approach_date}</span>
+                        <span className="text-white font-semibold">
+                          {asteroid.closest_approach_date}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-300">Miss Distance:</span>
                         <span className="text-white font-semibold">
-                          {Math.round(Number.parseFloat(asteroid.miss_distance_km) / 1000).toLocaleString()} km
+                          {Math.round(
+                            Number.parseFloat(asteroid.miss_distance_km) / 1000
+                          ).toLocaleString()}{" "}
+                          km
                         </span>
                       </div>
                     </div>
@@ -252,18 +307,38 @@ function AsteroidPopup({
 
                 <Accordion type="single" collapsible>
                   <AccordionItem value="impact">
-                    <AccordionTrigger className="text-white">Impact Scenarios</AccordionTrigger>
+                    <AccordionTrigger className="text-white">
+                      Impact Scenarios
+                    </AccordionTrigger>
                     <AccordionContent className="text-gray-300">
                       <div className="space-y-2">
-                        <p>Potential impact energy: ~{Math.round(asteroid.est_diameter_max_m / 100)} megatons TNT</p>
-                        <p>Crater diameter: ~{Math.round((asteroid.est_diameter_max_m * 20) / 1000)} km</p>
-                        <p>Blast radius: ~{Math.round((asteroid.est_diameter_max_m * 50) / 1000)} km</p>
+                        <p>
+                          Potential impact energy: ~
+                          {Math.round(asteroid.est_diameter_max_m / 100)}{" "}
+                          megatons TNT
+                        </p>
+                        <p>
+                          Crater diameter: ~
+                          {Math.round(
+                            (asteroid.est_diameter_max_m * 20) / 1000
+                          )}{" "}
+                          km
+                        </p>
+                        <p>
+                          Blast radius: ~
+                          {Math.round(
+                            (asteroid.est_diameter_max_m * 50) / 1000
+                          )}{" "}
+                          km
+                        </p>
                       </div>
                     </AccordionContent>
                   </AccordionItem>
 
                   <AccordionItem value="mitigation">
-                    <AccordionTrigger className="text-white">Mitigation Strategies</AccordionTrigger>
+                    <AccordionTrigger className="text-white">
+                      Mitigation Strategies
+                    </AccordionTrigger>
                     <AccordionContent className="text-gray-300">
                       <div className="space-y-2">
                         <p>• Kinetic Impactor: 85% success probability</p>
@@ -292,39 +367,50 @@ function AsteroidPopup({
         </motion.div>
       </motion.div>
     </AnimatePresence>
-  )
+  );
 }
 
 export default function SolarSystemModel() {
-  const [selectedAsteroid, setSelectedAsteroid] = useState<NEOData | null>(null)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [showFilters, setShowFilters] = useState(false)
+  const [selectedAsteroid, setSelectedAsteroid] = useState<NEOData | null>(
+    null
+  );
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     hazardLevel: "all",
     orbitingBody: "all",
     sizeRange: [0, 100000],
-  })
+  });
 
   const filteredAsteroids = React.useMemo(() => {
     return neoData.filter((asteroid) => {
-      const matchesSearch = asteroid.name.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesSearch =
+        asteroid.name?.toLowerCase().includes(searchTerm.toLowerCase()) ??
+        false;
       const matchesHazard =
         filters.hazardLevel === "all" ||
-        (filters.hazardLevel === "high" && asteroid.is_potentially_hazardous_asteroid) ||
-        (filters.hazardLevel === "low" && !asteroid.is_potentially_hazardous_asteroid)
+        (filters.hazardLevel === "high" &&
+          asteroid.is_potentially_hazardous_asteroid) ||
+        (filters.hazardLevel === "low" &&
+          !asteroid.is_potentially_hazardous_asteroid);
       const matchesOrbit =
-        filters.orbitingBody === "all" || asteroid.orbiting_body.toLowerCase() === filters.orbitingBody.toLowerCase()
+        filters.orbitingBody === "all" ||
+        asteroid.orbiting_body?.toLowerCase() ===
+          filters.orbitingBody.toLowerCase();
       const matchesSize =
-        asteroid.est_diameter_max_m >= filters.sizeRange[0] && asteroid.est_diameter_max_m <= filters.sizeRange[1]
+        asteroid.est_diameter_max_m >= filters.sizeRange[0] &&
+        asteroid.est_diameter_max_m <= filters.sizeRange[1];
 
-      return matchesSearch && matchesHazard && matchesOrbit && matchesSize
-    })
-  }, [searchTerm, filters])
+      return matchesSearch && matchesHazard && matchesOrbit && matchesSize;
+    });
+  }, [searchTerm, filters]);
 
   const hazardousCount = React.useMemo(
-    () => filteredAsteroids.filter((a) => a.is_potentially_hazardous_asteroid).length,
-    [filteredAsteroids],
-  )
+    () =>
+      filteredAsteroids.filter((a) => a.is_potentially_hazardous_asteroid)
+        .length,
+    [filteredAsteroids]
+  );
 
   return (
     <div className="min-h-screen relative overflow-hidden space-gradient">
@@ -342,7 +428,12 @@ export default function SolarSystemModel() {
         <Button
           variant={filters.hazardLevel === "high" ? "destructive" : "outline"}
           size="sm"
-          onClick={() => setFilters({ ...filters, hazardLevel: filters.hazardLevel === "high" ? "all" : "high" })}
+          onClick={() =>
+            setFilters({
+              ...filters,
+              hazardLevel: filters.hazardLevel === "high" ? "all" : "high",
+            })
+          }
         >
           High Risk
         </Button>
@@ -350,7 +441,12 @@ export default function SolarSystemModel() {
         <Button
           variant={filters.hazardLevel === "low" ? "default" : "outline"}
           size="sm"
-          onClick={() => setFilters({ ...filters, hazardLevel: filters.hazardLevel === "low" ? "all" : "low" })}
+          onClick={() =>
+            setFilters({
+              ...filters,
+              hazardLevel: filters.hazardLevel === "low" ? "all" : "low",
+            })
+          }
           className="bg-green-600 hover:bg-green-700 border-green-600"
         >
           Low Risk
@@ -379,9 +475,15 @@ export default function SolarSystemModel() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Settings className="h-5 w-5 text-orange-500" />
-                <h2 className="text-white font-semibold text-lg">Advanced Filters</h2>
+                <h2 className="text-white font-semibold text-lg">
+                  Advanced Filters
+                </h2>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setShowFilters(false)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowFilters(false)}
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -392,12 +494,19 @@ export default function SolarSystemModel() {
                 {["Earth", "Mars", "Venus"].map((body) => (
                   <Button
                     key={body}
-                    variant={filters.orbitingBody === body.toLowerCase() ? "default" : "outline"}
+                    variant={
+                      filters.orbitingBody === body.toLowerCase()
+                        ? "default"
+                        : "outline"
+                    }
                     size="sm"
                     onClick={() =>
                       setFilters({
                         ...filters,
-                        orbitingBody: filters.orbitingBody === body.toLowerCase() ? "all" : body.toLowerCase(),
+                        orbitingBody:
+                          filters.orbitingBody === body.toLowerCase()
+                            ? "all"
+                            : body.toLowerCase(),
                       })
                     }
                     className="text-xs"
@@ -413,7 +522,9 @@ export default function SolarSystemModel() {
               <div className="px-2">
                 <Slider
                   value={filters.sizeRange}
-                  onValueChange={(value) => setFilters({ ...filters, sizeRange: value })}
+                  onValueChange={(value) =>
+                    setFilters({ ...filters, sizeRange: value })
+                  }
                   max={100000}
                   min={0}
                   step={1000}
@@ -427,15 +538,24 @@ export default function SolarSystemModel() {
             </div>
 
             <div className="space-y-2 pt-4 border-t border-white/10">
-              <Button variant="outline" className="w-full text-white border-white/30 bg-transparent justify-start">
+              <Button
+                variant="outline"
+                className="w-full text-white border-white/30 bg-transparent justify-start"
+              >
                 <Target className="h-4 w-4 mr-2" />
                 Dashboard
               </Button>
-              <Button variant="outline" className="w-full text-white border-white/30 bg-transparent justify-start">
+              <Button
+                variant="outline"
+                className="w-full text-white border-white/30 bg-transparent justify-start"
+              >
                 <Shield className="h-4 w-4 mr-2" />
                 Simulation
               </Button>
-              <Button variant="outline" className="w-full text-white border-white/30 bg-transparent justify-start">
+              <Button
+                variant="outline"
+                className="w-full text-white border-white/30 bg-transparent justify-start"
+              >
                 <AlertTriangle className="h-4 w-4 mr-2" />
                 Deflection
               </Button>
@@ -465,7 +585,9 @@ export default function SolarSystemModel() {
           className="glass-morphism rounded-lg p-4 min-w-[120px]"
         >
           <div className="text-center">
-            <div className="text-2xl font-bold text-orange-500">{filteredAsteroids.length}</div>
+            <div className="text-2xl font-bold text-orange-500">
+              {filteredAsteroids.length}
+            </div>
             <div className="text-sm text-gray-300">Objects Found</div>
           </div>
         </motion.div>
@@ -477,16 +599,21 @@ export default function SolarSystemModel() {
           className="glass-morphism rounded-lg p-4 min-w-[120px]"
         >
           <div className="text-center">
-            <div className="text-2xl font-bold text-red-500">{hazardousCount}</div>
+            <div className="text-2xl font-bold text-red-500">
+              {hazardousCount}
+            </div>
             <div className="text-sm text-gray-300">Hazardous</div>
           </div>
         </motion.div>
       </div>
 
-    
-
       {/* Asteroid Popup */}
-      {selectedAsteroid && <AsteroidPopup asteroid={selectedAsteroid} onClose={() => setSelectedAsteroid(null)} />}
+      {selectedAsteroid && (
+        <AsteroidPopup
+          asteroid={selectedAsteroid}
+          onClose={() => setSelectedAsteroid(null)}
+        />
+      )}
     </div>
-  )
+  );
 }
