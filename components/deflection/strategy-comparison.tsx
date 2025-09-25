@@ -1,17 +1,49 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { BarChart3, TrendingUp, Clock, DollarSign } from "lucide-react"
-import type { Asteroid } from "@/lib/types"
-import deflectionData from "@/data/deflection_strategies.json"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { BarChart3, TrendingUp, Clock, DollarSign } from "lucide-react";
+import type { Asteroid } from "@/lib/types";
+import deflectionData from "@/data/deflection_strategies.json";
 
 interface StrategyComparisonProps {
-  selectedAsteroid: Asteroid | null
+  selectedAsteroid: Asteroid | null;
 }
 
-export function StrategyComparison({ selectedAsteroid }: StrategyComparisonProps) {
+export function StrategyComparison({
+  selectedAsteroid,
+}: StrategyComparisonProps) {
+  // Map strategy IDs to types
+  const getStrategyType = (
+    id: string
+  ): "kinetic" | "nuclear" | "gravity" | "solar" => {
+    if (id.includes("kinetic") || id.includes("impactor")) return "kinetic";
+    if (id.includes("nuclear") || id.includes("pulse")) return "nuclear";
+    if (id.includes("gravity") || id.includes("tractor")) return "gravity";
+    if (id.includes("solar") || id.includes("sail") || id.includes("ion"))
+      return "solar";
+    return "kinetic"; // default
+  };
+
+  // Transform JSON data to match DeflectionStrategy interface
+  const transformStrategy = (rawStrategy: any): any => ({
+    id: rawStrategy.id,
+    name: rawStrategy.name,
+    type: getStrategyType(rawStrategy.id),
+    description: rawStrategy.description,
+    effectiveness: rawStrategy.success_rate || 0.5,
+    cost: Math.round((rawStrategy.cost || 0) / 1000000), // Convert to millions
+    timeRequired: rawStrategy.lead_time || rawStrategy.mission_duration || 1,
+    technicalReadiness: rawStrategy.technology_readiness || 5,
+    risks: rawStrategy.disadvantages || [],
+    requirements: {
+      mass: rawStrategy.mass_required || 1000,
+      power: 100, // Default value as it's not in JSON
+      deltaV: (rawStrategy.delta_v || 0.001) * 1000, // Convert to m/s
+    },
+  });
+
   if (!selectedAsteroid) {
     return (
       <Card className="h-full">
@@ -24,25 +56,28 @@ export function StrategyComparison({ selectedAsteroid }: StrategyComparisonProps
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   // Get top strategies based on effectiveness for this asteroid
-  const strategies = deflectionData.strategies.sort((a, b) => b.effectiveness - a.effectiveness).slice(0, 4)
+  const strategies = deflectionData.strategies
+    .map(transformStrategy)
+    .sort((a, b) => b.effectiveness - a.effectiveness)
+    .slice(0, 4);
 
   const getEffectivenessColor = (effectiveness: number) => {
-    if (effectiveness >= 0.8) return "bg-green-600"
-    if (effectiveness >= 0.6) return "bg-yellow-600"
-    if (effectiveness >= 0.4) return "bg-orange-600"
-    return "bg-red-600"
-  }
+    if (effectiveness >= 0.8) return "bg-green-600";
+    if (effectiveness >= 0.6) return "bg-yellow-600";
+    if (effectiveness >= 0.4) return "bg-orange-600";
+    return "bg-red-600";
+  };
 
   const getReadinessColor = (trl: number) => {
-    if (trl >= 7) return "bg-green-600"
-    if (trl >= 5) return "bg-yellow-600"
-    if (trl >= 3) return "bg-orange-600"
-    return "bg-red-600"
-  }
+    if (trl >= 7) return "bg-green-600";
+    if (trl >= 5) return "bg-yellow-600";
+    if (trl >= 3) return "bg-orange-600";
+    return "bg-red-600";
+  };
 
   return (
     <Card className="h-full">
@@ -51,7 +86,9 @@ export function StrategyComparison({ selectedAsteroid }: StrategyComparisonProps
           <BarChart3 className="h-5 w-5 text-blue-600" />
           Strategy Comparison
         </CardTitle>
-        <p className="text-sm text-muted-foreground">Compare deflection options for {selectedAsteroid.name}</p>
+        <p className="text-sm text-muted-foreground">
+          Compare deflection options for {selectedAsteroid.name}
+        </p>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Asteroid Characteristics */}
@@ -75,7 +112,9 @@ export function StrategyComparison({ selectedAsteroid }: StrategyComparisonProps
                   <Badge variant="outline">#{index + 1}</Badge>
                   <span className="font-medium">{strategy.name}</span>
                 </div>
-                <Badge className={getReadinessColor(strategy.technicalReadiness)}>
+                <Badge
+                  className={getReadinessColor(strategy.technicalReadiness)}
+                >
                   TRL {strategy.technicalReadiness}
                 </Badge>
               </div>
@@ -86,15 +125,23 @@ export function StrategyComparison({ selectedAsteroid }: StrategyComparisonProps
                     <span>Effectiveness</span>
                     <span>{(strategy.effectiveness * 100).toFixed(0)}%</span>
                   </div>
-                  <Progress value={strategy.effectiveness * 100} className="h-2" />
+                  <Progress
+                    value={strategy.effectiveness * 100}
+                    className="h-2"
+                  />
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between text-sm mb-1">
                     <span>Cost Efficiency</span>
-                    <span>{Math.max(0, 100 - strategy.cost / 10).toFixed(0)}%</span>
+                    <span>
+                      {Math.max(0, 100 - strategy.cost / 10).toFixed(0)}%
+                    </span>
                   </div>
-                  <Progress value={Math.max(0, 100 - strategy.cost / 10)} className="h-2" />
+                  <Progress
+                    value={Math.max(0, 100 - strategy.cost / 10)}
+                    className="h-2"
+                  />
                 </div>
               </div>
 
@@ -116,16 +163,23 @@ export function StrategyComparison({ selectedAsteroid }: StrategyComparisonProps
               <div className="mt-3 pt-3 border-t">
                 <div className="grid grid-cols-2 gap-4 text-xs">
                   <div>
-                    <div className="font-medium text-green-600 mb-1">Advantages</div>
+                    <div className="font-medium text-green-600 mb-1">
+                      Advantages
+                    </div>
                     <div className="text-muted-foreground">
                       {strategy.effectiveness > 0.7 && "High success rate"}
-                      {strategy.technicalReadiness >= 7 && ", Proven technology"}
+                      {strategy.technicalReadiness >= 7 &&
+                        ", Proven technology"}
                       {strategy.cost < 1000 && ", Cost effective"}
                     </div>
                   </div>
                   <div>
                     <div className="font-medium text-red-600 mb-1">Risks</div>
-                    <div className="text-muted-foreground">{strategy.risks[0]}</div>
+                    <div className="text-muted-foreground">
+                      {strategy.risks && strategy.risks.length > 0
+                        ? strategy.risks[0]
+                        : "No major risks identified"}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -137,12 +191,15 @@ export function StrategyComparison({ selectedAsteroid }: StrategyComparisonProps
         <div className="bg-blue-50 p-4 rounded-lg">
           <h4 className="font-medium text-blue-800 mb-2">Recommendation</h4>
           <p className="text-sm text-blue-700">
-            For {selectedAsteroid.name}, the <strong>{strategies[0]?.name}</strong> approach offers the best balance of
-            effectiveness ({(strategies[0]?.effectiveness * 100).toFixed(0)}%) and technical readiness (TRL{" "}
-            {strategies[0]?.technicalReadiness}). Consider a multi-mission approach for critical threats.
+            For {selectedAsteroid.name}, the{" "}
+            <strong>{strategies[0]?.name}</strong> approach offers the best
+            balance of effectiveness (
+            {(strategies[0]?.effectiveness * 100).toFixed(0)}%) and technical
+            readiness (TRL {strategies[0]?.technicalReadiness}). Consider a
+            multi-mission approach for critical threats.
           </p>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

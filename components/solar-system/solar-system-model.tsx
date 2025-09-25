@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, Suspense, useMemo } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Sphere, Text, Line } from "@react-three/drei";
 import * as THREE from "three";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -594,12 +595,13 @@ function AsteroidPopup({
 }
 
 export default function SolarSystemModel() {
+  const router = useRouter();
   const [selectedAsteroid, setSelectedAsteroid] = useState<NEOData | null>(
     null
   );
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [orbitSpeed, setOrbitSpeed] = useState(1); // New: orbital speed multiplier
+  const [orbitSpeed, setOrbitSpeed] = useState(0.3); // New: orbital speed multiplier (slowed down from 1 to 0.3)
   const [showOrbitPaths, setShowOrbitPaths] = useState(true); // New: toggle orbit paths
   const [filters, setFilters] = useState({
     hazardLevel: "all",
@@ -1081,6 +1083,7 @@ export default function SolarSystemModel() {
                 <Button
                   variant="outline"
                   className="w-full text-white border-white/30 bg-transparent justify-start"
+                  onClick={() => router.push("/deflection")}
                 >
                   <AlertTriangle className="h-4 w-4 mr-2" />
                   Deflection Strategies

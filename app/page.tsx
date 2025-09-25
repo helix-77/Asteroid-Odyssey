@@ -10,7 +10,7 @@ export default function HomePage() {
         <div className="min-h-screen space-gradient flex items-center justify-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
         </div>
-        // sadh
+        // sadhsadsad
       }
     >
       <SolarSystemModel />
