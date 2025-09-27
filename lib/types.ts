@@ -1,49 +1,66 @@
 export interface Asteroid {
-  id: string
-  name: string
-  diameter: number // meters
-  mass: number // kg
-  density: number // kg/m³
-  composition: string
-  orbitalElements: {
-    semiMajorAxis: number // AU
-    eccentricity: number
-    inclination: number // degrees
-    longitudeOfAscendingNode: number // degrees
-    argumentOfPeriapsis: number // degrees
-    meanAnomaly: number // degrees
-  }
-  velocity: number // km/s
-  threatLevel: "low" | "medium" | "high" | "critical"
-  discoveryDate: string
-  nextApproach: string
-  minDistance: number // AU
+  id: string;
+  name: string;
+  size: number; // meters (diameter)
+  diameter: number; // meters (alias for size)
+  mass: number; // kg
+  density: number; // kg/m³
+  composition: string;
+  orbit: {
+    semi_major_axis: number; // AU
+    eccentricity: number;
+    inclination: number; // degrees
+    ascending_node: number; // degrees
+    perihelion: number; // degrees
+    mean_anomaly: number; // degrees
+  };
+  close_approach: {
+    date: string;
+    distance: number; // AU
+    velocity: number; // km/s
+  };
+  velocity: number; // km/s
+  threat_level: "low" | "medium" | "high" | "critical";
+  impact_probability: number;
+  discovery_date: string;
+  absolute_magnitude: number;
 }
 
 export interface ImpactResults {
-  craterDiameter: number // meters
-  blastRadius: number // meters
-  energyMegatons: number
-  seismicMagnitude: number
-  casualties: number
-  economicDamage: number // USD
-  environmentalImpact: string
-  recoveryTime: number // years
+  kineticEnergy: number; // Joules
+  tntEquivalent: number; // kilotons
+  crater: {
+    diameter: number; // meters
+    depth: number; // meters
+    volume: number; // cubic meters
+  };
+  effects: {
+    fireballRadius: number; // km
+    airblastRadius: number; // km
+    thermalRadiation: number; // km
+    seismicMagnitude: number;
+  };
+  casualties: {
+    immediate: number;
+    injured: number;
+    displaced: number;
+  };
+  economicImpact: number; // USD
 }
 
 export interface DeflectionStrategy {
-  id: string
-  name: string
-  type: "kinetic" | "nuclear" | "gravity" | "solar"
-  description: string
-  effectiveness: number // 0-1
-  cost: number // USD millions
-  timeRequired: number // years
-  technicalReadiness: number // 1-9 TRL scale
-  risks: string[]
+  id: string;
+  name: string;
+  type: "kinetic" | "nuclear" | "gravity" | "solar";
+  description: string;
+  effectiveness: number; // 0-1
+  cost: number; // USD millions
+  timeRequired: number; // years
+  technicalReadiness: number; // 1-9 TRL scale
+  risks: string[];
   requirements: {
-    mass: number // kg
-    power: number // kW
-    deltaV: number // m/s
-  }
+    mass: number; // kg
+    power: number; // kW
+    deltaV: number; // m/s
+  };
 }

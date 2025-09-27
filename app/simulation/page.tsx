@@ -4,15 +4,17 @@ import { useState } from "react";
 import { ImpactCalculator } from "@/components/simulation/impact-calculator";
 import { ImpactTimeline } from "@/components/simulation/impact-timeline";
 import { DamageAssessment } from "@/components/simulation/damage-assessment";
-import AdvancedEarth3D from "@/components/3d/advanced-earth-3d";
-import type { Asteroid } from "@/lib/types";
+import { ImpactHeatmap } from "@/components/simulation/impact-heatmap";
+import type { Asteroid, ImpactResults } from "@/lib/types";
 import asteroidData from "@/data/asteroids.json";
 
 export default function SimulationPage() {
   const [selectedAsteroid, setSelectedAsteroid] = useState<Asteroid | null>(
     null
   );
-  const [impactResults, setImpactResults] = useState<any>(null);
+  const [impactResults, setImpactResults] = useState<ImpactResults | null>(
+    null
+  );
   const [isTimelinePlaying, setIsTimelinePlaying] = useState(false);
   const [targetLocation, setTargetLocation] = useState({
     lat: 40.7128,
@@ -25,7 +27,7 @@ export default function SimulationPage() {
     setImpactResults(null);
   };
 
-  const handleSimulationResults = (results: any) => {
+  const handleSimulationResults = (results: ImpactResults) => {
     setImpactResults(results);
   };
 
@@ -62,7 +64,8 @@ export default function SimulationPage() {
                       {asteroid.name}
                     </div>
                     <div className="text-sm text-blue-200">
-                      {asteroid.diameter}m • {asteroid.composition}
+                      {asteroid.size || asteroid.diameter}m •{" "}
+                      {asteroid.composition}
                     </div>
                   </button>
                 ))}
@@ -75,20 +78,12 @@ export default function SimulationPage() {
             />
           </div>
 
-          {/* 3D Visualization */}
+          {/* 2D Heatmap Visualization */}
           <div className="lg:col-span-2">
-            <div
-              className="bg-black rounded-lg overflow-hidden"
-              style={{ height: "600px" }}
-            >
-              <AdvancedEarth3D
-                selectedAsteroid={selectedAsteroid?.id || null}
-                simulationMode="impact"
-                showOrbits={true}
-                showLabels={true}
-                timeScale={1}
-              />
-            </div>
+            <ImpactHeatmap
+              selectedAsteroid={selectedAsteroid}
+              onSimulate={handleSimulationResults}
+            />
           </div>
         </div>
 

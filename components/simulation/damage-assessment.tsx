@@ -1,16 +1,20 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { AlertTriangle, Users, Building, Zap } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { AlertTriangle, Users, Building, Zap } from "lucide-react";
+import type { ImpactResults } from "@/lib/types";
 
 interface DamageAssessmentProps {
-  impactResults: any
-  targetLocation: { lat: number; lng: number; name: string }
+  impactResults: ImpactResults | null;
+  targetLocation: { lat: number; lng: number; name: string };
 }
 
-export function DamageAssessment({ impactResults, targetLocation }: DamageAssessmentProps) {
+export function DamageAssessment({
+  impactResults,
+  targetLocation,
+}: DamageAssessmentProps) {
   if (!impactResults) {
     return (
       <Card className="h-full">
@@ -23,46 +27,46 @@ export function DamageAssessment({ impactResults, targetLocation }: DamageAssess
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   const damageZones = [
     {
       name: "Total Destruction",
-      radius: impactResults.craterDiameter / 2000, // km
+      radius: impactResults.crater.diameter / 2000, // km
       description: "Complete vaporization and crater formation",
       color: "bg-red-600",
-      casualties: Math.floor(impactResults.casualties * 0.4),
+      casualties: Math.floor(impactResults.casualties.immediate * 0.4),
     },
     {
       name: "Severe Damage",
-      radius: impactResults.blastRadius / 2000, // km
+      radius: impactResults.effects.airblastRadius / 2, // km
       description: "Buildings destroyed, fires, severe injuries",
       color: "bg-orange-600",
-      casualties: Math.floor(impactResults.casualties * 0.35),
+      casualties: Math.floor(impactResults.casualties.immediate * 0.35),
     },
     {
       name: "Moderate Damage",
-      radius: impactResults.blastRadius / 1000, // km
+      radius: impactResults.effects.airblastRadius, // km
       description: "Structural damage, broken windows, injuries",
       color: "bg-yellow-600",
-      casualties: Math.floor(impactResults.casualties * 0.2),
+      casualties: Math.floor(impactResults.casualties.immediate * 0.2),
     },
     {
       name: "Light Damage",
-      radius: impactResults.blastRadius / 500, // km
+      radius: impactResults.effects.airblastRadius * 2, // km
       description: "Minor structural damage, debris",
       color: "bg-blue-600",
-      casualties: Math.floor(impactResults.casualties * 0.05),
+      casualties: Math.floor(impactResults.casualties.immediate * 0.05),
     },
-  ]
+  ];
 
   const infrastructureImpact = {
-    power: Math.min(95, (impactResults.energyMegatons / 100) * 80),
-    water: Math.min(90, (impactResults.energyMegatons / 100) * 70),
-    transport: Math.min(98, (impactResults.energyMegatons / 100) * 90),
-    communications: Math.min(85, (impactResults.energyMegatons / 100) * 60),
-  }
+    power: Math.min(95, (impactResults.tntEquivalent / 1000) * 80),
+    water: Math.min(90, (impactResults.tntEquivalent / 1000) * 70),
+    transport: Math.min(98, (impactResults.tntEquivalent / 1000) * 90),
+    communications: Math.min(85, (impactResults.tntEquivalent / 1000) * 60),
+  };
 
   return (
     <Card className="h-full">
@@ -80,7 +84,9 @@ export function DamageAssessment({ impactResults, targetLocation }: DamageAssess
               <Users className="h-4 w-4 text-red-600" />
               <span className="font-medium">Casualties</span>
             </div>
-            <div className="text-2xl font-bold text-red-600">{impactResults.casualties.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-red-600">
+              {impactResults.casualties.immediate.toLocaleString()}
+            </div>
           </div>
 
           <div className="bg-orange-50 p-4 rounded-lg">
@@ -89,7 +95,11 @@ export function DamageAssessment({ impactResults, targetLocation }: DamageAssess
               <span className="font-medium">Affected Area</span>
             </div>
             <div className="text-2xl font-bold text-orange-600">
-              {Math.PI * Math.pow(impactResults.blastRadius / 1000, 2).toFixed(0)} km²
+              {Math.PI *
+                Math.pow(impactResults.effects.airblastRadius, 2).toFixed(
+                  0
+                )}{" "}
+              km²
             </div>
           </div>
         </div>
@@ -101,10 +111,16 @@ export function DamageAssessment({ impactResults, targetLocation }: DamageAssess
             <div key={index} className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-medium">{zone.name}</span>
-                <Badge className={zone.color}>{zone.radius.toFixed(1)} km radius</Badge>
+                <Badge className={zone.color}>
+                  {zone.radius.toFixed(1)} km radius
+                </Badge>
               </div>
-              <p className="text-sm text-muted-foreground">{zone.description}</p>
-              <div className="text-sm">Estimated casualties: {zone.casualties.toLocaleString()}</div>
+              <p className="text-sm text-muted-foreground">
+                {zone.description}
+              </p>
+              <div className="text-sm">
+                Estimated casualties: {zone.casualties.toLocaleString()}
+              </div>
             </div>
           ))}
         </div>
@@ -136,17 +152,27 @@ export function DamageAssessment({ impactResults, targetLocation }: DamageAssess
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span>Transportation</span>
-                <span>{infrastructureImpact.transport.toFixed(0)}% disrupted</span>
+                <span>
+                  {infrastructureImpact.transport.toFixed(0)}% disrupted
+                </span>
               </div>
-              <Progress value={infrastructureImpact.transport} className="h-2" />
+              <Progress
+                value={infrastructureImpact.transport}
+                className="h-2"
+              />
             </div>
 
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span>Communications</span>
-                <span>{infrastructureImpact.communications.toFixed(0)}% disrupted</span>
+                <span>
+                  {infrastructureImpact.communications.toFixed(0)}% disrupted
+                </span>
               </div>
-              <Progress value={infrastructureImpact.communications} className="h-2" />
+              <Progress
+                value={infrastructureImpact.communications}
+                className="h-2"
+              />
             </div>
           </div>
         </div>
@@ -163,5 +189,5 @@ export function DamageAssessment({ impactResults, targetLocation }: DamageAssess
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

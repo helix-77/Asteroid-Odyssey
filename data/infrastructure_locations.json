@@ -1,0 +1,352 @@
+{
+  "infrastructure_locations": [
+    {
+      "type": "military",
+      "locations": [
+        {
+          "lat": 38.9072,
+          "lng": -77.0369,
+          "name": "Pentagon",
+          "country": "USA",
+          "importance": "critical"
+        },
+        {
+          "lat": 51.5014,
+          "lng": -0.1419,
+          "name": "Ministry of Defence",
+          "country": "UK",
+          "importance": "critical"
+        },
+        {
+          "lat": 48.8566,
+          "lng": 2.3522,
+          "name": "Ministry of Armed Forces",
+          "country": "France",
+          "importance": "high"
+        },
+        {
+          "lat": 52.52,
+          "lng": 13.405,
+          "name": "Bundeswehr HQ",
+          "country": "Germany",
+          "importance": "high"
+        },
+        {
+          "lat": 55.7558,
+          "lng": 37.6176,
+          "name": "Ministry of Defence",
+          "country": "Russia",
+          "importance": "critical"
+        },
+        {
+          "lat": 35.6762,
+          "lng": 139.6503,
+          "name": "Ministry of Defense",
+          "country": "Japan",
+          "importance": "high"
+        },
+        {
+          "lat": 39.9042,
+          "lng": 116.4074,
+          "name": "Ministry of National Defense",
+          "country": "China",
+          "importance": "critical"
+        },
+        {
+          "lat": 28.6139,
+          "lng": 77.209,
+          "name": "Ministry of Defence",
+          "country": "India",
+          "importance": "high"
+        }
+      ]
+    },
+    {
+      "type": "energy",
+      "locations": [
+        {
+          "lat": 35.6762,
+          "lng": 139.6503,
+          "name": "Fukushima Daiichi",
+          "country": "Japan",
+          "importance": "critical",
+          "subtype": "nuclear"
+        },
+        {
+          "lat": 48.8566,
+          "lng": 2.3522,
+          "name": "Flamanville Nuclear",
+          "country": "France",
+          "importance": "high",
+          "subtype": "nuclear"
+        },
+        {
+          "lat": 51.5074,
+          "lng": -0.1278,
+          "name": "Sizewell B",
+          "country": "UK",
+          "importance": "high",
+          "subtype": "nuclear"
+        },
+        {
+          "lat": 40.7128,
+          "lng": -74.006,
+          "name": "Indian Point",
+          "country": "USA",
+          "importance": "critical",
+          "subtype": "nuclear"
+        },
+        {
+          "lat": 55.7558,
+          "lng": 37.6176,
+          "name": "Kursk Nuclear",
+          "country": "Russia",
+          "importance": "critical",
+          "subtype": "nuclear"
+        },
+        {
+          "lat": 25.7617,
+          "lng": -80.1918,
+          "name": "Turkey Point",
+          "country": "USA",
+          "importance": "high",
+          "subtype": "nuclear"
+        },
+        {
+          "lat": 34.0522,
+          "lng": -118.2437,
+          "name": "Diablo Canyon",
+          "country": "USA",
+          "importance": "high",
+          "subtype": "nuclear"
+        },
+        {
+          "lat": 41.8781,
+          "lng": -87.6298,
+          "name": "Dresden Nuclear",
+          "country": "USA",
+          "importance": "high",
+          "subtype": "nuclear"
+        },
+        {
+          "lat": 29.7604,
+          "lng": -95.3698,
+          "name": "South Texas Project",
+          "country": "USA",
+          "importance": "critical",
+          "subtype": "nuclear"
+        },
+        {
+          "lat": 33.4484,
+          "lng": -112.074,
+          "name": "Palo Verde",
+          "country": "USA",
+          "importance": "high",
+          "subtype": "nuclear"
+        },
+        {
+          "lat": 25.2048,
+          "lng": 55.2708,
+          "name": "Barakah Nuclear",
+          "country": "UAE",
+          "importance": "high",
+          "subtype": "nuclear"
+        },
+        {
+          "lat": 37.5665,
+          "lng": 126.978,
+          "name": "Kori Nuclear",
+          "country": "South Korea",
+          "importance": "critical",
+          "subtype": "nuclear"
+        }
+      ]
+    },
+    {
+      "type": "cultural",
+      "locations": [
+        {
+          "lat": 40.7589,
+          "lng": -73.9851,
+          "name": "Statue of Liberty",
+          "country": "USA",
+          "importance": "critical",
+          "subtype": "monument"
+        },
+        {
+          "lat": 48.8584,
+          "lng": 2.2945,
+          "name": "Eiffel Tower",
+          "country": "France",
+          "importance": "critical",
+          "subtype": "monument"
+        },
+        {
+          "lat": 51.5014,
+          "lng": -0.1419,
+          "name": "Big Ben",
+          "country": "UK",
+          "importance": "critical",
+          "subtype": "monument"
+        },
+        {
+          "lat": 41.8902,
+          "lng": 12.4922,
+          "name": "Colosseum",
+          "country": "Italy",
+          "importance": "critical",
+          "subtype": "monument"
+        },
+        {
+          "lat": 27.1751,
+          "lng": 78.0421,
+          "name": "Taj Mahal",
+          "country": "India",
+          "importance": "critical",
+          "subtype": "monument"
+        },
+        {
+          "lat": 39.9163,
+          "lng": 116.3972,
+          "name": "Forbidden City",
+          "country": "China",
+          "importance": "critical",
+          "subtype": "monument"
+        },
+        {
+          "lat": 29.9792,
+          "lng": 31.1342,
+          "name": "Great Pyramid",
+          "country": "Egypt",
+          "importance": "critical",
+          "subtype": "monument"
+        },
+        {
+          "lat": 40.4319,
+          "lng": -3.6904,
+          "name": "Sagrada Familia",
+          "country": "Spain",
+          "importance": "high",
+          "subtype": "monument"
+        },
+        {
+          "lat": 55.7522,
+          "lng": 37.6156,
+          "name": "Red Square",
+          "country": "Russia",
+          "importance": "critical",
+          "subtype": "monument"
+        },
+        {
+          "lat": 35.6762,
+          "lng": 139.6503,
+          "name": "Tokyo Skytree",
+          "country": "Japan",
+          "importance": "high",
+          "subtype": "monument"
+        },
+        {
+          "lat": -33.8568,
+          "lng": 151.2153,
+          "name": "Sydney Opera House",
+          "country": "Australia",
+          "importance": "critical",
+          "subtype": "monument"
+        },
+        {
+          "lat": 25.1972,
+          "lng": 55.2744,
+          "name": "Burj Khalifa",
+          "country": "UAE",
+          "importance": "high",
+          "subtype": "monument"
+        }
+      ]
+    },
+    {
+      "type": "civilian",
+      "locations": [
+        {
+          "lat": 40.6892,
+          "lng": -74.0445,
+          "name": "World Trade Center",
+          "country": "USA",
+          "importance": "critical",
+          "subtype": "commercial"
+        },
+        {
+          "lat": 51.5074,
+          "lng": -0.1278,
+          "name": "Canary Wharf",
+          "country": "UK",
+          "importance": "high",
+          "subtype": "commercial"
+        },
+        {
+          "lat": 35.6762,
+          "lng": 139.6503,
+          "name": "Tokyo Station",
+          "country": "Japan",
+          "importance": "critical",
+          "subtype": "transport"
+        },
+        {
+          "lat": 48.8566,
+          "lng": 2.3522,
+          "name": "Charles de Gaulle Airport",
+          "country": "France",
+          "importance": "critical",
+          "subtype": "transport"
+        },
+        {
+          "lat": 40.6892,
+          "lng": -74.1745,
+          "name": "JFK Airport",
+          "country": "USA",
+          "importance": "critical",
+          "subtype": "transport"
+        },
+        {
+          "lat": 51.47,
+          "lng": -0.4543,
+          "name": "Heathrow Airport",
+          "country": "UK",
+          "importance": "critical",
+          "subtype": "transport"
+        },
+        {
+          "lat": 35.6762,
+          "lng": 139.6503,
+          "name": "Narita Airport",
+          "country": "Japan",
+          "importance": "critical",
+          "subtype": "transport"
+        },
+        {
+          "lat": 22.3193,
+          "lng": 114.1694,
+          "name": "Hong Kong Airport",
+          "country": "Hong Kong",
+          "importance": "critical",
+          "subtype": "transport"
+        },
+        {
+          "lat": 1.3521,
+          "lng": 103.8198,
+          "name": "Changi Airport",
+          "country": "Singapore",
+          "importance": "critical",
+          "subtype": "transport"
+        },
+        {
+          "lat": 25.2048,
+          "lng": 55.2708,
+          "name": "Dubai Airport",
+          "country": "UAE",
+          "importance": "critical",
+          "subtype": "transport"
+        }
+      ]
+    }
+  ]
+}
