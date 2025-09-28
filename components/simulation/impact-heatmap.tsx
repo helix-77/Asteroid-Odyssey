@@ -11,6 +11,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet.heat";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -20,6 +21,7 @@ import { Play, Pause, RotateCcw } from "lucide-react";
 import impactLocationData from "@/data/impact_location.json";
 import populationData from "@/data/population_density.json";
 import infrastructureData from "@/data/infrastructure_locations.json";
+// Import individual country files as needed
 import type { Asteroid } from "@/lib/types";
 
 // Fix for default markers in Leaflet with Next.js
@@ -66,6 +68,196 @@ function MapUpdater({
       map.fitBounds(bounds, { padding: [20, 20] });
     }
   }, [impactZones, map]);
+
+  return null;
+}
+
+// Custom component for population density heatmap
+function PopulationHeatmap() {
+  const map = useMap();
+  const heatmapRef = useRef<any>(null);
+
+  useEffect(() => {
+    // Generate heatmap data from population density
+    const heatmapData: [number, number, number][] = [];
+
+    populationData.population_density_data.forEach((region) => {
+      region.coordinates.forEach((city) => {
+        // Normalize density to 0-1 range for heatmap
+        const intensity = Math.min(city.density / 50000, 1);
+        heatmapData.push([city.lat, city.lng, intensity]);
+
+        // Add surrounding points for better coverage
+        const surroundingPoints = [
+          [city.lat + 0.5, city.lng + 0.5, intensity * 0.8],
+          [city.lat - 0.5, city.lng - 0.5, intensity * 0.8],
+          [city.lat + 0.5, city.lng - 0.5, intensity * 0.8],
+          [city.lat - 0.5, city.lng + 0.5, intensity * 0.8],
+          [city.lat + 1, city.lng, intensity * 0.6],
+          [city.lat - 1, city.lng, intensity * 0.6],
+          [city.lat, city.lng + 1, intensity * 0.6],
+          [city.lat, city.lng - 1, intensity * 0.6],
+        ];
+
+        surroundingPoints.forEach(([lat, lng, int]) => {
+          heatmapData.push([lat, lng, int]);
+        });
+      });
+    });
+
+    // Create heatmap layer
+    if (heatmapRef.current) {
+      map.removeLayer(heatmapRef.current);
+    }
+
+    heatmapRef.current = (L as any)
+      .heatLayer(heatmapData, {
+        radius: 80,
+        blur: 50,
+        maxZoom: 8,
+        gradient: {
+          0.0: "green",
+          0.1: "lime",
+          0.3: "yellow",
+          0.5: "orange",
+          0.7: "red",
+          0.9: "darkred",
+          1.0: "maroon",
+        },
+      })
+      .addTo(map);
+
+    return () => {
+      if (heatmapRef.current) {
+        map.removeLayer(heatmapRef.current);
+      }
+    };
+  }, [map]);
+
+  return null;
+}
+
+// Custom component for country boundaries using real GeoJSON data
+function CountryOverlay() {
+  const map = useMap();
+  const geoJsonRef = useRef<L.GeoJSON | null>(null);
+  const [countriesLoaded, setCountriesLoaded] = useState(false);
+
+  // Color palette for countries
+  const countryColors = [
+    "#3B82F6",
+    "#EF4444",
+    "#10B981",
+    "#F59E0B",
+    "#8B5CF6",
+    "#EC4899",
+    "#06B6D4",
+    "#84CC16",
+    "#F97316",
+    "#14B8A6",
+    "#DC2626",
+    "#7C3AED",
+    "#059669",
+    "#DB2777",
+    "#0891B2",
+    "#CA8A04",
+    "#16A34A",
+    "#EA580C",
+    "#6366F1",
+    "#F43F5E",
+  ];
+
+  // List of countries to load (major countries for performance)
+  const countriesToLoad = [
+    "usa",
+    "canada",
+    "mexico",
+    "brazil",
+    "argentina",
+    "united_kingdom",
+    "france",
+    "germany",
+    "italy",
+    "spain",
+    "russia",
+    "china",
+    "india",
+    "japan",
+    "australia",
+    "south_africa",
+    "egypt",
+    "nigeria",
+  ];
+
+  useEffect(() => {
+    const loadCountries = async () => {
+      if (geoJsonRef.current) {
+        map.removeLayer(geoJsonRef.current);
+      }
+
+      const allFeatures: any[] = [];
+
+      // Load each country file
+      for (let i = 0; i < countriesToLoad.length; i++) {
+        const countryCode = countriesToLoad[i];
+        try {
+          const response = await fetch(
+            `/data/world-geojson-develop/countries/${countryCode}.json`
+          );
+          const countryData = await response.json();
+
+          // Add color property to each feature
+          countryData.features.forEach((feature: any) => {
+            feature.properties.color = countryColors[i % countryColors.length];
+            feature.properties.name = countryCode
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (l: string) => l.toUpperCase());
+          });
+
+          allFeatures.push(...countryData.features);
+        } catch (error) {
+          console.warn(`Failed to load ${countryCode}:`, error);
+        }
+      }
+
+      // Create GeoJSON layer with all countries
+      const combinedGeoJSON = {
+        type: "FeatureCollection" as const,
+        features: allFeatures,
+      };
+
+      geoJsonRef.current = L.geoJSON(combinedGeoJSON, {
+        style: (feature) => ({
+          fillColor: feature?.properties.color || "#94A3B8",
+          weight: 1,
+          opacity: 0.8,
+          color: "#374151",
+          dashArray: "3",
+          fillOpacity: 0.3,
+        }),
+        onEachFeature: (feature, layer) => {
+          if (feature.properties && feature.properties.name) {
+            layer.bindPopup(`
+              <div>
+                <h3 class="font-semibold">${feature.properties.name}</h3>
+                <p class="text-sm text-gray-600">Country</p>
+              </div>
+            `);
+          }
+        },
+      }).addTo(map);
+
+      setCountriesLoaded(true);
+    };
+
+    loadCountries();
+
+    return () => {
+      if (geoJsonRef.current) {
+        map.removeLayer(geoJsonRef.current);
+      }
+    };
+  }, [map]);
 
   return null;
 }
@@ -318,42 +510,28 @@ export function ImpactHeatmap({
             <MapContainer
               center={[20, 0]}
               zoom={2}
+              minZoom={1}
+              maxZoom={18}
+              maxBounds={[
+                [-85, -180],
+                [85, 180],
+              ]}
               style={{ height: "100%", width: "100%" }}
               className="z-0"
             >
               <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                noWrap={true}
               />
 
               <MapUpdater impactZones={impactZones} timeStep={timeStep} />
 
-              {/* Population Density Heatmap */}
-              {populationData.population_density_data.map((region) =>
-                region.coordinates.map((city, index) => (
-                  <Circle
-                    key={`pop-${region.region}-${index}`}
-                    center={[city.lat, city.lng]}
-                    radius={Math.sqrt(city.density) * 2000} // Larger radius for heatmap effect
-                    pathOptions={{
-                      color: getPopulationColor(city.density),
-                      fillColor: getPopulationColor(city.density),
-                      fillOpacity: 0.4,
-                      weight: 0,
-                    }}
-                  >
-                    <Popup>
-                      <div>
-                        <h3 className="font-semibold">{city.name}</h3>
-                        <p>
-                          Population Density: {city.density.toLocaleString()}{" "}
-                          people/km²
-                        </p>
-                      </div>
-                    </Popup>
-                  </Circle>
-                ))
-              )}
+              {/* Country Boundaries Overlay */}
+              <CountryOverlay />
+
+              {/* Population Density Heatmap Overlay */}
+              <PopulationHeatmap />
 
               {/* Infrastructure Markers */}
               {infrastructureData.infrastructure_locations.map((category) =>
@@ -363,7 +541,7 @@ export function ImpactHeatmap({
                     position={[location.lat, location.lng]}
                     icon={getInfrastructureIcon(
                       category.type,
-                      location.subtype
+                      (location as any).subtype
                     )}
                   >
                     <Popup>
@@ -372,7 +550,8 @@ export function ImpactHeatmap({
                         <p className="text-sm text-gray-600">
                           {category.type.charAt(0).toUpperCase() +
                             category.type.slice(1)}
-                          {location.subtype && ` • ${location.subtype}`}
+                          {(location as any).subtype &&
+                            ` • ${(location as any).subtype}`}
                         </p>
                         <p className="text-sm">{location.country}</p>
                         <Badge
@@ -462,29 +641,33 @@ export function ImpactHeatmap({
           <CardTitle>Map Legend</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-4 gap-4 text-sm">
             <div>
-              <h4 className="font-semibold mb-2">Population Density</h4>
+              <h4 className="font-semibold mb-2">Population Density Heatmap</h4>
               <div className="space-y-1">
                 <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-red-600 rounded-full"></div>
-                  <span>&gt; 20,000 people/km²</span>
+                  <div className="w-4 h-4 bg-gradient-to-r from-maroon to-darkred rounded"></div>
+                  <span>Very High (&gt; 40,000)</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-orange-600 rounded-full"></div>
-                  <span>10,000 - 20,000</span>
+                  <div className="w-4 h-4 bg-gradient-to-r from-red to-darkred rounded"></div>
+                  <span>High (20,000 - 40,000)</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-yellow-600 rounded-full"></div>
-                  <span>5,000 - 10,000</span>
+                  <div className="w-4 h-4 bg-gradient-to-r from-orange to-red rounded"></div>
+                  <span>Medium-High (10,000 - 20,000)</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-lime-600 rounded-full"></div>
-                  <span>1,000 - 5,000</span>
+                  <div className="w-4 h-4 bg-gradient-to-r from-yellow to-orange rounded"></div>
+                  <span>Medium (5,000 - 10,000)</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-green-600 rounded-full"></div>
-                  <span>&lt; 1,000</span>
+                  <div className="w-4 h-4 bg-gradient-to-r from-lime to-yellow rounded"></div>
+                  <span>Low (1,000 - 5,000)</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-gradient-to-r from-green to-lime rounded"></div>
+                  <span>Very Low (&lt; 1,000)</span>
                 </div>
               </div>
             </div>
@@ -526,6 +709,42 @@ export function ImpactHeatmap({
                 </div>
                 <div className="text-xs text-muted-foreground mt-2">
                   Zones show impact radius from your data
+                </div>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">Countries</h4>
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <div
+                    className="w-4 h-4 border border-gray-400 rounded"
+                    style={{ backgroundColor: "#3B82F6", opacity: 0.3 }}
+                  ></div>
+                  <span>United States</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div
+                    className="w-4 h-4 border border-gray-400 rounded"
+                    style={{ backgroundColor: "#EF4444", opacity: 0.3 }}
+                  ></div>
+                  <span>Canada</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div
+                    className="w-4 h-4 border border-gray-400 rounded"
+                    style={{ backgroundColor: "#10B981", opacity: 0.3 }}
+                  ></div>
+                  <span>Mexico</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div
+                    className="w-4 h-4 border border-gray-400 rounded"
+                    style={{ backgroundColor: "#F59E0B", opacity: 0.3 }}
+                  ></div>
+                  <span>Brazil</span>
+                </div>
+                <div className="text-xs text-muted-foreground mt-2">
+                  Each country has a unique color
                 </div>
               </div>
             </div>
