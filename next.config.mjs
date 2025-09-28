@@ -10,6 +10,14 @@ const nextConfig = {
     unoptimized: true,
   },
   outputFileTracingRoot: process.cwd(),
+  async rewrites() {
+    return [
+      {
+        source: "/data/:path*",
+        destination: "/data/:path*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

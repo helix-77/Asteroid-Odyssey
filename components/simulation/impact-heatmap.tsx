@@ -167,27 +167,12 @@ function CountryOverlay() {
     "#F43F5E",
   ];
 
-  // List of countries to load (major countries for performance)
-  const countriesToLoad = [
-    "usa",
-    "canada",
-    "mexico",
-    "brazil",
-    "argentina",
-    "united_kingdom",
-    "france",
-    "germany",
-    "italy",
-    "spain",
-    "russia",
-    "china",
-    "india",
-    "japan",
-    "australia",
-    "south_africa",
-    "egypt",
-    "nigeria",
-  ];
+  // Helper to normalize country names to file names
+  const toFileName = (countryName: string) =>
+    countryName
+      .toLowerCase()
+      .replace(/[^a-z]+/g, "_")
+      .replace(/^_+|_+$/g, "");
 
   useEffect(() => {
     const loadCountries = async () => {
@@ -197,28 +182,82 @@ function CountryOverlay() {
 
       const allFeatures: any[] = [];
 
-      // Load each country file
-      for (let i = 0; i < countriesToLoad.length; i++) {
-        const countryCode = countriesToLoad[i];
-        try {
-          const response = await fetch(
-            `/data/world-geojson-develop/countries/${countryCode}.json`
-          );
-          const countryData = await response.json();
+      try {
+        // Fetch country code/name mapping to enumerate all countries
+        const mappingRes = await fetch(
+          `/data/world-geojson-develop/helper/countryCode.json`
+        );
+        const codeToName = (await mappingRes.json()) as Record<string, string>;
 
-          // Add color property to each feature
-          countryData.features.forEach((feature: any) => {
-            feature.properties.color = countryColors[i % countryColors.length];
-            feature.properties.name = countryCode
-              .replace(/_/g, " ")
-              .replace(/\b\w/g, (l: string) => l.toUpperCase());
-          });
+        const entries = Object.entries(codeToName);
 
-          allFeatures.push(...countryData.features);
-        } catch (error) {
-          console.warn(`Failed to load ${countryCode}:`, error);
-        }
+        // Build list of fetches for all countries in parallel
+        const fetches = entries.map(async ([code, name], index) => {
+          // Preferred filename derived from country name
+          const baseFile = toFileName(name);
+
+          // Known alternate filenames for a few special cases
+          const alternates: string[] = [];
+          if (code === "US") alternates.push("usa", "united_states");
+          if (code === "GB") alternates.push("united_kingdom", "uk");
+          if (code === "KR") alternates.push("south_korea", "korea");
+          if (code === "KP") alternates.push("north_korea");
+          if (code === "CD")
+            alternates.push("democratic_republic_of_the_congo");
+          if (code === "CG") alternates.push("republic_of_the_congo", "congo");
+          if (code === "CI") alternates.push("cote_d_ivoire");
+          if (code === "TZ") alternates.push("tanzania_united_republic_of");
+          if (code === "BO") alternates.push("bolivia_plurinational_state_of");
+          if (code === "IR") alternates.push("iran_islamic_republic_of");
+          if (code === "LA")
+            alternates.push("lao_people_s_democratic_republic");
+          if (code === "FM") alternates.push("micronesia_federated_states_of");
+          if (code === "VE")
+            alternates.push("venezuela_bolivarian_republic_of");
+
+          const candidateFiles = [baseFile, ...alternates];
+
+          for (const file of candidateFiles) {
+            try {
+              const url = `/data/world-geojson-develop/countries/${file}.json`;
+              console.log(`Attempting to fetch: ${url}`);
+              const res = await fetch(url);
+              if (!res.ok) {
+                console.warn(
+                  `Failed to fetch ${url}: ${res.status} ${res.statusText}`
+                );
+                throw new Error(`${res.status}`);
+              }
+              const countryData = await res.json();
+              console.log(
+                `Successfully loaded ${name} (${code}) from ${file}.json`
+              );
+
+              // Assign deterministic color and readable name
+              const color = countryColors[index % countryColors.length];
+              countryData.features.forEach((feature: any) => {
+                feature.properties.color = color;
+                feature.properties.name = name;
+                feature.properties.iso2 = code;
+              });
+
+              allFeatures.push(...countryData.features);
+              return; // Loaded successfully; stop trying alternates
+            } catch (error) {
+              console.warn(`Failed to load ${file}.json for ${name}:`, error);
+              // try next candidate
+            }
+          }
+
+          console.warn(`Failed to load country GeoJSON for ${name} (${code})`);
+        });
+
+        await Promise.all(fetches);
+      } catch (e) {
+        console.warn("Failed to enumerate countries:", e);
       }
+
+      console.log(`Loaded ${allFeatures.length} country features`);
 
       // Create GeoJSON layer with all countries
       const combinedGeoJSON = {
@@ -230,10 +269,9 @@ function CountryOverlay() {
         style: (feature) => ({
           fillColor: feature?.properties.color || "#94A3B8",
           weight: 1,
-          opacity: 0.8,
-          color: "#374151",
-          dashArray: "3",
-          fillOpacity: 0.3,
+          opacity: 1,
+          color: "#111827",
+          fillOpacity: 0.85, // solid-looking fills
         }),
         onEachFeature: (feature, layer) => {
           if (feature.properties && feature.properties.name) {
