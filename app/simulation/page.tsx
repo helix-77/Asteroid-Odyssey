@@ -43,16 +43,6 @@ export default function SimulationPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-blue-900 to-slate-900">
       <div className="container mx-auto p-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Impact Simulation Center
-          </h1>
-          <p className="text-blue-200">
-            Analyze potential asteroid impacts and their devastating effects on
-            Earth
-          </p>
-        </div>
-
         <div className="relative mb-6">
           {/* Collapsible Asteroid Selection - Side Panel */}
           <div
