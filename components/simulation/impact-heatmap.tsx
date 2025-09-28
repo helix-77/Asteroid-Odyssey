@@ -310,6 +310,12 @@ export function ImpactHeatmap({
   const [maxTimeSteps] = useState(100);
   const [playbackSpeed, setPlaybackSpeed] = useState([1]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [infraVisibility, setInfraVisibility] = useState({
+    military: true,
+    energy: true,
+    cultural: true,
+    civilian: true,
+  });
 
   // Generate impact zones from impact location data
   const generateImpactZones = () => {
@@ -485,6 +491,42 @@ export function ImpactHeatmap({
             asteroid to see dynamic timelapse effects.
           </div>
 
+          {/* Layer Toggles */}
+          <div className="grid grid-cols-2 gap-3">
+            {(
+              [
+                { key: "military", label: "Military", color: "#dc2626" },
+                { key: "energy", label: "Energy", color: "#f59e0b" },
+                { key: "cultural", label: "Cultural", color: "#8b5cf6" },
+                { key: "civilian", label: "Civilian", color: "#059669" },
+              ] as const
+            ).map(({ key, label, color }) => (
+              <label
+                key={key}
+                className="flex items-center space-x-2 text-sm cursor-pointer select-none"
+              >
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={infraVisibility[key]}
+                  onChange={(e) =>
+                    setInfraVisibility((prev) => ({
+                      ...prev,
+                      [key]: e.target.checked,
+                    }))
+                  }
+                />
+                <span className="inline-flex items-center">
+                  <span
+                    className="inline-block w-3 h-3 rounded-full mr-2"
+                    style={{ backgroundColor: color }}
+                  />
+                  {label}
+                </span>
+              </label>
+            ))}
+          </div>
+
           {selectedAsteroid ? (
             <>
               <div className="flex items-center space-x-4">
@@ -573,38 +615,40 @@ export function ImpactHeatmap({
 
               {/* Infrastructure Markers */}
               {infrastructureData.infrastructure_locations.map((category) =>
-                category.locations.map((location, index) => (
-                  <Marker
-                    key={`infra-${category.type}-${index}`}
-                    position={[location.lat, location.lng]}
-                    icon={getInfrastructureIcon(
-                      category.type,
-                      (location as any).subtype
-                    )}
-                  >
-                    <Popup>
-                      <div>
-                        <h3 className="font-semibold">{location.name}</h3>
-                        <p className="text-sm text-gray-600">
-                          {category.type.charAt(0).toUpperCase() +
-                            category.type.slice(1)}
-                          {(location as any).subtype &&
-                            ` • ${(location as any).subtype}`}
-                        </p>
-                        <p className="text-sm">{location.country}</p>
-                        <Badge
-                          variant={
-                            location.importance === "critical"
-                              ? "destructive"
-                              : "secondary"
-                          }
-                        >
-                          {location.importance}
-                        </Badge>
-                      </div>
-                    </Popup>
-                  </Marker>
-                ))
+                infraVisibility[category.type as keyof typeof infraVisibility]
+                  ? category.locations.map((location, index) => (
+                      <Marker
+                        key={`infra-${category.type}-${index}`}
+                        position={[location.lat, location.lng]}
+                        icon={getInfrastructureIcon(
+                          category.type,
+                          (location as any).subtype
+                        )}
+                      >
+                        <Popup>
+                          <div>
+                            <h3 className="font-semibold">{location.name}</h3>
+                            <p className="text-sm text-gray-600">
+                              {category.type.charAt(0).toUpperCase() +
+                                category.type.slice(1)}
+                              {(location as any).subtype &&
+                                ` • ${(location as any).subtype}`}
+                            </p>
+                            <p className="text-sm">{location.country}</p>
+                            <Badge
+                              variant={
+                                location.importance === "critical"
+                                  ? "destructive"
+                                  : "secondary"
+                              }
+                            >
+                              {location.importance}
+                            </Badge>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    ))
+                  : null
               )}
 
               {/* Impact Zones */}
