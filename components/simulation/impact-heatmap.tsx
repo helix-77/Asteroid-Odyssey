@@ -316,29 +316,43 @@ export function ImpactHeatmap({
     cultural: true,
     civilian: true,
   });
+  const [showImpactZones, setShowImpactZones] = useState(true);
 
   // Generate impact zones from impact location data
   const generateImpactZones = () => {
     if (!selectedAsteroid) return [];
 
-    return impactLocationData.asteroid_impacts.map((impact, index) => {
-      // Calculate impact intensity based on asteroid size and speed
-      const baseRadius = impact.impact_radius_km * 1000; // Convert to meters
-      const intensity = Math.min(
-        (selectedAsteroid.size || selectedAsteroid.diameter) / 100,
-        1
-      ); // Normalize intensity
+    // Find the impact scenario that matches the selected asteroid
+    const matchingImpact = impactLocationData.asteroid_impacts.find(
+      (impact) =>
+        impact.name
+          .toLowerCase()
+          .includes(selectedAsteroid.name.toLowerCase()) ||
+        selectedAsteroid.name.toLowerCase().includes(impact.name.toLowerCase())
+    );
 
-      return {
-        id: `impact-${index}`,
-        name: impact.name,
-        lat: impact.impact_location.latitude,
-        lng: impact.impact_location.longitude,
+    // If no exact match, use the first impact as default
+    const impactToUse =
+      matchingImpact || impactLocationData.asteroid_impacts[0];
+
+    // Calculate impact intensity based on asteroid size and speed
+    const baseRadius = impactToUse.impact_radius_km * 1000; // Convert to meters
+    const intensity = Math.min(
+      (selectedAsteroid.size || selectedAsteroid.diameter) / 100,
+      1
+    ); // Normalize intensity
+
+    return [
+      {
+        id: `impact-${selectedAsteroid.id}`,
+        name: impactToUse.name,
+        lat: impactToUse.impact_location.latitude,
+        lng: impactToUse.impact_location.longitude,
         radius: baseRadius,
         intensity,
-        timestamp: index * 20, // Stagger impacts over time
-      };
-    });
+        timestamp: 0, // Show immediately
+      },
+    ];
   };
 
   // Start/stop timelapse
@@ -385,19 +399,8 @@ export function ImpactHeatmap({
       setImpactZones(zones);
       setTimeStep(0);
     } else {
-      // Show static impact zones from data even without asteroid selected
-      const staticZones = impactLocationData.asteroid_impacts.map(
-        (impact, index) => ({
-          id: `static-impact-${index}`,
-          name: impact.name,
-          lat: impact.impact_location.latitude,
-          lng: impact.impact_location.longitude,
-          radius: impact.impact_radius_km * 1000,
-          intensity: 0.5, // Default intensity
-          timestamp: 0, // Show immediately
-        })
-      );
-      setImpactZones(staticZones);
+      // Don't show any impact zones when no asteroid is selected
+      setImpactZones([]);
       setTimeStep(0);
     }
   }, [selectedAsteroid]);
@@ -492,39 +495,55 @@ export function ImpactHeatmap({
           </div>
 
           {/* Layer Toggles */}
-          <div className="grid grid-cols-2 gap-3">
-            {(
-              [
-                { key: "military", label: "Military", color: "#dc2626" },
-                { key: "energy", label: "Energy", color: "#f59e0b" },
-                { key: "cultural", label: "Cultural", color: "#8b5cf6" },
-                { key: "civilian", label: "Civilian", color: "#059669" },
-              ] as const
-            ).map(({ key, label, color }) => (
-              <label
-                key={key}
-                className="flex items-center space-x-2 text-sm cursor-pointer select-none"
-              >
+          <div className="space-y-3">
+            <div>
+              <label className="flex items-center space-x-2 text-sm cursor-pointer select-none">
                 <input
                   type="checkbox"
                   className="h-4 w-4"
-                  checked={infraVisibility[key]}
-                  onChange={(e) =>
-                    setInfraVisibility((prev) => ({
-                      ...prev,
-                      [key]: e.target.checked,
-                    }))
-                  }
+                  checked={showImpactZones}
+                  onChange={(e) => setShowImpactZones(e.target.checked)}
                 />
                 <span className="inline-flex items-center">
-                  <span
-                    className="inline-block w-3 h-3 rounded-full mr-2"
-                    style={{ backgroundColor: color }}
-                  />
-                  {label}
+                  <span className="inline-block w-3 h-3 rounded-full mr-2 bg-red-600 animate-pulse" />
+                  Impact Zones
                 </span>
               </label>
-            ))}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {(
+                [
+                  { key: "military", label: "Military", color: "#dc2626" },
+                  { key: "energy", label: "Energy", color: "#f59e0b" },
+                  { key: "cultural", label: "Cultural", color: "#8b5cf6" },
+                  { key: "civilian", label: "Civilian", color: "#059669" },
+                ] as const
+              ).map(({ key, label, color }) => (
+                <label
+                  key={key}
+                  className="flex items-center space-x-2 text-sm cursor-pointer select-none"
+                >
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={infraVisibility[key]}
+                    onChange={(e) =>
+                      setInfraVisibility((prev) => ({
+                        ...prev,
+                        [key]: e.target.checked,
+                      }))
+                    }
+                  />
+                  <span className="inline-flex items-center">
+                    <span
+                      className="inline-block w-3 h-3 rounded-full mr-2"
+                      style={{ backgroundColor: color }}
+                    />
+                    {label}
+                  </span>
+                </label>
+              ))}
+            </div>
           </div>
 
           {selectedAsteroid ? (
@@ -652,14 +671,15 @@ export function ImpactHeatmap({
               )}
 
               {/* Impact Zones */}
-              {impactZones.map((zone) => (
-                <div key={zone.id}>
-                  {/* Impact Marker */}
-                  <Marker
-                    position={[zone.lat, zone.lng]}
-                    icon={L.divIcon({
-                      className: "impact-marker",
-                      html: `<div style="
+              {showImpactZones &&
+                impactZones.map((zone) => (
+                  <div key={zone.id}>
+                    {/* Impact Marker */}
+                    <Marker
+                      position={[zone.lat, zone.lng]}
+                      icon={L.divIcon({
+                        className: "impact-marker",
+                        html: `<div style="
                         background-color: #dc2626;
                         width: 20px;
                         height: 20px;
@@ -668,50 +688,50 @@ export function ImpactHeatmap({
                         box-shadow: 0 0 10px rgba(220, 38, 38, 0.8);
                         animation: pulse 2s infinite;
                       "></div>`,
-                      iconSize: [20, 20],
-                      iconAnchor: [10, 10],
-                    })}
-                  >
-                    <Popup>
-                      <div>
-                        <h3 className="font-semibold text-red-600">
-                          {zone.name}
-                        </h3>
-                        <p>
-                          Impact Radius: {(zone.radius / 1000).toFixed(1)} km
-                        </p>
-                        <p>Intensity: {(zone.intensity * 100).toFixed(0)}%</p>
-                        <p>Timestamp: {zone.timestamp}s</p>
-                      </div>
-                    </Popup>
-                  </Marker>
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10],
+                      })}
+                    >
+                      <Popup>
+                        <div>
+                          <h3 className="font-semibold text-red-600">
+                            {zone.name}
+                          </h3>
+                          <p>
+                            Impact Radius: {(zone.radius / 1000).toFixed(1)} km
+                          </p>
+                          <p>Intensity: {(zone.intensity * 100).toFixed(0)}%</p>
+                          <p>Timestamp: {zone.timestamp}s</p>
+                        </div>
+                      </Popup>
+                    </Marker>
 
-                  {/* Impact Zone Circle */}
-                  <Circle
-                    center={[zone.lat, zone.lng]}
-                    radius={getCircleRadius(zone)}
-                    pathOptions={{
-                      color: getCircleColor(zone),
-                      fillColor: getCircleColor(zone),
-                      fillOpacity: 0.3,
-                      weight: 3,
-                    }}
-                  />
+                    {/* Impact Zone Circle */}
+                    <Circle
+                      center={[zone.lat, zone.lng]}
+                      radius={getCircleRadius(zone)}
+                      pathOptions={{
+                        color: getCircleColor(zone),
+                        fillColor: getCircleColor(zone),
+                        fillOpacity: 0.3,
+                        weight: 3,
+                      }}
+                    />
 
-                  {/* Secondary Impact Ring */}
-                  <Circle
-                    center={[zone.lat, zone.lng]}
-                    radius={getCircleRadius(zone) * 1.5}
-                    pathOptions={{
-                      color: getCircleColor(zone),
-                      fillColor: "transparent",
-                      fillOpacity: 0,
-                      weight: 2,
-                      dashArray: "10, 10",
-                    }}
-                  />
-                </div>
-              ))}
+                    {/* Secondary Impact Ring */}
+                    <Circle
+                      center={[zone.lat, zone.lng]}
+                      radius={getCircleRadius(zone) * 1.5}
+                      pathOptions={{
+                        color: getCircleColor(zone),
+                        fillColor: "transparent",
+                        fillOpacity: 0,
+                        weight: 2,
+                        dashArray: "10, 10",
+                      }}
+                    />
+                  </div>
+                ))}
             </MapContainer>
           </div>
         </CardContent>
