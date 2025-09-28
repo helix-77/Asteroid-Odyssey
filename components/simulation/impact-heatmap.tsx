@@ -341,6 +341,7 @@ function CountryOverlay() {
           if (code === "FM") alternates.push("micronesia_federated_states_of");
           if (code === "VE")
             alternates.push("venezuela_bolivarian_republic_of");
+          if (code === "RU") alternates.push("russia");
 
           const candidateFiles = [baseFile, ...alternates];
 
