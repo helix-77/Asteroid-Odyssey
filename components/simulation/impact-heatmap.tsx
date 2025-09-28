@@ -108,8 +108,8 @@ function DragController() {
   return null;
 }
 
-// Asteroid Selector Component with slide in/out functionality
-function AsteroidSelector({
+// Floating Asteroid Selector Button
+function FloatingAsteroidButton({
   selectedAsteroid,
   onAsteroidSelect,
 }: {
@@ -128,11 +128,12 @@ function AsteroidSelector({
 
   return (
     <div className="relative">
-      {/* Toggle Button */}
+      {/* Floating Toggle Button */}
       <Button
         onClick={() => setIsOpen(!isOpen)}
         variant="outline"
-        className="fixed top-4 right-4 z-50"
+        className="fixed top-4 right-4 z-50 shadow-lg"
+        size="sm"
       >
         {isOpen ? (
           <ChevronRight className="w-4 h-4" />
@@ -604,6 +605,15 @@ export function ImpactHeatmap({
 
   return (
     <div className="h-screen flex flex-col">
+      {/* Floating Asteroid Selector */}
+      <FloatingAsteroidButton
+        selectedAsteroid={selectedAsteroid}
+        onAsteroidSelect={(asteroid) => {
+          // This would be passed from parent component
+          console.log("Asteroid selected:", asteroid);
+        }}
+      />
+
       {/* Game Map - Top 50% */}
       <div className="h-[50vh] w-full relative">
         <MapContainer
@@ -835,136 +845,9 @@ export function ImpactHeatmap({
         </div>
       </div>
 
-      {/* Controls Panel - Bottom 70% */}
+      {/* Controls Panel - Bottom 50% */}
       <div className="flex-1 p-4 space-y-4 overflow-y-auto">
         {/* Controls */}
-        {/* Asteroid Selector - Slide in/out */}
-        <AsteroidSelector
-          selectedAsteroid={selectedAsteroid}
-          onAsteroidSelect={(asteroid) => {
-            // This would be passed from parent component
-            console.log("Asteroid selected:", asteroid);
-          }}
-        />
-
-        {/* Legend */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Map Legend</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-4 gap-4 text-sm">
-              <div>
-                <h4 className="font-semibold mb-2">
-                  Population Density Heatmap
-                </h4>
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-gradient-to-r from-maroon to-darkred rounded"></div>
-                    <span>Very High (&gt; 40,000)</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-gradient-to-r from-red to-darkred rounded"></div>
-                    <span>High (20,000 - 40,000)</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-gradient-to-r from-orange to-red rounded"></div>
-                    <span>Medium-High (10,000 - 20,000)</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-gradient-to-r from-yellow to-orange rounded"></div>
-                    <span>Medium (5,000 - 10,000)</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-gradient-to-r from-lime to-yellow rounded"></div>
-                    <span>Low (1,000 - 5,000)</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-gradient-to-r from-green to-lime rounded"></div>
-                    <span>Very Low (&lt; 1,000)</span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">Infrastructure</h4>
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-red-600 rounded-full"></div>
-                    <span>Military</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-amber-600 rounded-full"></div>
-                    <span>Energy</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-purple-600 rounded-full"></div>
-                    <span>Cultural</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-green-600 rounded-full"></div>
-                    <span>Civilian</span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">Impact Zones</h4>
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-red-600 rounded-full animate-pulse"></div>
-                    <span>Impact Point</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-red-600 rounded-full"></div>
-                    <span>Impact Zone</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-dashed border-red-600 rounded-full"></div>
-                    <span>Secondary Ring</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-2">
-                    Zones show impact radius from your data
-                  </div>
-                </div>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">Countries</h4>
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className="w-4 h-4 border border-gray-400 rounded"
-                      style={{ backgroundColor: "#3B82F6", opacity: 0.3 }}
-                    ></div>
-                    <span>United States</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className="w-4 h-4 border border-gray-400 rounded"
-                      style={{ backgroundColor: "#EF4444", opacity: 0.3 }}
-                    ></div>
-                    <span>Canada</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className="w-4 h-4 border border-gray-400 rounded"
-                      style={{ backgroundColor: "#10B981", opacity: 0.3 }}
-                    ></div>
-                    <span>Mexico</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className="w-4 h-4 border border-gray-400 rounded"
-                      style={{ backgroundColor: "#F59E0B", opacity: 0.3 }}
-                    ></div>
-                    <span>Brazil</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-2">
-                    Each country has a unique color
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
