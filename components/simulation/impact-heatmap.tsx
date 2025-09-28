@@ -17,7 +17,13 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Play, Pause, RotateCcw } from "lucide-react";
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import impactLocationData from "@/data/impact_location.json";
 import populationData from "@/data/population_density.json";
 import infrastructureData from "@/data/infrastructure_locations.json";
@@ -60,16 +66,136 @@ function MapUpdater({
 }) {
   const map = useMap();
 
-  useEffect(() => {
-    if (impactZones.length > 0) {
-      const bounds = L.latLngBounds(
-        impactZones.map((zone) => [zone.lat, zone.lng])
-      );
-      map.fitBounds(bounds, { padding: [20, 20] });
-    }
-  }, [impactZones, map]);
+  // Disabled automatic zoom to impact zones
+  // useEffect(() => {
+  //   if (impactZones.length > 0) {
+  //     const bounds = L.latLngBounds(
+  //       impactZones.map((zone) => [zone.lat, zone.lng])
+  //     );
+  //     map.fitBounds(bounds, { padding: [20, 20] });
+  //   }
+  // }, [impactZones, map]);
 
   return null;
+}
+
+// Custom component to handle dragging based on zoom level
+function DragController() {
+  const map = useMap();
+
+  useEffect(() => {
+    const handleZoomEnd = () => {
+      const currentZoom = map.getZoom();
+      // Enable dragging only when zoomed in (zoom level > 3)
+      if (currentZoom > 3) {
+        map.dragging.enable();
+      } else {
+        map.dragging.disable();
+      }
+    };
+
+    // Set initial state
+    handleZoomEnd();
+
+    // Listen for zoom changes
+    map.on("zoomend", handleZoomEnd);
+
+    return () => {
+      map.off("zoomend", handleZoomEnd);
+    };
+  }, [map]);
+
+  return null;
+}
+
+// Asteroid Selector Component with slide in/out functionality
+function AsteroidSelector({
+  selectedAsteroid,
+  onAsteroidSelect,
+}: {
+  selectedAsteroid: Asteroid | null;
+  onAsteroidSelect: (asteroid: Asteroid | null) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Mock asteroid data - replace with real data
+  const asteroids = [
+    { id: 1, name: "Bennu", size: 500, threat_level: "high" },
+    { id: 2, name: "Apophis", size: 370, threat_level: "medium" },
+    { id: 3, name: "Didymos", size: 780, threat_level: "low" },
+    { id: 4, name: "Vesta", size: 525, threat_level: "medium" },
+  ];
+
+  return (
+    <div className="relative">
+      {/* Toggle Button */}
+      <Button
+        onClick={() => setIsOpen(!isOpen)}
+        variant="outline"
+        className="fixed top-4 right-4 z-50"
+      >
+        {isOpen ? (
+          <ChevronRight className="w-4 h-4" />
+        ) : (
+          <ChevronLeft className="w-4 h-4" />
+        )}
+        {isOpen ? "Hide" : "Asteroids"}
+      </Button>
+
+      {/* Slide-out Panel */}
+      <div
+        className={`fixed top-0 right-0 h-full w-80 bg-white border-l shadow-lg transform transition-transform duration-300 z-40 ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="p-4">
+          <h3 className="text-lg font-semibold mb-4">Select Asteroid</h3>
+
+          <div className="space-y-2">
+            {asteroids.map((asteroid) => (
+              <div
+                key={asteroid.id}
+                className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                  selectedAsteroid?.id === asteroid.id
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+                onClick={() => onAsteroidSelect(asteroid as Asteroid)}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">{asteroid.name}</h4>
+                    <p className="text-sm text-gray-600">
+                      Size: {asteroid.size}m
+                    </p>
+                  </div>
+                  <Badge
+                    variant={
+                      asteroid.threat_level === "high"
+                        ? "destructive"
+                        : asteroid.threat_level === "medium"
+                        ? "default"
+                        : "secondary"
+                    }
+                  >
+                    {asteroid.threat_level}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+
+            <Button
+              variant="outline"
+              className="w-full mt-4"
+              onClick={() => onAsteroidSelect(null)}
+            >
+              Clear Selection
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // Custom component for population density heatmap
@@ -477,40 +603,160 @@ export function ImpactHeatmap({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Controls */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            Impact Heatmap Controls
-            {selectedAsteroid && (
-              <Badge className="bg-red-600">{selectedAsteroid.name}</Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="text-sm text-muted-foreground mb-4">
-            Impact zones from your data are always visible on the map. Select an
-            asteroid to see dynamic timelapse effects.
-          </div>
+    <div className="h-screen flex flex-col">
+      {/* Game Map - Top 50% */}
+      <div className="h-[50vh] w-full relative">
+        <MapContainer
+          center={[20, 0]}
+          zoom={2}
+          minZoom={1}
+          maxZoom={18}
+          maxBounds={[
+            [-85, -180],
+            [85, 180],
+          ]}
+          style={{ height: "100%", width: "100%" }}
+          className="z-0"
+          dragging={false}
+          scrollWheelZoom={true}
+          doubleClickZoom={true}
+          touchZoom={true}
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            noWrap={true}
+          />
 
-          {/* Layer Toggles */}
-          <div className="space-y-3">
-            <div>
-              <label className="flex items-center space-x-2 text-sm cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4"
-                  checked={showImpactZones}
-                  onChange={(e) => setShowImpactZones(e.target.checked)}
+          <MapUpdater impactZones={impactZones} timeStep={timeStep} />
+          <DragController />
+
+          {/* Country Boundaries Overlay */}
+          <CountryOverlay />
+
+          {/* Population Density Heatmap Overlay */}
+          <PopulationHeatmap />
+
+          {/* Infrastructure Markers */}
+          {infrastructureData.infrastructure_locations.map((category) =>
+            infraVisibility[category.type as keyof typeof infraVisibility]
+              ? category.locations.map((location, index) => (
+                  <Marker
+                    key={`infra-${category.type}-${index}`}
+                    position={[location.lat, location.lng]}
+                    icon={getInfrastructureIcon(
+                      category.type,
+                      (location as any).subtype
+                    )}
+                  >
+                    <Popup>
+                      <div>
+                        <h3 className="font-semibold">{location.name}</h3>
+                        <p className="text-sm text-gray-600">
+                          {category.type.charAt(0).toUpperCase() +
+                            category.type.slice(1)}
+                          {(location as any).subtype &&
+                            ` • ${(location as any).subtype}`}
+                        </p>
+                        <p className="text-sm">{location.country}</p>
+                        <Badge
+                          variant={
+                            location.importance === "critical"
+                              ? "destructive"
+                              : "secondary"
+                          }
+                        >
+                          {location.importance}
+                        </Badge>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))
+              : null
+          )}
+
+          {/* Impact Zones */}
+          {showImpactZones &&
+            impactZones.map((zone) => (
+              <div key={zone.id}>
+                {/* Impact Marker */}
+                <Marker
+                  position={[zone.lat, zone.lng]}
+                  icon={L.divIcon({
+                    className: "impact-marker",
+                    html: `<div style="
+                    background-color: #dc2626;
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    border: 3px solid white;
+                    box-shadow: 0 0 10px rgba(220, 38, 38, 0.8);
+                    animation: pulse 2s infinite;
+                  "></div>`,
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10],
+                  })}
+                >
+                  <Popup>
+                    <div>
+                      <h3 className="font-semibold text-red-600">
+                        {zone.name}
+                      </h3>
+                      <p>Impact Radius: {(zone.radius / 1000).toFixed(1)} km</p>
+                      <p>Intensity: {(zone.intensity * 100).toFixed(0)}%</p>
+                      <p>Timestamp: {zone.timestamp}s</p>
+                    </div>
+                  </Popup>
+                </Marker>
+
+                {/* Impact Zone Circle */}
+                <Circle
+                  center={[zone.lat, zone.lng]}
+                  radius={getCircleRadius(zone)}
+                  pathOptions={{
+                    color: getCircleColor(zone),
+                    fillColor: getCircleColor(zone),
+                    fillOpacity: 0.3,
+                    weight: 3,
+                  }}
                 />
-                <span className="inline-flex items-center">
-                  <span className="inline-block w-3 h-3 rounded-full mr-2 bg-red-600 animate-pulse" />
-                  Impact Zones
-                </span>
-              </label>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+
+                {/* Secondary Impact Ring */}
+                <Circle
+                  center={[zone.lat, zone.lng]}
+                  radius={getCircleRadius(zone) * 1.5}
+                  pathOptions={{
+                    color: getCircleColor(zone),
+                    fillColor: "transparent",
+                    fillOpacity: 0,
+                    weight: 2,
+                    dashArray: "10, 10",
+                  }}
+                />
+              </div>
+            ))}
+        </MapContainer>
+      </div>
+
+      {/* Compact Controls - Below Map */}
+      <div className="px-4 py-2 bg-gray-50 border-t">
+        <div className="flex items-center justify-between gap-4">
+          {/* Layer Toggles - Compact */}
+          <div className="flex items-center gap-4">
+            <label className="flex items-center space-x-2 text-sm cursor-pointer select-none">
+              <input
+                type="checkbox"
+                className="h-4 w-4"
+                checked={showImpactZones}
+                onChange={(e) => setShowImpactZones(e.target.checked)}
+              />
+              <span className="inline-flex items-center">
+                <span className="inline-block w-3 h-3 rounded-full mr-2 bg-red-600 animate-pulse" />
+                Impact Zones
+              </span>
+            </label>
+
+            <div className="flex items-center gap-3">
               {(
                 [
                   { key: "military", label: "Military", color: "#dc2626" },
@@ -534,21 +780,19 @@ export function ImpactHeatmap({
                       }))
                     }
                   />
-                  <span className="inline-flex items-center">
-                    <span
-                      className="inline-block w-3 h-3 rounded-full mr-2"
-                      style={{ backgroundColor: color }}
-                    />
-                    {label}
-                  </span>
+                  <span
+                    className="inline-block w-3 h-3 rounded-full"
+                    style={{ backgroundColor: color }}
+                  />
                 </label>
               ))}
             </div>
           </div>
 
-          {selectedAsteroid ? (
-            <>
-              <div className="flex items-center space-x-4">
+          {/* Playback Controls - Compact */}
+          {selectedAsteroid && (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <Button
                   onClick={togglePlayback}
                   variant={isPlaying ? "destructive" : "default"}
@@ -559,300 +803,169 @@ export function ImpactHeatmap({
                   ) : (
                     <Play className="w-4 h-4" />
                   )}
-                  {isPlaying ? "Pause" : "Play"}
                 </Button>
                 <Button onClick={resetTimelapse} variant="outline" size="sm">
                   <RotateCcw className="w-4 h-4" />
-                  Reset
                 </Button>
               </div>
 
-              <div>
-                <label className="text-sm font-medium">
-                  Playback Speed: {playbackSpeed[0]}x
-                </label>
+              <div className="flex items-center gap-2 text-sm">
+                <span>Speed: {playbackSpeed[0]}x</span>
                 <Slider
                   value={playbackSpeed}
                   onValueChange={setPlaybackSpeed}
                   max={5}
                   min={0.5}
                   step={0.5}
-                  className="mt-2"
+                  className="w-20"
                 />
               </div>
 
-              <div>
-                <label className="text-sm font-medium">
-                  Time: {timeStep}/{maxTimeSteps}
-                </label>
+              <div className="flex items-center gap-2 text-sm">
+                <span>
+                  {timeStep}/{maxTimeSteps}
+                </span>
                 <Progress
                   value={(timeStep / maxTimeSteps) * 100}
-                  className="mt-2"
+                  className="w-20 h-2"
                 />
               </div>
-            </>
-          ) : (
-            <div className="text-center text-muted-foreground py-4">
-              <p className="mb-2">Impact zones are visible on the map</p>
-              <p className="text-xs">
-                Select an asteroid to see dynamic timelapse effects
-              </p>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Map */}
-      <Card>
-        <CardContent className="p-0">
-          <div style={{ height: "600px", width: "100%" }}>
-            <MapContainer
-              center={[20, 0]}
-              zoom={2}
-              minZoom={1}
-              maxZoom={18}
-              maxBounds={[
-                [-85, -180],
-                [85, 180],
-              ]}
-              style={{ height: "100%", width: "100%" }}
-              className="z-0"
-            >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                noWrap={true}
-              />
+      {/* Controls Panel - Bottom 70% */}
+      <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+        {/* Controls */}
+        {/* Asteroid Selector - Slide in/out */}
+        <AsteroidSelector
+          selectedAsteroid={selectedAsteroid}
+          onAsteroidSelect={(asteroid) => {
+            // This would be passed from parent component
+            console.log("Asteroid selected:", asteroid);
+          }}
+        />
 
-              <MapUpdater impactZones={impactZones} timeStep={timeStep} />
-
-              {/* Country Boundaries Overlay */}
-              <CountryOverlay />
-
-              {/* Population Density Heatmap Overlay */}
-              <PopulationHeatmap />
-
-              {/* Infrastructure Markers */}
-              {infrastructureData.infrastructure_locations.map((category) =>
-                infraVisibility[category.type as keyof typeof infraVisibility]
-                  ? category.locations.map((location, index) => (
-                      <Marker
-                        key={`infra-${category.type}-${index}`}
-                        position={[location.lat, location.lng]}
-                        icon={getInfrastructureIcon(
-                          category.type,
-                          (location as any).subtype
-                        )}
-                      >
-                        <Popup>
-                          <div>
-                            <h3 className="font-semibold">{location.name}</h3>
-                            <p className="text-sm text-gray-600">
-                              {category.type.charAt(0).toUpperCase() +
-                                category.type.slice(1)}
-                              {(location as any).subtype &&
-                                ` • ${(location as any).subtype}`}
-                            </p>
-                            <p className="text-sm">{location.country}</p>
-                            <Badge
-                              variant={
-                                location.importance === "critical"
-                                  ? "destructive"
-                                  : "secondary"
-                              }
-                            >
-                              {location.importance}
-                            </Badge>
-                          </div>
-                        </Popup>
-                      </Marker>
-                    ))
-                  : null
-              )}
-
-              {/* Impact Zones */}
-              {showImpactZones &&
-                impactZones.map((zone) => (
-                  <div key={zone.id}>
-                    {/* Impact Marker */}
-                    <Marker
-                      position={[zone.lat, zone.lng]}
-                      icon={L.divIcon({
-                        className: "impact-marker",
-                        html: `<div style="
-                        background-color: #dc2626;
-                        width: 20px;
-                        height: 20px;
-                        border-radius: 50%;
-                        border: 3px solid white;
-                        box-shadow: 0 0 10px rgba(220, 38, 38, 0.8);
-                        animation: pulse 2s infinite;
-                      "></div>`,
-                        iconSize: [20, 20],
-                        iconAnchor: [10, 10],
-                      })}
-                    >
-                      <Popup>
-                        <div>
-                          <h3 className="font-semibold text-red-600">
-                            {zone.name}
-                          </h3>
-                          <p>
-                            Impact Radius: {(zone.radius / 1000).toFixed(1)} km
-                          </p>
-                          <p>Intensity: {(zone.intensity * 100).toFixed(0)}%</p>
-                          <p>Timestamp: {zone.timestamp}s</p>
-                        </div>
-                      </Popup>
-                    </Marker>
-
-                    {/* Impact Zone Circle */}
-                    <Circle
-                      center={[zone.lat, zone.lng]}
-                      radius={getCircleRadius(zone)}
-                      pathOptions={{
-                        color: getCircleColor(zone),
-                        fillColor: getCircleColor(zone),
-                        fillOpacity: 0.3,
-                        weight: 3,
-                      }}
-                    />
-
-                    {/* Secondary Impact Ring */}
-                    <Circle
-                      center={[zone.lat, zone.lng]}
-                      radius={getCircleRadius(zone) * 1.5}
-                      pathOptions={{
-                        color: getCircleColor(zone),
-                        fillColor: "transparent",
-                        fillOpacity: 0,
-                        weight: 2,
-                        dashArray: "10, 10",
-                      }}
-                    />
+        {/* Legend */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Map Legend</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-4 gap-4 text-sm">
+              <div>
+                <h4 className="font-semibold mb-2">
+                  Population Density Heatmap
+                </h4>
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-gradient-to-r from-maroon to-darkred rounded"></div>
+                    <span>Very High (&gt; 40,000)</span>
                   </div>
-                ))}
-            </MapContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Legend */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Map Legend</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-4 gap-4 text-sm">
-            <div>
-              <h4 className="font-semibold mb-2">Population Density Heatmap</h4>
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-gradient-to-r from-maroon to-darkred rounded"></div>
-                  <span>Very High (&gt; 40,000)</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-gradient-to-r from-red to-darkred rounded"></div>
+                    <span>High (20,000 - 40,000)</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-gradient-to-r from-orange to-red rounded"></div>
+                    <span>Medium-High (10,000 - 20,000)</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-gradient-to-r from-yellow to-orange rounded"></div>
+                    <span>Medium (5,000 - 10,000)</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-gradient-to-r from-lime to-yellow rounded"></div>
+                    <span>Low (1,000 - 5,000)</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-gradient-to-r from-green to-lime rounded"></div>
+                    <span>Very Low (&lt; 1,000)</span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-gradient-to-r from-red to-darkred rounded"></div>
-                  <span>High (20,000 - 40,000)</span>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Infrastructure</h4>
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-red-600 rounded-full"></div>
+                    <span>Military</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-amber-600 rounded-full"></div>
+                    <span>Energy</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-purple-600 rounded-full"></div>
+                    <span>Cultural</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-green-600 rounded-full"></div>
+                    <span>Civilian</span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-gradient-to-r from-orange to-red rounded"></div>
-                  <span>Medium-High (10,000 - 20,000)</span>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Impact Zones</h4>
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-red-600 rounded-full animate-pulse"></div>
+                    <span>Impact Point</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-red-600 rounded-full"></div>
+                    <span>Impact Zone</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-dashed border-red-600 rounded-full"></div>
+                    <span>Secondary Ring</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-2">
+                    Zones show impact radius from your data
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-gradient-to-r from-yellow to-orange rounded"></div>
-                  <span>Medium (5,000 - 10,000)</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-gradient-to-r from-lime to-yellow rounded"></div>
-                  <span>Low (1,000 - 5,000)</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-gradient-to-r from-green to-lime rounded"></div>
-                  <span>Very Low (&lt; 1,000)</span>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Countries</h4>
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <div
+                      className="w-4 h-4 border border-gray-400 rounded"
+                      style={{ backgroundColor: "#3B82F6", opacity: 0.3 }}
+                    ></div>
+                    <span>United States</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div
+                      className="w-4 h-4 border border-gray-400 rounded"
+                      style={{ backgroundColor: "#EF4444", opacity: 0.3 }}
+                    ></div>
+                    <span>Canada</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div
+                      className="w-4 h-4 border border-gray-400 rounded"
+                      style={{ backgroundColor: "#10B981", opacity: 0.3 }}
+                    ></div>
+                    <span>Mexico</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div
+                      className="w-4 h-4 border border-gray-400 rounded"
+                      style={{ backgroundColor: "#F59E0B", opacity: 0.3 }}
+                    ></div>
+                    <span>Brazil</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-2">
+                    Each country has a unique color
+                  </div>
                 </div>
               </div>
             </div>
-            <div>
-              <h4 className="font-semibold mb-2">Infrastructure</h4>
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-red-600 rounded-full"></div>
-                  <span>Military</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-amber-600 rounded-full"></div>
-                  <span>Energy</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-purple-600 rounded-full"></div>
-                  <span>Cultural</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-green-600 rounded-full"></div>
-                  <span>Civilian</span>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-2">Impact Zones</h4>
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-red-600 rounded-full animate-pulse"></div>
-                  <span>Impact Point</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-red-600 rounded-full"></div>
-                  <span>Impact Zone</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-dashed border-red-600 rounded-full"></div>
-                  <span>Secondary Ring</span>
-                </div>
-                <div className="text-xs text-muted-foreground mt-2">
-                  Zones show impact radius from your data
-                </div>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-2">Countries</h4>
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <div
-                    className="w-4 h-4 border border-gray-400 rounded"
-                    style={{ backgroundColor: "#3B82F6", opacity: 0.3 }}
-                  ></div>
-                  <span>United States</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div
-                    className="w-4 h-4 border border-gray-400 rounded"
-                    style={{ backgroundColor: "#EF4444", opacity: 0.3 }}
-                  ></div>
-                  <span>Canada</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div
-                    className="w-4 h-4 border border-gray-400 rounded"
-                    style={{ backgroundColor: "#10B981", opacity: 0.3 }}
-                  ></div>
-                  <span>Mexico</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div
-                    className="w-4 h-4 border border-gray-400 rounded"
-                    style={{ backgroundColor: "#F59E0B", opacity: 0.3 }}
-                  ></div>
-                  <span>Brazil</span>
-                </div>
-                <div className="text-xs text-muted-foreground mt-2">
-                  Each country has a unique color
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
