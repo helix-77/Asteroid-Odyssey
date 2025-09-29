@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { StrategySelector } from "@/components/deflection/strategy-selector";
+import { DeflectionCalculator } from "@/components/deflection/deflection-calculator";
 import { MissionPlanner } from "@/components/deflection/mission-planner";
 import { StrategyComparison } from "@/components/deflection/strategy-comparison";
 import DeflectionTrajectory from "@/components/3d/deflection-trajectory";
@@ -13,6 +14,7 @@ export default function DeflectionPage() {
   const [selectedStrategy, setSelectedStrategy] =
     useState<DeflectionStrategy | null>(null);
   const [missionPlan, setMissionPlan] = useState<any>(null);
+  const [deflectionResults, setDeflectionResults] = useState<any>(null);
 
   const handleAsteroidSelect = (asteroid: any) => {
     setSelectedAsteroid(asteroid);
@@ -29,6 +31,10 @@ export default function DeflectionPage() {
     setMissionPlan(plan);
   };
 
+  const handleDeflectionCalculation = (results: any) => {
+    setDeflectionResults(results);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900">
       <div className="container mx-auto p-6">
@@ -42,7 +48,7 @@ export default function DeflectionPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
-          {/* Asteroid Selection */}
+          {/* Asteroid Selection & Deflection Calculator */}
           <div className="lg:col-span-1">
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-4">
               <h3 className="font-semibold text-white mb-3">Select Target</h3>
@@ -63,7 +69,7 @@ export default function DeflectionPage() {
                         {asteroid.name}
                       </div>
                       <div className="text-sm text-purple-200">
-                        {asteroid.size}m •{" "}
+                        {asteroid.diameter}m •{" "}
                         {asteroid.threat_level?.toUpperCase() || "UNKNOWN"}
                       </div>
                     </button>
@@ -71,10 +77,9 @@ export default function DeflectionPage() {
               </div>
             </div>
 
-            <StrategySelector
+            <DeflectionCalculator
               selectedAsteroid={selectedAsteroid}
-              onStrategySelect={handleStrategySelect}
-              selectedStrategy={selectedStrategy}
+              onCalculate={handleDeflectionCalculation}
             />
           </div>
 
@@ -110,11 +115,55 @@ export default function DeflectionPage() {
 
           {/* Mission Planning */}
           <div className="lg:col-span-1">
-            <MissionPlanner
-              selectedAsteroid={selectedAsteroid}
-              selectedStrategy={selectedStrategy}
-              onMissionPlan={handleMissionPlan}
-            />
+            {deflectionResults ? (
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                <h3 className="font-semibold text-white mb-3">
+                  Mission Summary
+                </h3>
+                <div className="space-y-3 text-white">
+                  <div>
+                    <div className="text-sm text-purple-200">Best Strategy</div>
+                    <div className="font-medium">
+                      {deflectionResults.comparison[0]?.strategy.name}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-purple-200">
+                      Success Probability
+                    </div>
+                    <div className="font-medium">
+                      {deflectionResults.comparison[0]?.missionSuccess
+                        ? "High"
+                        : "Moderate"}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-purple-200">Warning Time</div>
+                    <div className="font-medium">
+                      {deflectionResults.warningTime} years
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-purple-200">
+                      Impact Reduction
+                    </div>
+                    <div className="font-medium">
+                      {(
+                        deflectionResults.comparison[0]
+                          ?.impactProbabilityReduction * 100
+                      ).toFixed(1)}
+                      %
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <MissionPlanner
+                selectedAsteroid={selectedAsteroid}
+                selectedStrategy={selectedStrategy}
+                onMissionPlan={handleMissionPlan}
+              />
+            )}
           </div>
         </div>
 

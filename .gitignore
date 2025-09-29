@@ -27,5 +27,9 @@ yarn-error.log*
 next-env.d.ts
 
 .vscode
+.kiro/
+.cursor/
 
 /testing_branches_dummy_change
+
+pnpm-lock.yaml

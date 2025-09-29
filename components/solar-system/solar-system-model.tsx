@@ -867,50 +867,65 @@ export default function SolarSystemModel() {
                       orbitingBody: "all",
                     })
                   }
-                  className="justify-start text-white border-white/30"
+                  className={`justify-start transition-all duration-200 ${
+                    filters.orbitingBody === "all"
+                      ? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+                      : "text-white/80 hover:text-white border-white/20 hover:border-white/40 hover:bg-white/5"
+                  }`}
                 >
                   <div className="w-3 h-3 rounded-full bg-gray-400 mr-3"></div>
                   All Bodies
+                  <span className="ml-auto text-xs opacity-70">
+                    ({neoData.length})
+                  </span>
                 </Button>
-                {["Earth", "Mars", "Venus"].map((body) => (
-                  <Button
-                    key={body}
-                    variant={
-                      filters.orbitingBody === body.toLowerCase()
-                        ? "secondary"
-                        : "outline"
-                    }
-                    size="sm"
-                    onClick={() =>
-                      setFilters({
-                        ...filters,
-                        orbitingBody:
-                          filters.orbitingBody === body.toLowerCase()
-                            ? "all"
-                            : body.toLowerCase(),
-                      })
-                    }
-                    className="justify-start text-white border-white/30"
-                  >
-                    <div
-                      className={`w-3 h-3 rounded-full mr-3 ${
-                        body === "Earth"
-                          ? "bg-blue-500"
-                          : body === "Mars"
-                          ? "bg-red-500"
-                          : "bg-orange-500"
+                {["Earth", "Mars", "Venus"].map((body) => {
+                  const isSelected =
+                    filters.orbitingBody === body.toLowerCase();
+                  const count = neoData.filter(
+                    (a) => a.orbiting_body?.toLowerCase() === body.toLowerCase()
+                  ).length;
+
+                  return (
+                    <Button
+                      key={body}
+                      variant={isSelected ? "secondary" : "outline"}
+                      size="sm"
+                      onClick={() =>
+                        setFilters({
+                          ...filters,
+                          orbitingBody: isSelected ? "all" : body.toLowerCase(),
+                        })
+                      }
+                      className={`justify-start transition-all duration-200 ${
+                        isSelected
+                          ? `${
+                              body === "Earth"
+                                ? "bg-blue-600 hover:bg-blue-700 border-blue-600"
+                                : body === "Mars"
+                                ? "bg-red-600 hover:bg-red-700 border-red-600"
+                                : "bg-orange-600 hover:bg-orange-700 border-orange-600"
+                            } text-white`
+                          : "text-white/80 hover:text-white border-white/20 hover:border-white/40 hover:bg-white/5"
                       }`}
-                    ></div>
-                    {body} (
-                    {
-                      neoData.filter(
-                        (a) =>
-                          a.orbiting_body?.toLowerCase() === body.toLowerCase()
-                      ).length
-                    }
-                    )
-                  </Button>
-                ))}
+                      disabled={count === 0}
+                    >
+                      <div
+                        className={`w-3 h-3 rounded-full mr-3 ${
+                          body === "Earth"
+                            ? "bg-blue-500"
+                            : body === "Mars"
+                            ? "bg-red-500"
+                            : "bg-orange-500"
+                        } ${isSelected ? "ring-2 ring-white/30" : ""}`}
+                      ></div>
+                      {body}
+                      <span className="ml-auto text-xs opacity-70">
+                        ({count})
+                      </span>
+                    </Button>
+                  );
+                })}
               </div>
             </div>
 

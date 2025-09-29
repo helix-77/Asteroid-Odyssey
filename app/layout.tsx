@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import "./globals.css"
 import { MainNav } from "@/components/navigation/main-nav"
+import { ThemeProvider } from "@/components/theme-provider"
 
 export const metadata: Metadata = {
   title: "NASA Asteroid Defense System | Earth's Digital Shield",
@@ -27,13 +28,15 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
-        <Suspense fallback={<div>Loading...</div>}>
-          <MainNav />
-          <main className="pt-16">{children}</main>
-          <Analytics />
-        </Suspense>
+        <ThemeProvider>
+          <Suspense fallback={<div>Loading...</div>}>
+            <MainNav />
+            <main className="pt-16">{children}</main>
+            <Analytics />
+          </Suspense>
+        </ThemeProvider>
       </body>
     </html>
   )

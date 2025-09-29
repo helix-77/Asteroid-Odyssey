@@ -22,6 +22,20 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "components/solar-system/.backup/AsteroidObject.tsx",
+    "components/solar-system/.backup/CameraControls.tsx",
+    "components/solar-system/.backup/ControlPanel.tsx",
+    "components/solar-system/.backup/FilterPanel.tsx",
+    "components/solar-system/.backup/InfoPanel.tsx",
+    "components/solar-system/.backup/LightingSetup.tsx",
+    "components/solar-system/.backup/OrbitPath.tsx",
+    "components/solar-system/.backup/SceneContainer.tsx",
+    "components/solar-system/.backup/SearchBar.tsx"
+  ],
   "exclude": ["node_modules"]
 }

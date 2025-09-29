@@ -1,0 +1,214 @@
+{
+  "asteroid_compositions": {
+    "C-type": {
+      "description": "Carbonaceous asteroids - dark, carbon-rich objects",
+      "density": {
+        "value": 1400,
+        "uncertainty": 200,
+        "unit": "kg/m³",
+        "source": "Carry (2012) - Density of asteroids"
+      },
+      "porosity": {
+        "value": 0.3,
+        "uncertainty": 0.1,
+        "description": "High porosity due to rubble pile structure"
+      },
+      "strength": {
+        "value": 1e6,
+        "uncertainty": 5e5,
+        "unit": "Pa",
+        "description": "Tensile strength for impact calculations"
+      },
+      "albedo": {
+        "value": 0.05,
+        "uncertainty": 0.02,
+        "description": "Geometric albedo for diameter calculations"
+      },
+      "composition": {
+        "carbon": 0.03,
+        "silicates": 0.45,
+        "water": 0.1,
+        "organics": 0.05,
+        "metals": 0.02,
+        "other": 0.35
+      },
+      "examples": ["1 Ceres", "2 Pallas", "10 Hygiea", "253 Mathilde"],
+      "spectral_class": ["C", "B", "F", "G"],
+      "formation_region": "Outer asteroid belt (>2.7 AU)"
+    },
+    "S-type": {
+      "description": "Silicaceous asteroids - stony objects with silicate minerals",
+      "density": {
+        "value": 2700,
+        "uncertainty": 300,
+        "unit": "kg/m³",
+        "source": "Carry (2012) - Density of asteroids"
+      },
+      "porosity": {
+        "value": 0.2,
+        "uncertainty": 0.1,
+        "description": "Moderate porosity"
+      },
+      "strength": {
+        "value": 1e7,
+        "uncertainty": 5e6,
+        "unit": "Pa",
+        "description": "Higher strength than C-types"
+      },
+      "albedo": {
+        "value": 0.2,
+        "uncertainty": 0.05,
+        "description": "Moderate albedo"
+      },
+      "composition": {
+        "silicates": 0.6,
+        "iron": 0.15,
+        "nickel": 0.02,
+        "pyroxene": 0.15,
+        "olivine": 0.05,
+        "other": 0.03
+      },
+      "examples": ["4 Vesta", "6 Hebe", "433 Eros", "25143 Itokawa"],
+      "spectral_class": ["S", "Q", "V"],
+      "formation_region": "Inner asteroid belt (<2.5 AU)"
+    },
+    "M-type": {
+      "description": "Metallic asteroids - iron-nickel composition",
+      "density": {
+        "value": 5300,
+        "uncertainty": 500,
+        "unit": "kg/m³",
+        "source": "Carry (2012) - Density of asteroids"
+      },
+      "porosity": {
+        "value": 0.1,
+        "uncertainty": 0.05,
+        "description": "Low porosity due to metallic structure"
+      },
+      "strength": {
+        "value": 5e7,
+        "uncertainty": 2e7,
+        "unit": "Pa",
+        "description": "High strength metallic material"
+      },
+      "albedo": {
+        "value": 0.15,
+        "uncertainty": 0.05,
+        "description": "Moderate to high albedo"
+      },
+      "composition": {
+        "iron": 0.7,
+        "nickel": 0.25,
+        "cobalt": 0.02,
+        "silicates": 0.02,
+        "other": 0.01
+      },
+      "examples": ["16 Psyche", "216 Kleopatra", "6178 (1986 DA)"],
+      "spectral_class": ["M", "X", "E"],
+      "formation_region": "Core remnants from differentiated bodies"
+    },
+    "X-type": {
+      "description": "Mixed composition - could be metallic or enstatite",
+      "density": {
+        "value": 3500,
+        "uncertainty": 800,
+        "unit": "kg/m³",
+        "source": "Estimated from spectral analysis"
+      },
+      "porosity": {
+        "value": 0.15,
+        "uncertainty": 0.1,
+        "description": "Variable porosity"
+      },
+      "strength": {
+        "value": 2e7,
+        "uncertainty": 1e7,
+        "unit": "Pa",
+        "description": "Intermediate strength"
+      },
+      "albedo": {
+        "value": 0.12,
+        "uncertainty": 0.08,
+        "description": "Variable albedo"
+      },
+      "composition": {
+        "variable": "Composition varies significantly within class"
+      },
+      "examples": ["21 Lutetia", "55 Pandora"],
+      "spectral_class": ["X"],
+      "formation_region": "Various regions"
+    }
+  },
+  "size_dependent_properties": {
+    "porosity_scaling": {
+      "description": "Porosity increases with decreasing size for rubble piles",
+      "formula": "porosity = base_porosity * (1 + k * (D_ref/D)^n)",
+      "parameters": {
+        "k": 0.5,
+        "n": 0.3,
+        "D_ref": 1000,
+        "unit": "meters"
+      },
+      "source": "Consolmagno et al. (2008)"
+    },
+    "strength_scaling": {
+      "description": "Strength decreases with increasing size due to scale effects",
+      "formula": "strength = base_strength * (D_ref/D)^m",
+      "parameters": {
+        "m": 0.2,
+        "D_ref": 100,
+        "unit": "meters"
+      },
+      "source": "Holsapple (2007)"
+    }
+  },
+  "uncertainty_models": {
+    "composition_uncertainty": {
+      "spectroscopic_classification": {
+        "high_confidence": 0.1,
+        "medium_confidence": 0.3,
+        "low_confidence": 0.5,
+        "description": "Fractional uncertainty in composition assignment"
+      },
+      "density_uncertainty": {
+        "measured": 0.05,
+        "derived_from_type": 0.15,
+        "estimated": 0.3,
+        "description": "Fractional uncertainty in density values"
+      }
+    }
+  },
+  "validation_data": {
+    "well_characterized_asteroids": {
+      "433_Eros": {
+        "type": "S-type",
+        "density": { "value": 2670, "uncertainty": 30, "unit": "kg/m³" },
+        "porosity": { "value": 0.16, "uncertainty": 0.06 },
+        "source": "NEAR Shoemaker mission"
+      },
+      "25143_Itokawa": {
+        "type": "S-type",
+        "density": { "value": 1900, "uncertainty": 130, "unit": "kg/m³" },
+        "porosity": { "value": 0.4, "uncertainty": 0.1 },
+        "source": "Hayabusa mission"
+      },
+      "101955_Bennu": {
+        "type": "B-type",
+        "density": { "value": 1190, "uncertainty": 13, "unit": "kg/m³" },
+        "porosity": { "value": 0.5, "uncertainty": 0.17 },
+        "source": "OSIRIS-REx mission"
+      },
+      "162173_Ryugu": {
+        "type": "C-type",
+        "density": { "value": 1190, "uncertainty": 20, "unit": "kg/m³" },
+        "porosity": { "value": 0.5, "uncertainty": 0.07 },
+        "source": "Hayabusa2 mission"
+      }
+    }
+  },
+  "references": {
+    "Carry_2012": "Carry, B. (2012). Density of asteroids. Planetary and Space Science, 73(1), 98-118.",
+    "Consolmagno_2008": "Consolmagno, G. J., et al. (2008). The significance of meteorite density and porosity. Chemie der Erde-Geochemistry, 68(1), 1-29.",
+    "Holsapple_2007": "Holsapple, K. A. (2007). Spin limits of Solar System bodies: From the small fast-rotators to 2003 EL61. Icarus, 187(2), 500-509."
+  }
+}

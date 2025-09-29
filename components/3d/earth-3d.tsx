@@ -1,14 +1,18 @@
-"use client"
+"use client";
 
-import { Suspense } from "react"
-import AdvancedEarth3D from "./advanced-earth-3d"
+import { Suspense } from "react";
+import AdvancedEarth3D from "./advanced-earth-3d";
+import { UnifiedAsteroidData } from "@/lib/data/asteroid-manager";
 
 interface Earth3DProps {
-  selectedAsteroid: string | null
-  simulationMode: "tracking" | "impact" | "deflection"
+  selectedAsteroid: UnifiedAsteroidData | null;
+  simulationMode: "tracking" | "impact" | "deflection";
 }
 
-export default function Earth3D({ selectedAsteroid, simulationMode }: Earth3DProps) {
+export default function Earth3D({
+  selectedAsteroid,
+  simulationMode,
+}: Earth3DProps) {
   return (
     <Suspense
       fallback={
@@ -25,5 +29,5 @@ export default function Earth3D({ selectedAsteroid, simulationMode }: Earth3DPro
         timeScale={1}
       />
     </Suspense>
-  )
+  );
 }

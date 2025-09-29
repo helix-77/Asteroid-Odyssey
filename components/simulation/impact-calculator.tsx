@@ -209,34 +209,66 @@ export function ImpactCalculator({
                   <div className="bg-red-50 p-3 rounded">
                     <div className="font-medium">Crater Diameter</div>
                     <div className="text-2xl font-bold text-red-600">
-                      {(results.craterDiameter / 1000).toFixed(1)} km
+                      {(results.crater.diameter / 1000).toFixed(1)} km
+                    </div>
+                    <div className="text-xs text-red-600">
+                      Depth: {(results.crater.depth / 1000).toFixed(2)} km
                     </div>
                   </div>
 
                   <div className="bg-orange-50 p-3 rounded">
-                    <div className="font-medium">Blast Radius</div>
+                    <div className="font-medium">Airblast Radius</div>
                     <div className="text-2xl font-bold text-orange-600">
-                      {(results.blastRadius / 1000).toFixed(1)} km
+                      {results.effects.airblastRadius.toFixed(1)} km
+                    </div>
+                    <div className="text-xs text-orange-600">
+                      Fireball: {results.effects.fireballRadius.toFixed(2)} km
                     </div>
                   </div>
 
                   <div className="bg-yellow-50 p-3 rounded">
                     <div className="font-medium">Energy Released</div>
                     <div className="text-2xl font-bold text-yellow-600">
-                      {results.energyMegatons.toFixed(1)} MT
+                      {results.tntEquivalent.toFixed(1)} kt TNT
+                    </div>
+                    <div className="text-xs text-yellow-600">
+                      {(results.kineticEnergy / 1e15).toFixed(2)} PJ
                     </div>
                   </div>
 
                   <div className="bg-blue-50 p-3 rounded">
                     <div className="font-medium">Seismic Magnitude</div>
                     <div className="text-2xl font-bold text-blue-600">
-                      {results.seismicMagnitude.toFixed(1)}
+                      {results.effects.seismicMagnitude.toFixed(1)}
+                    </div>
+                    <div className="text-xs text-blue-600">
+                      Thermal: {results.effects.thermalRadiation.toFixed(1)} km
                     </div>
                   </div>
                 </div>
 
-                <div className="text-sm text-muted-foreground">
-                  Estimated casualties: {results.casualties.toLocaleString()}
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="font-medium text-gray-700">Casualties</div>
+                    <div className="text-lg font-bold text-gray-800">
+                      {results.casualties.immediate.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      Injured: {results.casualties.injured.toLocaleString()}
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 p-3 rounded">
+                    <div className="font-medium text-gray-700">
+                      Economic Impact
+                    </div>
+                    <div className="text-lg font-bold text-gray-800">
+                      ${(results.economicImpact / 1e9).toFixed(1)}B
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      Displaced: {results.casualties.displaced.toLocaleString()}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
