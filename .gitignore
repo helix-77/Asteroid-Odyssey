@@ -33,3 +33,5 @@ next-env.d.ts
 /testing_branches_dummy_change
 
 pnpm-lock.yaml
+
+/package-lock.json
