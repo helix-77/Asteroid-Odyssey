@@ -1,6 +1,7 @@
 export interface Asteroid {
   id: string;
   name: string;
+<<<<<<< HEAD
   diameter: number; // meters
   mass: number; // kg
   density: number; // kg/m³
@@ -134,6 +135,53 @@ export interface ImpactResults {
   economicDamage: number; // USD
   environmentalImpact: string;
   recoveryTime: number; // years
+=======
+  size: number; // meters (diameter)
+  diameter: number; // meters (alias for size)
+  mass: number; // kg
+  density: number; // kg/m³
+  composition: string;
+  orbit: {
+    semi_major_axis: number; // AU
+    eccentricity: number;
+    inclination: number; // degrees
+    ascending_node: number; // degrees
+    perihelion: number; // degrees
+    mean_anomaly: number; // degrees
+  };
+  close_approach: {
+    date: string;
+    distance: number; // AU
+    velocity: number; // km/s
+  };
+  velocity: number; // km/s
+  threat_level: "low" | "medium" | "high" | "critical";
+  impact_probability: number;
+  discovery_date: string;
+  absolute_magnitude: number;
+}
+
+export interface ImpactResults {
+  kineticEnergy: number; // Joules
+  tntEquivalent: number; // kilotons
+  crater: {
+    diameter: number; // meters
+    depth: number; // meters
+    volume: number; // cubic meters
+  };
+  effects: {
+    fireballRadius: number; // km
+    airblastRadius: number; // km
+    thermalRadiation: number; // km
+    seismicMagnitude: number;
+  };
+  casualties: {
+    immediate: number;
+    injured: number;
+    displaced: number;
+  };
+  economicImpact: number; // USD
+>>>>>>> dornishApril
 }
 
 export interface DeflectionStrategy {

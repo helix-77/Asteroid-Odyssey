@@ -10,11 +10,11 @@ import {
   calculateImpact,
   type ImpactParameters,
 } from "@/lib/calculations/impact";
-import type { Asteroid } from "@/lib/types";
+import type { Asteroid, ImpactResults } from "@/lib/types";
 
 interface ImpactCalculatorProps {
   selectedAsteroid: Asteroid | null;
-  onSimulate: (results: any) => void;
+  onSimulate: (results: ImpactResults) => void;
 }
 
 export function ImpactCalculator({
@@ -29,7 +29,7 @@ export function ImpactCalculator({
     name: "New York City",
   });
   const [isSimulating, setIsSimulating] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<ImpactResults | null>(null);
 
   const locations = [
     { lat: 40.7128, lng: -74.006, name: "New York City" },
@@ -48,16 +48,17 @@ export function ImpactCalculator({
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Calculate asteroid mass from diameter and density
-    const radius = selectedAsteroid.diameter / 2;
+    const diameter = selectedAsteroid.size || selectedAsteroid.diameter;
+    const radius = diameter / 2;
     const volume = (4 / 3) * Math.PI * Math.pow(radius, 3);
-    const asteroidMass = volume * selectedAsteroid.density;
+    const asteroidMass = volume * (selectedAsteroid.density || 3000); // Default density if not provided
 
     const impactParams: ImpactParameters = {
       asteroidMass,
       velocity: impactVelocity[0] * 1000, // Convert km/s to m/s
       angle: impactAngle[0],
       density: selectedAsteroid.density,
-      diameter: selectedAsteroid.diameter,
+      diameter: diameter,
     };
 
     // Estimate population data for target location (simplified)
@@ -77,9 +78,10 @@ export function ImpactCalculator({
 
   const getThreatLevel = () => {
     if (!selectedAsteroid) return "unknown";
-    if (selectedAsteroid.diameter > 1000) return "extinction";
-    if (selectedAsteroid.diameter > 500) return "global";
-    if (selectedAsteroid.diameter > 100) return "regional";
+    const diameter = selectedAsteroid.size || selectedAsteroid.diameter;
+    if (diameter > 1000) return "extinction";
+    if (diameter > 500) return "global";
+    if (diameter > 100) return "regional";
     return "local";
   };
 
@@ -121,11 +123,14 @@ export function ImpactCalculator({
             <div className="space-y-2">
               <h4 className="font-semibold">{selectedAsteroid.name}</h4>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>Diameter: {selectedAsteroid.diameter}m</div>
+                <div>
+                  Diameter: {selectedAsteroid.size || selectedAsteroid.diameter}
+                  m
+                </div>
                 <div>
                   Mass: {(selectedAsteroid.mass / 1e12).toFixed(2)}T tons
                 </div>
-                <div>Density: {selectedAsteroid.density} kg/m³</div>
+                <div>Density: {selectedAsteroid.density || 3000} kg/m³</div>
                 <div>Type: {selectedAsteroid.composition}</div>
               </div>
             </div>
@@ -210,9 +215,12 @@ export function ImpactCalculator({
                     <div className="font-medium">Crater Diameter</div>
                     <div className="text-2xl font-bold text-red-600">
                       {(results.crater.diameter / 1000).toFixed(1)} km
+<<<<<<< HEAD
                     </div>
                     <div className="text-xs text-red-600">
                       Depth: {(results.crater.depth / 1000).toFixed(2)} km
+=======
+>>>>>>> dornishApril
                     </div>
                   </div>
 
@@ -220,19 +228,26 @@ export function ImpactCalculator({
                     <div className="font-medium">Airblast Radius</div>
                     <div className="text-2xl font-bold text-orange-600">
                       {results.effects.airblastRadius.toFixed(1)} km
+<<<<<<< HEAD
                     </div>
                     <div className="text-xs text-orange-600">
                       Fireball: {results.effects.fireballRadius.toFixed(2)} km
+=======
+>>>>>>> dornishApril
                     </div>
                   </div>
 
                   <div className="bg-yellow-50 p-3 rounded">
                     <div className="font-medium">Energy Released</div>
                     <div className="text-2xl font-bold text-yellow-600">
+<<<<<<< HEAD
                       {results.tntEquivalent.toFixed(1)} kt TNT
                     </div>
                     <div className="text-xs text-yellow-600">
                       {(results.kineticEnergy / 1e15).toFixed(2)} PJ
+=======
+                      {(results.tntEquivalent / 1000).toFixed(1)} MT
+>>>>>>> dornishApril
                     </div>
                   </div>
 
@@ -240,13 +255,17 @@ export function ImpactCalculator({
                     <div className="font-medium">Seismic Magnitude</div>
                     <div className="text-2xl font-bold text-blue-600">
                       {results.effects.seismicMagnitude.toFixed(1)}
+<<<<<<< HEAD
                     </div>
                     <div className="text-xs text-blue-600">
                       Thermal: {results.effects.thermalRadiation.toFixed(1)} km
+=======
+>>>>>>> dornishApril
                     </div>
                   </div>
                 </div>
 
+<<<<<<< HEAD
                 <div className="grid grid-cols-2 gap-3 mt-4">
                   <div className="bg-gray-50 p-3 rounded">
                     <div className="font-medium text-gray-700">Casualties</div>
@@ -269,6 +288,11 @@ export function ImpactCalculator({
                       Displaced: {results.casualties.displaced.toLocaleString()}
                     </div>
                   </div>
+=======
+                <div className="text-sm text-muted-foreground">
+                  Estimated casualties:{" "}
+                  {results.casualties.immediate.toLocaleString()}
+>>>>>>> dornishApril
                 </div>
               </div>
             )}

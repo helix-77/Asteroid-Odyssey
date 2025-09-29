@@ -1,0 +1,45 @@
+{
+    "asteroid_impacts": [
+      {
+        "name": "Impactor-2025",
+        "impact_location": {
+          "latitude": 34.05,
+          "longitude": -118.25
+        },
+        "impact_radius_km": 120
+      },
+      {
+        "name": "Bennu-II",
+        "impact_location": {
+          "latitude": 51.50,
+          "longitude": -0.12
+        },
+        "impact_radius_km": 80
+      },
+      {
+        "name": "Apophis-Minor",
+        "impact_location": {
+          "latitude": -33.87,
+          "longitude": 151.21
+        },
+        "impact_radius_km": 50
+      },
+      {
+        "name": "Didymos-B",
+        "impact_location": {
+          "latitude": 35.68,
+          "longitude": 139.69
+        },
+        "impact_radius_km": 150
+      },
+      {
+        "name": "Vesta-Fragment",
+        "impact_location": {
+          "latitude": 48.85,
+          "longitude": 2.35
+        },
+        "impact_radius_km": 70
+      }
+    ]
+  }
+  
