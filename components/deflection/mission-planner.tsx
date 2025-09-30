@@ -125,12 +125,12 @@ export function MissionPlanner({
 
   if (!selectedAsteroid || !selectedStrategy) {
     return (
-      <Card className="h-full">
+      <Card className="h-full glass-morphism">
         <CardHeader>
-          <CardTitle>Mission Planner</CardTitle>
+          <CardTitle className="text-white">Mission Planner</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center text-muted-foreground py-8">
+          <div className="text-center text-gray-200 py-8">
             Select an asteroid and deflection strategy to plan mission
           </div>
         </CardContent>
@@ -139,13 +139,13 @@ export function MissionPlanner({
   }
 
   return (
-    <Card className="h-full">
+    <Card className="h-full glass-morphism">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Rocket className="h-5 w-5 text-blue-600" />
+        <CardTitle className="flex items-center gap-2 text-white">
+          <Rocket className="h-5 w-5 text-blue-400" />
           Mission Planner
         </CardTitle>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-gray-200">
           Plan {selectedStrategy.name} mission for {selectedAsteroid.name}
         </p>
       </CardHeader>
@@ -153,7 +153,7 @@ export function MissionPlanner({
         {/* Mission Parameters */}
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium">
+            <label className="text-sm font-medium text-white">
               Launch Window: {launchWindow[0]} years from now
             </label>
             <Slider
@@ -164,14 +164,14 @@ export function MissionPlanner({
               step={0.5}
               className="mt-2"
             />
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="text-xs text-gray-300 mt-1">
               Earlier launches have higher success rates but less preparation
               time
             </div>
           </div>
 
           <div>
-            <label className="text-sm font-medium">
+            <label className="text-sm font-medium text-white">
               Mission Duration: {missionDuration[0]} years
             </label>
             <Slider
@@ -182,14 +182,14 @@ export function MissionPlanner({
               step={0.5}
               className="mt-2"
             />
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="text-xs text-gray-300 mt-1">
               Longer missions allow for more precise targeting and course
               corrections
             </div>
           </div>
 
           <div>
-            <label className="text-sm font-medium">
+            <label className="text-sm font-medium text-white">
               Number of Missions: {numberOfMissions[0]}
             </label>
             <Slider
@@ -200,7 +200,7 @@ export function MissionPlanner({
               step={1}
               className="mt-2"
             />
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="text-xs text-gray-300 mt-1">
               Multiple missions increase success probability but multiply costs
             </div>
           </div>
@@ -218,7 +218,7 @@ export function MissionPlanner({
         {/* Calculation Progress */}
         {isCalculating && (
           <div className="space-y-2">
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-gray-200">
               Analyzing orbital mechanics...
             </div>
             <Progress value={75} className="w-full" />
@@ -227,9 +227,9 @@ export function MissionPlanner({
 
         {/* Mission Results */}
         {missionPlan && (
-          <div className="space-y-4 border-t pt-4">
+          <div className="space-y-4 border-t border-border/20 pt-4">
             <div className="flex items-center justify-between">
-              <h4 className="font-semibold">Mission Analysis</h4>
+              <h4 className="font-semibold text-white">Mission Analysis</h4>
               <Badge
                 className={getRiskLevel(missionPlan.successProbability).color}
               >
@@ -238,10 +238,10 @@ export function MissionPlanner({
             </div>
 
             {/* Success Probability */}
-            <div className="bg-blue-900/20 p-4 rounded-lg">
+            <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-500/20">
               <div className="flex items-center gap-2 mb-2">
-                <Target className="h-4 w-4 text-blue-600" />
-                <span className="font-medium">Success Probability</span>
+                <Target className="h-4 w-4 text-blue-400" />
+                <span className="font-medium text-white">Success Probability</span>
               </div>
               <div
                 className={`text-3xl font-bold ${getSuccessColor(
@@ -259,33 +259,33 @@ export function MissionPlanner({
             {/* Mission Details */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">Total Cost</div>
-                <div className="font-semibold">
+                <div className="text-sm text-gray-300">Total Cost</div>
+                <div className="font-semibold text-white">
                   ${missionPlan.totalCost.toLocaleString()}M
                 </div>
               </div>
 
               <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">Timeline</div>
-                <div className="font-semibold">
+                <div className="text-sm text-gray-300">Timeline</div>
+                <div className="font-semibold text-white">
                   {missionPlan.totalTime} years
                 </div>
               </div>
 
               <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-gray-300">
                   Deflection Distance
                 </div>
-                <div className="font-semibold">
+                <div className="font-semibold text-white">
                   {missionPlan.deflectionDistance.toLocaleString()} km
                 </div>
               </div>
 
               <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-gray-300">
                   Delta-V Required
                 </div>
-                <div className="font-semibold">
+                <div className="font-semibold text-white">
                   {missionPlan.deltaVRequired.toFixed(2)} m/s
                 </div>
               </div>
@@ -293,11 +293,11 @@ export function MissionPlanner({
 
             {/* Mission Timeline */}
             <div className="space-y-2">
-              <h5 className="font-medium flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
+              <h5 className="font-medium flex items-center gap-2 text-white">
+                <Calendar className="h-4 w-4 text-blue-400" />
                 Mission Timeline
               </h5>
-              <div className="space-y-2 text-sm">
+              <div className="space-y-2 text-sm text-gray-200">
                 <div className="flex justify-between">
                   <span>Mission Planning & Development</span>
                   <span>{launchWindow[0] - 1} years</span>
@@ -314,7 +314,7 @@ export function MissionPlanner({
                   <span>Deflection Operation</span>
                   <span>6 months</span>
                 </div>
-                <div className="flex justify-between font-medium">
+                <div className="flex justify-between font-medium text-white">
                   <span>Mission Complete</span>
                   <span>Year {launchWindow[0] + missionDuration[0]}</span>
                 </div>
@@ -324,8 +324,8 @@ export function MissionPlanner({
             {/* Risks and Considerations */}
             {missionPlan.risks && missionPlan.risks.length > 0 && (
               <div className="space-y-2">
-                <h5 className="font-medium flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-orange-600" />
+                <h5 className="font-medium flex items-center gap-2 text-white">
+                  <AlertCircle className="h-4 w-4 text-orange-400" />
                   Mission Risks
                 </h5>
                 <div className="space-y-1">
@@ -334,9 +334,9 @@ export function MissionPlanner({
                     .map((risk: string, index: number) => (
                       <div
                         key={index}
-                        className="text-sm text-orange-600 flex items-start gap-2"
+                        className="text-sm text-orange-400 flex items-start gap-2"
                       >
-                        <div className="w-1 h-1 bg-orange-600 rounded-full mt-2 flex-shrink-0" />
+                        <div className="w-1 h-1 bg-orange-400 rounded-full mt-2 flex-shrink-0" />
                         {risk}
                       </div>
                     ))}

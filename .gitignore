@@ -29,9 +29,8 @@ next-env.d.ts
 .vscode
 .kiro/
 .cursor/
+.windsurf/
 
 /testing_branches_dummy_change
-
-pnpm-lock.yaml
 
 /package-lock.json

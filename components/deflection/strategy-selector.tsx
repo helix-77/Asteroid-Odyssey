@@ -101,12 +101,12 @@ export function StrategySelector({
 
   if (!selectedAsteroid) {
     return (
-      <Card className="h-full">
+      <Card className="h-full glass-morphism">
         <CardHeader>
-          <CardTitle>Deflection Strategies</CardTitle>
+          <CardTitle className="text-white">Deflection Strategies</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center text-muted-foreground py-8">
+          <div className="text-center text-gray-200 py-8">
             Select an asteroid to view deflection options
           </div>
         </CardContent>
@@ -115,29 +115,29 @@ export function StrategySelector({
   }
 
   return (
-    <Card className="h-full">
+    <Card className="h-full glass-morphism">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-orange-600" />
+        <CardTitle className="flex items-center gap-2 text-white">
+          <AlertTriangle className="h-5 w-5 text-orange-400" />
           Deflection Strategies
         </CardTitle>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-gray-200">
           Choose a method to deflect {selectedAsteroid.name}
         </p>
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="kinetic" className="text-xs">
+          <TabsList className="glass-morphism grid w-full grid-cols-4">
+            <TabsTrigger value="kinetic" className="text-xs text-white data-[state=active]:text-black">
               Kinetic
             </TabsTrigger>
-            <TabsTrigger value="nuclear" className="text-xs">
+            <TabsTrigger value="nuclear" className="text-xs text-white data-[state=active]:text-black">
               Nuclear
             </TabsTrigger>
-            <TabsTrigger value="gravity" className="text-xs">
+            <TabsTrigger value="gravity" className="text-xs text-white data-[state=active]:text-black">
               Gravity
             </TabsTrigger>
-            <TabsTrigger value="solar" className="text-xs">
+            <TabsTrigger value="solar" className="text-xs text-white data-[state=active]:text-black">
               Solar
             </TabsTrigger>
           </TabsList>
@@ -149,15 +149,15 @@ export function StrategySelector({
                   key={strategy.id}
                   className={`border rounded-lg p-4 cursor-pointer transition-all ${
                     selectedStrategy?.id === strategy.id
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300"
+                      ? "border-blue-400 bg-blue-500/20"
+                      : "border-border/20 hover:bg-slate-800/50"
                   }`}
                   onClick={() => onStrategySelect(strategy)}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      {getStrategyIcon(strategy.type)}
-                      <h4 className="font-semibold">{strategy.name}</h4>
+                      <span className="text-blue-400">{getStrategyIcon(strategy.type)}</span>
+                      <h4 className="font-semibold text-white">{strategy.name}</h4>
                     </div>
                     <Badge
                       className={getReadinessColor(strategy.technicalReadiness)}
@@ -166,13 +166,13 @@ export function StrategySelector({
                     </Badge>
                   </div>
 
-                  <p className="text-sm text-muted-foreground mb-3">
+                  <p className="text-sm text-gray-200 mb-3">
                     {strategy.description}
                   </p>
 
                   <div className="grid grid-cols-2 gap-4 mb-3">
                     <div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-gray-300">
                         Effectiveness
                       </div>
                       <div
@@ -189,12 +189,12 @@ export function StrategySelector({
                     </div>
 
                     <div>
-                      <div className="text-xs text-muted-foreground">Cost</div>
-                      <div className="font-semibold">${strategy.cost}M</div>
+                      <div className="text-xs text-gray-300">Cost</div>
+                      <div className="font-semibold text-white">${strategy.cost}M</div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-4 text-xs text-gray-300">
                     <div className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       {strategy.timeRequired} years
@@ -205,11 +205,11 @@ export function StrategySelector({
                   </div>
 
                   {strategy.risks && strategy.risks.length > 0 && (
-                    <div className="mt-3 pt-3 border-t">
-                      <div className="text-xs text-muted-foreground mb-1">
+                    <div className="mt-3 pt-3 border-t border-border/20">
+                      <div className="text-xs text-gray-300 mb-1">
                         Key Risks:
                       </div>
-                      <div className="text-xs text-red-600">
+                      <div className="text-xs text-red-400">
                         {strategy.risks.slice(0, 2).join(", ")}
                       </div>
                     </div>
