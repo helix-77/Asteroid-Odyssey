@@ -107,6 +107,7 @@ export function ImpactSimulator() {
         const infrastructureData = await infrastructureRes.json();
         
         console.log('Loaded asteroids:', asteroidsData.asteroids);
+        console.log('Loaded population data:', populationData.population_density_data);
         setAsteroids(asteroidsData.asteroids || []);
         setPopulationData(populationData.population_density_data || []);
         setInfrastructureData(infrastructureData.infrastructure_locations || []);
@@ -636,7 +637,7 @@ export function ImpactSimulator() {
           </div>
 
           {/* Main Map Area */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-2">
             <Card className="h-[600px]">
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -666,6 +667,7 @@ export function ImpactSimulator() {
                   simulationResults={simulationResults}
                   enhancedResults={enhancedResults}
                   currentTimeline={currentTimeline}
+                  currentTimeIndex={currentTimeIndex}
                   activeFilter={activeFilter}
                   selectedRegion={selectedRegion}
                   populationData={populationData}
@@ -673,6 +675,100 @@ export function ImpactSimulator() {
                 />
               </CardContent>
             </Card>
+          </div>
+
+          {/* RIGHT SIDE PANEL - Legends and Data */}
+          <div className="lg:col-span-1">
+            <div className="space-y-4">
+              {/* Climate Data Panel - COMPACT */}
+              {currentTimeline && (
+                <Card className="bg-gradient-to-br from-blue-900 to-blue-950 text-white">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Climate Data</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 pt-0">
+                    <div className="bg-black/30 rounded p-2">
+                      <div className="text-xs text-blue-200">Temp</div>
+                      <div className="text-lg font-bold">
+                        -{Math.round((currentTimeIndex / 100) * 15)}°C
+                      </div>
+                    </div>
+                    <div className="bg-black/30 rounded p-2">
+                      <div className="text-xs text-yellow-200">Sunlight</div>
+                      <div className="text-lg font-bold">
+                        -{Math.round((currentTimeIndex / 100) * 70)}%
+                      </div>
+                    </div>
+                    <div className="bg-black/30 rounded p-2">
+                      <div className="text-xs text-gray-200">Pollution</div>
+                      <div className="text-lg font-bold">
+                        +{Math.round((currentTimeIndex / 100) * 95)}%
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Population Density Legend */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Population Density</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full" style={{backgroundColor: 'rgb(200, 0, 0)'}}></div>
+                    <span className="text-xs">Very High (&gt;10k/km²)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full" style={{backgroundColor: 'rgb(255, 100, 0)'}}></div>
+                    <span className="text-xs">High (5k-10k/km²)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full" style={{backgroundColor: 'rgb(255, 200, 0)'}}></div>
+                    <span className="text-xs">Medium (1k-5k/km²)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full" style={{backgroundColor: 'rgb(150, 255, 0)'}}></div>
+                    <span className="text-xs">Low (&lt;1k/km²)</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Casualty Counter - COMPACT */}
+              {currentTimeline && (
+                <Card className="bg-gradient-to-br from-red-900 to-red-950 text-white">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Casualties</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="text-2xl font-bold">
+                      {Math.round(currentTimeline.casualties).toLocaleString()}
+                    </div>
+                    <div className="text-xs text-red-200">Deaths</div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Impact Phase - COMPACT */}
+              {currentTimeline && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Phase</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="text-sm font-bold">
+                      {currentTimeIndex < 10 ? "Initial Impact" :
+                       currentTimeIndex < 20 ? "Ejecta Spread" :
+                       currentTimeIndex < 40 ? "Regional Devastation" :
+                       "Nuclear Winter"}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {formatTimeAfterImpact(currentTimeline.time)} | {(currentTimeline.damageRadius / 1000).toFixed(0)}km
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </div>
         </div>
       </div>

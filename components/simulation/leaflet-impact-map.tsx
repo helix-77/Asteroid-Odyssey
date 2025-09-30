@@ -6,6 +6,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { ImpactResults } from "@/lib/calculations/impact";
 import type { EnhancedImpactResults } from "@/lib/calculations/enhanced-impact-simulator";
+import PopulationHeatmap from "./population-heatmap";
 
 // Fix for default markers in react-leaflet
 if (typeof window !== 'undefined') {
@@ -40,6 +41,7 @@ interface LeafletImpactMapProps {
   simulationResults: ImpactResults | null;
   enhancedResults: EnhancedImpactResults | null;
   currentTimeline: TimelineState | null;
+  currentTimeIndex: number;
   activeFilter: string;
   selectedRegion: string;
   populationData: any[];
@@ -171,6 +173,7 @@ export default function LeafletImpactMap({
   simulationResults,
   enhancedResults,
   currentTimeline,
+  currentTimeIndex,
   activeFilter,
   selectedRegion,
   populationData,
@@ -207,11 +210,20 @@ export default function LeafletImpactMap({
     loadWorldData();
   }, []);
 
-  // Update map view when region changes
+  // Update map view when region changes and CONSTRAIN bounds
   useEffect(() => {
     if (mapRef.current && regionBounds[selectedRegion]) {
       const bounds = regionBounds[selectedRegion];
       mapRef.current.fitBounds(bounds);
+      
+      // Set max bounds to prevent panning outside region
+      if (selectedRegion !== "global") {
+        mapRef.current.setMaxBounds(bounds);
+      } else {
+        // Remove constraints for global view
+        const globalBounds = regionBounds.global;
+        mapRef.current.setMaxBounds(globalBounds);
+      }
     }
   }, [selectedRegion]);
 
@@ -266,6 +278,10 @@ export default function LeafletImpactMap({
         className="h-full w-full"
         zoomControl={true}
         scrollWheelZoom={true}
+        maxBounds={regionBounds[selectedRegion]}
+        maxBoundsViscosity={1.0}
+        minZoom={selectedRegion === "global" ? 1 : 3}
+        maxZoom={selectedRegion === "global" ? 10 : 8}
       >
         {/* Base tile layer */}
         <TileLayer
@@ -305,74 +321,70 @@ export default function LeafletImpactMap({
           </Popup>
         </Marker>
 
-        {/* ACTUAL WORKING CRATER VISUALIZATION */}
-        {currentTimeline && (
-          <Circle
-            center={[impactLocation.lat, impactLocation.lng]}
-            radius={currentTimeline.craterRadius}
-            pathOptions={{
-              fillColor: "#8B0000",
-              fillOpacity: 0.9,
-              color: "#FF0000",
-              weight: 3,
-            }}
+        {/* INCOMING ASTEROID IMAGE - Shows BEFORE simulation runs */}
+        {simulationResults && !currentTimeline && (
+          <Marker
+            position={[impactLocation.lat, impactLocation.lng]}
+            icon={L.icon({
+              iconUrl: '/incoming_2.png',
+              iconSize: [80, 80],
+              iconAnchor: [40, 40],
+            })}
           />
         )}
 
-        {/* GLOBAL IMPACT ZONES THAT EXPAND OVER TIME */}
+        {/* CRATER IMAGE - ALWAYS SHOWS when timeline is running */}
         {currentTimeline && (
+          <Marker
+            position={[impactLocation.lat, impactLocation.lng]}
+            icon={L.icon({
+              iconUrl: '/crater.png',
+              // Fixed size crater that's always visible
+              iconSize: [60, 60], // Fixed 60px size
+              iconAnchor: [30, 30],
+            })}
+          />
+        )}
+
+        {/* ANIMATED SHOCKWAVE EFFECT */}
+        {currentTimeline && currentTimeIndex < 10 && (
           <>
-            {/* Immediate devastation zone */}
             <Circle
               center={[impactLocation.lat, impactLocation.lng]}
-              radius={Math.min(currentTimeline.damageRadius * 0.1, 500000)}
+              radius={currentTimeIndex * 50000} // Rapidly expanding shockwave
               pathOptions={{
-                fillColor: "#7f1d1d",
-                fillOpacity: 0.8,
-                color: "#dc2626",
+                fillColor: "transparent",
+                color: "#ff6b6b",
                 weight: 3,
+                opacity: Math.max(0, 1 - (currentTimeIndex / 10)),
               }}
             />
-            
-            {/* Regional destruction zone */}
             <Circle
               center={[impactLocation.lat, impactLocation.lng]}
-              radius={Math.min(currentTimeline.damageRadius * 0.4, 2000000)}
+              radius={currentTimeIndex * 30000} // Secondary shockwave
               pathOptions={{
-                fillColor: getCircleColor(activeFilter),
-                fillOpacity: 0.5,
-                color: getCircleColor(activeFilter),
+                fillColor: "transparent",
+                color: "#ffa500",
                 weight: 2,
+                opacity: Math.max(0, 0.8 - (currentTimeIndex / 10)),
               }}
             />
-            
-            {/* Continental effects zone */}
-            <Circle
-              center={[impactLocation.lat, impactLocation.lng]}
-              radius={Math.min(currentTimeline.damageRadius * 0.7, 5000000)}
-              pathOptions={{
-                fillColor: getCircleColor(activeFilter),
-                fillOpacity: 0.3,
-                color: getCircleColor(activeFilter),
-                weight: 1,
-              }}
-            />
-            
-            {/* Global effects zone - can cover entire hemisphere */}
-            {currentTimeline.damageRadius > 5000000 && (
-              <Circle
-                center={[impactLocation.lat, impactLocation.lng]}
-                radius={currentTimeline.damageRadius}
-                pathOptions={{
-                  fillColor: activeFilter === "climate" ? "#1e40af" : getCircleColor(activeFilter),
-                  fillOpacity: 0.15,
-                  color: activeFilter === "climate" ? "#3b82f6" : getCircleColor(activeFilter),
-                  weight: 1,
-                  dashArray: "10, 5",
-                }}
-              />
-            )}
           </>
+        )}
+
+        {/* EJECTA DEBRIS VISUALIZATION */}
+        {currentTimeline && currentTimeIndex > 2 && currentTimeIndex < 20 && (
+          <Circle
+            center={[impactLocation.lat, impactLocation.lng]}
+            radius={Math.min(currentTimeIndex * 10000, 200000)} // Ejecta spread
+            pathOptions={{
+              fillColor: "#8b4513",
+              fillOpacity: 0.3 * (1 - currentTimeIndex / 20),
+              color: "#654321",
+              weight: 1,
+              dashArray: "5, 10",
+            }}
+          />
         )}
 
         {/* INFRASTRUCTURE DAMAGE VISUALIZATION */}
@@ -440,130 +452,83 @@ export default function LeafletImpactMap({
           );
         })}
 
-        {/* GLOBAL POPULATION DENSITY VISUALIZATION */}
-        {populationData.map((regionData, regionIndex) => 
-          regionData.coordinates?.map((population: any, index: number) => {
-            const distanceFromImpact = Math.sqrt(
-              Math.pow((impactLocation.lat - population.lat) * 111, 2) + 
-              Math.pow((impactLocation.lng - population.lng) * 111 * Math.cos(population.lat * Math.PI / 180), 2)
-            );
-            
-            // Calculate impact effects based on timeline
-            let impactSeverity = 0;
-            let populationStatus = "normal";
-            
-            if (currentTimeline && distanceFromImpact <= (currentTimeline.damageRadius / 1000)) {
-              impactSeverity = Math.max(0, 1 - (distanceFromImpact / (currentTimeline.damageRadius / 1000)));
-              
-              if (impactSeverity > 0.8) populationStatus = "destroyed";
-              else if (impactSeverity > 0.5) populationStatus = "severe";
-              else if (impactSeverity > 0.2) populationStatus = "moderate";
-              else populationStatus = "affected";
-            }
-            
-            // Color coding based on impact severity and filter
-            let fillColor = "#fbbf24"; // Default yellow
-            let opacity = 0.4;
-            
-            if (activeFilter === "casualties") {
-              switch (populationStatus) {
-                case "destroyed": fillColor = "#7f1d1d"; opacity = 0.9; break; // Dark red
-                case "severe": fillColor = "#dc2626"; opacity = 0.8; break; // Red
-                case "moderate": fillColor = "#ea580c"; opacity = 0.7; break; // Orange
-                case "affected": fillColor = "#eab308"; opacity = 0.6; break; // Yellow
-                default: fillColor = "#22c55e"; opacity = 0.3; break; // Green
-              }
-            } else if (activeFilter === "infrastructure") {
-              // Show infrastructure damage
-              fillColor = impactSeverity > 0.3 ? "#dc2626" : "#fbbf24";
-              opacity = impactSeverity > 0.3 ? 0.8 : 0.3;
-            } else if (activeFilter === "climate") {
-              // Show climate effects (global)
-              const globalEffect = currentTimeline ? Math.min(1, currentTimeline.damageRadius / 10000000) : 0;
-              fillColor = globalEffect > 0.1 ? "#1e40af" : "#fbbf24";
-              opacity = globalEffect > 0.1 ? 0.6 : 0.3;
-            }
-            
-            return (
-              <Circle
-                key={`pop-${regionIndex}-${index}`}
-                center={[population.lat, population.lng]}
-                radius={Math.sqrt(population.density) * 30 + (impactSeverity * 50)}
-                pathOptions={{
-                  fillColor: fillColor,
-                  fillOpacity: opacity,
-                  color: populationStatus === "normal" ? "#f59e0b" : "#dc2626",
-                  weight: populationStatus === "normal" ? 1 : 2,
-                }}
-              >
-                <Popup>
-                  <div className="text-sm">
-                    <div className="font-semibold">{population.name}</div>
-                    <div>Region: {regionData.region}</div>
-                    <div>Population Density: {population.density.toLocaleString()}/km²</div>
-                    <div>Distance from Impact: {distanceFromImpact.toFixed(0)} km</div>
-                    {populationStatus !== "normal" && (
-                      <>
-                        <div className={`font-bold ${populationStatus === "destroyed" ? "text-red-800" : "text-orange-600"}`}>
-                          Status: {populationStatus.toUpperCase()}
-                        </div>
-                        <div className="text-red-600">
-                          Impact Severity: {(impactSeverity * 100).toFixed(0)}%
-                        </div>
-                        <div className="text-red-600">
-                          Est. Casualties: {Math.round(population.density * 100 * impactSeverity).toLocaleString()}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </Popup>
-              </Circle>
-            );
-          })
+        {/* REAL CONTINUOUS GRADIENT POPULATION HEATMAP */}
+        <PopulationHeatmap 
+          populationData={populationData}
+          currentTimeline={currentTimeline}
+          impactLocation={impactLocation}
+        />
+
+        {/* NUCLEAR WINTER / ATMOSPHERIC DARKENING */}
+        {currentTimeline && currentTimeIndex > 30 && (
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: `rgba(0, 0, 0, ${Math.min(0.6, (currentTimeIndex - 30) / 70)})`, // Gradually darken
+              mixBlendMode: 'multiply'
+            }}
+          />
+        )}
+
+        {/* CLIMATE DATA VISUALIZATION - Temperature, sunlight, pollution overlays */}
+        {currentTimeline && activeFilter === "climate" && enhancedResults && (
+          <div 
+            className="absolute inset-0 pointer-events-none z-10"
+            style={{
+              background: `
+                radial-gradient(circle at ${impactLocation.lat}% ${impactLocation.lng + 180}%, 
+                  rgba(59, 130, 246, ${Math.min(0.8, currentTimeline.time / 86400)}) 0%, 
+                  rgba(59, 130, 246, ${Math.min(0.4, currentTimeline.time / 172800)}) 30%, 
+                  rgba(59, 130, 246, ${Math.min(0.2, currentTimeline.time / 345600)}) 60%, 
+                  transparent 100%
+                )
+              `,
+              mixBlendMode: 'overlay'
+            }}
+          />
+        )}
+
+        {/* TSUNAMI VISUALIZATION */}
+        {currentTimeline && enhancedResults && currentTimeline.time > 3600 && ( // After 1 hour
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: `
+                radial-gradient(circle at ${impactLocation.lat}% ${impactLocation.lng + 180}%, 
+                  transparent 0%, 
+                  transparent 20%, 
+                  rgba(59, 130, 246, 0.6) 25%, 
+                  rgba(59, 130, 246, 0.3) 30%, 
+                  transparent 35%
+                )
+              `,
+              animation: 'pulse 2s infinite'
+            }}
+          />
+        )}
+
+        {/* FOREST FIRE VISUALIZATION */}
+        {currentTimeline && currentTimeline.time > 7200 && ( // After 2 hours
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: `
+                radial-gradient(circle at ${impactLocation.lat}% ${impactLocation.lng + 180}%, 
+                  rgba(239, 68, 68, 0.4) 0%, 
+                  rgba(245, 158, 11, 0.3) 15%, 
+                  transparent 25%
+                )
+              `,
+              mixBlendMode: 'screen'
+            }}
+          />
         )}
       </MapContainer>
 
-      {/* GLOBAL IMPACT LEGEND */}
-      {currentTimeline && (
-        <div className="absolute bottom-4 left-4 bg-black/90 text-white rounded-lg p-3 shadow-lg max-w-xs">
-          <div className="text-sm font-bold mb-2">Global Impact Zones</div>
-          <div className="space-y-1 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-red-800"></div>
-              <span>Crater (Permanent)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-red-700"></div>
-              <span>Total Devastation (&lt;500km)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getCircleColor(activeFilter) }}></div>
-              <span>Regional Destruction (&lt;2000km)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full opacity-60" style={{ backgroundColor: getCircleColor(activeFilter) }}></div>
-              <span>Continental Effects (&lt;5000km)</span>
-            </div>
-            {currentTimeline.damageRadius > 5000000 && (
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full opacity-30" style={{ backgroundColor: activeFilter === "climate" ? "#3b82f6" : getCircleColor(activeFilter) }}></div>
-                <span>Global Effects</span>
-              </div>
-            )}
-          </div>
-          <div className="mt-2 pt-2 border-t border-gray-600">
-            <div className="text-xs">
-              <div>Time: {formatTimeAfterImpact(currentTimeline.time)}</div>
-              <div>Affected Radius: {(currentTimeline.damageRadius / 1000).toFixed(0)} km</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Simple instruction */}
-      {!currentTimeline && (
-        <div className="absolute top-4 left-4 bg-black/80 text-white rounded-lg p-2 shadow-lg">
-          <div className="text-sm">
+      {/* Simple instruction - only show if no simulation running */}
+      {!simulationResults && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black/90 text-white rounded-lg p-3 shadow-lg z-50">
+          <div className="text-sm text-center">
             Click map to set impact location, then run simulation
           </div>
         </div>
