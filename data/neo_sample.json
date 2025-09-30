@@ -1,5 +1,65 @@
 [
   {
+    "name": "Impactor-2025 (2025-XX1)",
+    "neo_reference_id": "2025XX1",
+    "absolute_magnitude_h": 18.2,
+    "is_potentially_hazardous_asteroid": true,
+    "est_diameter_min_m": 135.0,
+    "est_diameter_max_m": 165.0,
+    "closest_approach_date": "2025-09-15",
+    "miss_distance_km": "465000.0",
+    "relative_velocity_km_s": "12.4",
+    "orbiting_body": "Earth"
+  },
+  {
+    "name": "Bennu-II (2025-AB2)",
+    "neo_reference_id": "2025AB2",
+    "absolute_magnitude_h": 19.8,
+    "is_potentially_hazardous_asteroid": true,
+    "est_diameter_min_m": 80.1,
+    "est_diameter_max_m": 98.1,
+    "closest_approach_date": "2025-11-22",
+    "miss_distance_km": "675000.0",
+    "relative_velocity_km_s": "9.8",
+    "orbiting_body": "Earth"
+  },
+  {
+    "name": "Apophis-Minor (2025-CD3)",
+    "neo_reference_id": "2025CD3",
+    "absolute_magnitude_h": 21.5,
+    "is_potentially_hazardous_asteroid": false,
+    "est_diameter_min_m": 40.5,
+    "est_diameter_max_m": 49.5,
+    "closest_approach_date": "2025-07-08",
+    "miss_distance_km": "1005000.0",
+    "relative_velocity_km_s": "7.2",
+    "orbiting_body": "Earth"
+  },
+  {
+    "name": "Didymos-B (2025-EF4)",
+    "neo_reference_id": "2025EF4",
+    "absolute_magnitude_h": 17.1,
+    "is_potentially_hazardous_asteroid": true,
+    "est_diameter_min_m": 180.0,
+    "est_diameter_max_m": 220.0,
+    "closest_approach_date": "2025-12-31",
+    "miss_distance_km": "285000.0",
+    "relative_velocity_km_s": "16.3",
+    "orbiting_body": "Earth"
+  },
+  {
+    "name": "Vesta-Fragment (2025-GH5)",
+    "neo_reference_id": "2025GH5",
+    "absolute_magnitude_h": 20.3,
+    "is_potentially_hazardous_asteroid": false,
+    "est_diameter_min_m": 60.3,
+    "est_diameter_max_m": 73.8,
+    "closest_approach_date": "2026-03-17",
+    "miss_distance_km": "1335000.0",
+    "relative_velocity_km_s": "11.1",
+    "orbiting_body": "Earth"
+  },
+  {
     "name": "1566 Icarus (1949 MA)",
     "neo_reference_id": "2001566",
     "absolute_magnitude_h": 16.53,

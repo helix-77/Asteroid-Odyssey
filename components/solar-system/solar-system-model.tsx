@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ImpactCalculator } from "@/components/shared/impact-calculator";
 import {
   Search,
   X,
@@ -58,97 +59,13 @@ interface NEOData {
   [key: string]: any;
 }
 
-interface ImpactCalculation {
-  kineticEnergy: number; // Joules
-  tntEquivalent: number; // Megatons
-  craterDiameter: number; // km
-  craterDepth: number; // km
-  fireballRadius: number; // km
-  shockwaveRadius: number; // km
-  thermalRadius: number; // km
-  seismicMagnitude: number;
-  estimatedCasualties: number;
-  estimatedInjured: number;
-}
+// ImpactCalculation interface removed - now using shared component
 
 // ============================================================================
-// PHYSICS CALCULATIONS (Scientific Accuracy)
+// PHYSICS CALCULATIONS - Now using shared impact calculator component
 // ============================================================================
-
-/**
- * Calculate impact energy and effects using real physics formulas
- * References:
- * - Collins et al. (2005): Earth Impact Effects Program
- * - Holsapple & Housen (2007): Crater scaling laws
- */
-function calculateImpactPhysics(asteroid: NEOData): ImpactCalculation {
-  // Average diameter in meters
-  const diameter =
-    (asteroid.est_diameter_min_m + asteroid.est_diameter_max_m) / 2;
-
-  // Estimate mass assuming stony asteroid (density ~2700 kg/m³)
-  const radius = diameter / 2;
-  const volume = (4 / 3) * Math.PI * Math.pow(radius, 3);
-  const density = 2700; // kg/m³ for stony asteroids
-  const mass = volume * density; // kg
-
-  // Velocity in m/s (use provided or estimate)
-  const velocityKmS = asteroid.relative_velocity_km_s
-    ? parseFloat(asteroid.relative_velocity_km_s)
-    : 20; // Average impact velocity
-  const velocity = velocityKmS * 1000; // m/s
-
-  // Kinetic Energy: KE = 0.5 * m * v²
-  const kineticEnergy = 0.5 * mass * Math.pow(velocity, 2); // Joules
-
-  // Convert to TNT equivalent (1 ton TNT = 4.184 × 10⁹ J)
-  const tntEquivalent = kineticEnergy / 4.184e15; // Megatons
-
-  // Crater diameter using scaling laws (Collins et al., 2005)
-  // D_crater ≈ 1.8 * D_projectile * (ρ_projectile/ρ_target)^(1/3) * (v/v_sound)^0.44
-  const targetDensity = 2500; // kg/m³ for rock
-  const soundSpeed = 3000; // m/s in rock
-  const craterDiameter =
-    (1.8 *
-      diameter *
-      Math.pow(density / targetDensity, 1 / 3) *
-      Math.pow(velocity / soundSpeed, 0.44)) /
-    1000; // Convert to km
-
-  // Crater depth (typically 1/3 to 1/5 of diameter)
-  const craterDepth = craterDiameter / 4;
-
-  // Fireball radius (for airburst or surface impact)
-  const fireballRadius = 0.028 * Math.pow(tntEquivalent, 0.33); // km
-
-  // Shockwave radius (overpressure > 1 psi, causes structural damage)
-  const shockwaveRadius = 0.5 * Math.pow(tntEquivalent, 0.33); // km
-
-  // Thermal radiation radius (3rd degree burns)
-  const thermalRadius = 0.4 * Math.pow(tntEquivalent, 0.41); // km
-
-  // Seismic magnitude (Richter scale)
-  const seismicMagnitude = 0.67 * Math.log10(kineticEnergy) - 5.87;
-
-  // Casualty estimates (very rough, based on population density)
-  const affectedArea = Math.PI * Math.pow(shockwaveRadius, 2); // km²
-  const avgPopDensity = 50; // people per km² (global average)
-  const estimatedCasualties = Math.round(affectedArea * avgPopDensity * 0.1);
-  const estimatedInjured = Math.round(affectedArea * avgPopDensity * 0.3);
-
-  return {
-    kineticEnergy,
-    tntEquivalent,
-    craterDiameter,
-    craterDepth,
-    fireballRadius,
-    shockwaveRadius,
-    thermalRadius,
-    seismicMagnitude,
-    estimatedCasualties,
-    estimatedInjured,
-  };
-}
+// Physics calculations moved to @/components/shared/impact-calculator
+// and @/lib/calculations/impact for consistency across all pages
 
 /**
  * Calculate orbital period using Kepler's Third Law
@@ -676,7 +593,6 @@ function EnhancedAsteroidPopup({
   const [activeTab, setActiveTab] = useState("overview");
 
   const threat = useMemo(() => getThreatLevel(asteroid), [asteroid]);
-  const impact = useMemo(() => calculateImpactPhysics(asteroid), [asteroid]);
 
   const avgDiameter =
     (asteroid.est_diameter_min_m + asteroid.est_diameter_max_m) / 2;
@@ -850,202 +766,18 @@ function EnhancedAsteroidPopup({
                   </Card>
                 </div>
 
-                {/* Quick Stats */}
+                {/* Quick Stats - Using shared impact calculator */}
                 <Card className="p-4">
                   <h3 className="text-sm font-semibold mb-3">
                     Impact Statistics
                   </h3>
-                  <div className="grid grid-cols-4 gap-3">
-                    <div className="text-center">
-                      <Zap className="h-5 w-5 text-yellow-500 mx-auto mb-1" />
-                      <p className="text-lg font-bold">
-                        {impact.tntEquivalent.toFixed(1)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">MT TNT</p>
-                    </div>
-                    <div className="text-center">
-                      <Target className="h-5 w-5 text-red-500 mx-auto mb-1" />
-                      <p className="text-lg font-bold">
-                        {impact.craterDiameter.toFixed(1)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Crater (km)
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <Flame className="h-5 w-5 text-orange-500 mx-auto mb-1" />
-                      <p className="text-lg font-bold">
-                        {impact.fireballRadius.toFixed(1)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Fireball (km)
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <Gauge className="h-5 w-5 text-purple-500 mx-auto mb-1" />
-                      <p className="text-lg font-bold">
-                        {impact.seismicMagnitude.toFixed(1)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Richter</p>
-                    </div>
-                  </div>
+                  <ImpactCalculator asteroid={asteroid} compact={true} showDataQuality={false} />
                 </Card>
               </TabsContent>
 
-              {/* Impact Analysis Tab */}
+              {/* Impact Analysis Tab - Using shared impact calculator */}
               <TabsContent value="impact" className="space-y-4">
-                <Card className="p-4">
-                  <h3 className="text-sm font-semibold mb-3">
-                    Impact Analysis
-                  </h3>
-
-                  <div className="space-y-4">
-                    {/* Energy Release */}
-                    <div>
-                      <h4 className="text-xs font-semibold text-blue-500/70 mb-2">
-                        Energy Release
-                      </h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-black/30 p-4 rounded-lg">
-                          <p className="text-gray-400 text-sm mb-1">
-                            Kinetic Energy
-                          </p>
-                          <p className="text-red-400 font-bold text-xl">
-                            {(impact.kineticEnergy / 1e15).toFixed(2)} × 10¹⁵ J
-                          </p>
-                        </div>
-                        <div className="bg-black/30 p-4 rounded-lg">
-                          <p className="text-gray-400 text-sm mb-1">
-                            TNT Equivalent
-                          </p>
-                          <p className="text-red-400 font-bold text-xl">
-                            {impact.tntEquivalent.toFixed(2)} Megatons
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            ~{(impact.tntEquivalent / 15).toFixed(0)}× Hiroshima
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Crater Formation */}
-                    <div>
-                      <h4 className="text-xs font-semibold text-muted-foreground mb-2">
-                        Crater Formation
-                      </h4>
-                      <div className="grid grid-cols-3 gap-2">
-                        <Card className="p-2 text-center">
-                          <p className="text-sm text-muted-foreground">
-                            Diameter
-                          </p>
-                          <p className="font-bold text-sm">
-                            {impact.craterDiameter.toFixed(2)} km
-                          </p>
-                        </Card>
-                        <Card className="p-2 text-center">
-                          <p className="text-sm text-muted-foreground">Depth</p>
-                          <p className="font-bold text-sm">
-                            {impact.craterDepth.toFixed(2)} km
-                          </p>
-                        </Card>
-                        <Card className="p-2 text-center">
-                          <p className="text-sm text-muted-foreground">
-                            Volume
-                          </p>
-                          <p className="font-bold text-sm">
-                            {(
-                              Math.PI *
-                              Math.pow(impact.craterDiameter / 2, 2) *
-                              impact.craterDepth
-                            ).toFixed(1)}{" "}
-                            km³
-                          </p>
-                        </Card>
-                      </div>
-                    </div>
-
-                    {/* Damage Zones */}
-                    <div>
-                      <h4 className="text-xs font-semibold text-muted-foreground mb-2">
-                        Damage Zones
-                      </h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex items-center justify-between p-2 rounded-md bg-destructive/10">
-                          <span className="font-medium">Fireball</span>
-                          <span className="font-semibold">
-                            {impact.fireballRadius.toFixed(2)} km
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 rounded-md bg-orange-500/10">
-                          <span className="font-medium">Shockwave</span>
-                          <span className="font-semibold">
-                            {impact.shockwaveRadius.toFixed(2)} km
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between p-2 rounded-md bg-yellow-500/10">
-                          <span className="font-medium">Thermal</span>
-                          <span className="font-semibold">
-                            {impact.thermalRadius.toFixed(2)} km
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Casualties */}
-                    <div>
-                      <h4 className="text-xs font-semibold text-muted-foreground mb-2">
-                        Estimated Casualties
-                      </h4>
-                      <Card className="p-3">
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Based on 50 people/km² density
-                        </p>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <p className="text-xs text-muted-foreground">
-                              Fatalities
-                            </p>
-                            <p className="text-destructive font-bold">
-                              ~{impact.estimatedCasualties.toLocaleString()}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">
-                              Injured
-                            </p>
-                            <p className="text-orange-500 font-bold">
-                              ~{impact.estimatedInjured.toLocaleString()}
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
-                    </div>
-
-                    {/* Seismic Effects */}
-                    <div>
-                      <h4 className="text-xs font-semibold text-muted-foreground mb-2">
-                        Seismic Effects
-                      </h4>
-                      <Card className="p-3">
-                        <p className="text-xs text-muted-foreground mb-1">
-                          Earthquake Magnitude
-                        </p>
-                        <p className="font-bold text-2xl">
-                          {impact.seismicMagnitude.toFixed(1)} Richter
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {impact.seismicMagnitude > 7
-                            ? "Catastrophic damage"
-                            : impact.seismicMagnitude > 6
-                            ? "Major damage"
-                            : impact.seismicMagnitude > 5
-                            ? "Moderate damage"
-                            : "Minor damage"}
-                        </p>
-                      </Card>
-                    </div>
-                  </div>
-                </Card>
+                <ImpactCalculator asteroid={asteroid} showDataQuality={true} />
               </TabsContent>
 
               {/* Defense Options Tab */}
