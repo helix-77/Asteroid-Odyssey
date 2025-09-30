@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { ImpactCalculator } from "@/components/simulation/impact-calculator";
 import { ImpactTimeline } from "@/components/simulation/impact-timeline";
 import { DamageAssessment } from "@/components/simulation/damage-assessment";
-import { ImpactHeatmap } from "@/components/simulation/impact-heatmap";
 import { Button } from "@/components/ui/button";
 import {
   ChevronDown,
@@ -14,6 +14,12 @@ import {
 } from "lucide-react";
 import type { Asteroid, ImpactResults } from "@/lib/types";
 import asteroidData from "@/data/asteroids.json";
+
+// Dynamically import ImpactHeatmap with no SSR to avoid window/document errors
+const ImpactHeatmap = dynamic(
+  () => import("@/components/simulation/impact-heatmap").then((mod) => ({ default: mod.ImpactHeatmap })),
+  { ssr: false, loading: () => <div className="h-[50vh] w-full bg-slate-800 animate-pulse rounded-lg flex items-center justify-center"><p className="text-white">Loading map...</p></div> }
+);
 
 export default function SimulationPage() {
   const [selectedAsteroid, setSelectedAsteroid] = useState<Asteroid | null>(

@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MissionControl from "@/components/dashboard/mission-control";
 import { PhysicsShowcase } from "@/components/dashboard/physics-showcase";
-import Earth3D from "@/components/3d/earth-3d";
 import ErrorBoundary, {
   AsteroidDataErrorBoundary,
   PhysicsCalculationErrorBoundary,
@@ -15,6 +15,19 @@ import ErrorBoundary, {
 import { ArrowLeft, Settings, HelpCircle, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { UnifiedAsteroidData } from "@/lib/data/asteroid-manager";
+
+// Dynamically import Earth3D with no SSR to avoid Three.js/Canvas errors
+const Earth3D = dynamic(
+  () => import("@/components/3d/earth-3d"),
+  { 
+    ssr: false, 
+    loading: () => (
+      <div className="absolute inset-0 bg-slate-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
+      </div>
+    )
+  }
+);
 
 export default function Dashboard() {
   const [selectedAsteroid, setSelectedAsteroid] =

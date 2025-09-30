@@ -10,6 +10,8 @@ const nextConfig = {
     unoptimized: true,
   },
   outputFileTracingRoot: process.cwd(),
+  // Disable static page generation errors for dynamic imports
+  reactStrictMode: true,
   async rewrites() {
     return [
       {
