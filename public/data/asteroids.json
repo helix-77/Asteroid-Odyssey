@@ -1,0 +1,129 @@
+{
+  "asteroids": [
+    {
+      "id": "2025-XX1",
+      "name": "Impactor-2025",
+      "size": 150,
+      "velocity": 15.5,
+      "mass": 1.5e10,
+      "orbit": {
+        "semi_major_axis": 1.324,
+        "eccentricity": 0.223,
+        "inclination": 5.37,
+        "ascending_node": 169.85,
+        "perihelion": 336.29,
+        "mean_anomaly": 229.81
+      },
+      "close_approach": {
+        "date": "2025-09-15T14:30:00Z",
+        "distance": 0.0031,
+        "velocity": 12.4
+      },
+      "threat_level": "high",
+      "impact_probability": 0.0023,
+      "composition": "stony",
+      "discovery_date": "2024-12-15",
+      "absolute_magnitude": 18.2
+    },
+    {
+      "id": "2025-AB2",
+      "name": "Bennu-II",
+      "size": 89,
+      "velocity": 11.2,
+      "mass": 3.2e9,
+      "orbit": {
+        "semi_major_axis": 1.126,
+        "eccentricity": 0.204,
+        "inclination": 6.03,
+        "ascending_node": 2.06,
+        "perihelion": 66.22,
+        "mean_anomaly": 101.7
+      },
+      "close_approach": {
+        "date": "2025-11-22T08:15:00Z",
+        "distance": 0.0045,
+        "velocity": 9.8
+      },
+      "threat_level": "medium",
+      "impact_probability": 0.0008,
+      "composition": "carbonaceous",
+      "discovery_date": "2024-10-03",
+      "absolute_magnitude": 19.8
+    },
+    {
+      "id": "2025-CD3",
+      "name": "Apophis-Minor",
+      "size": 45,
+      "velocity": 8.9,
+      "mass": 4.1e8,
+      "orbit": {
+        "semi_major_axis": 0.922,
+        "eccentricity": 0.191,
+        "inclination": 3.33,
+        "ascending_node": 204.43,
+        "perihelion": 126.4,
+        "mean_anomaly": 15.87
+      },
+      "close_approach": {
+        "date": "2025-07-08T19:45:00Z",
+        "distance": 0.0067,
+        "velocity": 7.2
+      },
+      "threat_level": "low",
+      "impact_probability": 0.0001,
+      "composition": "metallic",
+      "discovery_date": "2024-08-20",
+      "absolute_magnitude": 21.5
+    },
+    {
+      "id": "2025-EF4",
+      "name": "Didymos-B",
+      "size": 200,
+      "velocity": 18.7,
+      "mass": 2.8e10,
+      "orbit": {
+        "semi_major_axis": 1.644,
+        "eccentricity": 0.384,
+        "inclination": 3.41,
+        "ascending_node": 73.19,
+        "perihelion": 319.32,
+        "mean_anomaly": 271.46
+      },
+      "close_approach": {
+        "date": "2025-12-31T23:59:00Z",
+        "distance": 0.0019,
+        "velocity": 16.3
+      },
+      "threat_level": "high",
+      "impact_probability": 0.0034,
+      "composition": "stony-iron",
+      "discovery_date": "2024-11-12",
+      "absolute_magnitude": 17.1
+    },
+    {
+      "id": "2025-GH5",
+      "name": "Vesta-Fragment",
+      "size": 67,
+      "velocity": 13.4,
+      "mass": 1.2e9,
+      "orbit": {
+        "semi_major_axis": 2.361,
+        "eccentricity": 0.089,
+        "inclination": 7.14,
+        "ascending_node": 103.85,
+        "perihelion": 151.27,
+        "mean_anomaly": 88.92
+      },
+      "close_approach": {
+        "date": "2026-03-17T12:30:00Z",
+        "distance": 0.0089,
+        "velocity": 11.1
+      },
+      "threat_level": "low",
+      "impact_probability": 0.0002,
+      "composition": "basaltic",
+      "discovery_date": "2024-09-05",
+      "absolute_magnitude": 20.3
+    }
+  ]
+}
