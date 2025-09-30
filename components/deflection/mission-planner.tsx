@@ -7,7 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Rocket, Target, AlertCircle } from "lucide-react";
-import { assessMissionSuccess } from "@/lib/calculations/deflection";
+import { calculateDeflection } from "@/lib/calculations/deflection";
 import type { DeflectionStrategy, Asteroid } from "@/lib/types";
 
 interface MissionPlannerProps {
@@ -35,12 +35,74 @@ export function MissionPlanner({
     // Simulate calculation delay
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    const plan = assessMissionSuccess(
-      selectedStrategy,
-      10, // lead time in years
-      selectedAsteroid?.diameter || 500,
-      selectedAsteroid?.mass || 1e12
+    // Derive time to impact from close approach if available (years)
+    const timeToImpactYears = (() => {
+      const dateStr = selectedAsteroid?.close_approach?.date;
+      if (!dateStr) return Math.max(launchWindow[0] + missionDuration[0], 3);
+      const impactMs = new Date(dateStr).getTime() - Date.now();
+      const years = impactMs / (365.25 * 24 * 3600 * 1000);
+      return Math.max(years, 1);
+    })();
+
+    // Map UI strategy to calculation model (units in m/s, years)
+    const calcStrategy = {
+      id: selectedStrategy.id,
+      name: selectedStrategy.name,
+      deltaV: selectedStrategy.requirements.deltaV, // m/s
+      leadTime: selectedStrategy.timeRequired, // years
+      cost: selectedStrategy.cost, // M USD (kept consistent)
+      successRate: selectedStrategy.effectiveness, // 0-1
+      massRequired: selectedStrategy.requirements.mass || 1000,
+    };
+
+    // Build asteroid params for calculation
+    const distanceToEarthAU = selectedAsteroid?.close_approach?.distance ?? 0.01;
+    const asteroidParams = {
+      mass: selectedAsteroid?.mass || 1e12, // kg
+      velocity: (selectedAsteroid?.velocity || 10) * 1000, // m/s
+      size: selectedAsteroid?.size || selectedAsteroid?.diameter || 100, // m
+      distanceToEarth: distanceToEarthAU, // AU
+      impactProbability: selectedAsteroid?.impact_probability || 0.001,
+    };
+
+    const deflection = calculateDeflection(
+      calcStrategy as any,
+      asteroidParams,
+      timeToImpactYears,
+      1e12
     );
+
+    // Aggregate a user-facing mission plan
+    const missions = numberOfMissions[0];
+    const baseEff = selectedStrategy.effectiveness;
+    const combinedEff = 1 - Math.pow(1 - baseEff, missions);
+    const timeSlackBoost = launchWindow[0] >= calcStrategy.leadTime ? 0.05 : -0.05;
+    const successProbability = Math.min(
+      0.98,
+      Math.max(0.02, combinedEff + timeSlackBoost)
+    );
+
+    const deltaVRequired = selectedStrategy.requirements.deltaV; // m/s
+    const deltaVKmPerSec = deltaVRequired / 1000;
+
+    // Approximate deflection distance from angular change and radius (arc length)
+    const angleRad = (deflection.trajectoryChange * Math.PI) / 180;
+    const arcLengthKm = angleRad * (distanceToEarthAU * 1.496e8); // AU to km
+
+    const plan = {
+      successProbability,
+      totalCost: selectedStrategy.cost * missions, // millions USD
+      totalTime: launchWindow[0] + missionDuration[0], // years
+      deflectionDistance: Math.max(arcLengthKm, 0), // km
+      deltaVRequired, // m/s
+      deltaV: deltaVKmPerSec, // km/s for other consumers
+      warningTime: timeToImpactYears, // years
+      massRatio: (selectedStrategy.requirements.mass || 1000) / (selectedAsteroid?.mass || 1e12),
+      energy: 0.5 * (selectedAsteroid?.mass || 1e12) * Math.pow(selectedAsteroid?.velocity ? selectedAsteroid.velocity * 1000 : 10000, 2), // J
+      deflectionAngle: deflection.trajectoryChange, // degrees
+      riskFactors: deflection.riskFactors,
+      risks: deflection.riskFactors,
+    };
 
     setMissionPlan(plan);
     onMissionPlan(plan);
@@ -176,7 +238,7 @@ export function MissionPlanner({
             </div>
 
             {/* Success Probability */}
-            <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="bg-blue-900/20 p-4 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <Target className="h-4 w-4 text-blue-600" />
                 <span className="font-medium">Success Probability</span>
