@@ -7,6 +7,10 @@ import "leaflet/dist/leaflet.css";
 import type { ImpactResults } from "@/lib/calculations/impact";
 import type { EnhancedImpactResults } from "@/lib/calculations/enhanced-impact-simulator";
 import PopulationHeatmap from "./population-heatmap";
+import CountryPopulationDensity from "./country-population-density";
+import TsunamiVisualization from "./tsunami-visualization";
+import TemperatureVisualization from "./temperature-visualization";
+import CraterVisualization from "./crater-visualization";
 
 // Fix for default markers in react-leaflet
 if (typeof window !== 'undefined') {
@@ -333,18 +337,13 @@ export default function LeafletImpactMap({
           />
         )}
 
-        {/* CRATER IMAGE - ALWAYS SHOWS when timeline is running */}
-        {currentTimeline && (
-          <Marker
-            position={[impactLocation.lat, impactLocation.lng]}
-            icon={L.icon({
-              iconUrl: '/crater.png',
-              // Fixed size crater that's always visible
-              iconSize: [60, 60], // Fixed 60px size
-              iconAnchor: [30, 30],
-            })}
-          />
-        )}
+        {/* ENHANCED CRATER VISUALIZATION - Properly scaled */}
+        <CraterVisualization
+          impactLocation={impactLocation}
+          currentTimeline={currentTimeline}
+          enhancedResults={enhancedResults}
+          simulationResults={simulationResults}
+        />
 
         {/* ANIMATED SHOCKWAVE EFFECT */}
         {currentTimeline && currentTimeIndex < 10 && (
@@ -452,12 +451,22 @@ export default function LeafletImpactMap({
           );
         })}
 
-        {/* REAL CONTINUOUS GRADIENT POPULATION HEATMAP */}
-        <PopulationHeatmap 
+        {/* COUNTRY-WISE POPULATION DENSITY VISUALIZATION */}
+        <CountryPopulationDensity
           populationData={populationData}
           currentTimeline={currentTimeline}
           impactLocation={impactLocation}
+          activeFilter={activeFilter}
         />
+
+        {/* REAL CONTINUOUS GRADIENT POPULATION HEATMAP */}
+        {activeFilter !== 'casualties' && (
+          <PopulationHeatmap 
+            populationData={populationData}
+            currentTimeline={currentTimeline}
+            impactLocation={impactLocation}
+          />
+        )}
 
         {/* NUCLEAR WINTER / ATMOSPHERIC DARKENING */}
         {currentTimeline && currentTimeIndex > 30 && (
@@ -470,42 +479,22 @@ export default function LeafletImpactMap({
           />
         )}
 
-        {/* CLIMATE DATA VISUALIZATION - Temperature, sunlight, pollution overlays */}
-        {currentTimeline && activeFilter === "climate" && enhancedResults && (
-          <div 
-            className="absolute inset-0 pointer-events-none z-10"
-            style={{
-              background: `
-                radial-gradient(circle at ${impactLocation.lat}% ${impactLocation.lng + 180}%, 
-                  rgba(59, 130, 246, ${Math.min(0.8, currentTimeline.time / 86400)}) 0%, 
-                  rgba(59, 130, 246, ${Math.min(0.4, currentTimeline.time / 172800)}) 30%, 
-                  rgba(59, 130, 246, ${Math.min(0.2, currentTimeline.time / 345600)}) 60%, 
-                  transparent 100%
-                )
-              `,
-              mixBlendMode: 'overlay'
-            }}
-          />
-        )}
+        {/* ENHANCED TEMPERATURE VISUALIZATION */}
+        <TemperatureVisualization
+          impactLocation={impactLocation}
+          currentTimeline={currentTimeline}
+          currentTimeIndex={currentTimeIndex}
+          enhancedResults={enhancedResults}
+          activeFilter={activeFilter}
+        />
 
-        {/* TSUNAMI VISUALIZATION */}
-        {currentTimeline && enhancedResults && currentTimeline.time > 3600 && ( // After 1 hour
-          <div 
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: `
-                radial-gradient(circle at ${impactLocation.lat}% ${impactLocation.lng + 180}%, 
-                  transparent 0%, 
-                  transparent 20%, 
-                  rgba(59, 130, 246, 0.6) 25%, 
-                  rgba(59, 130, 246, 0.3) 30%, 
-                  transparent 35%
-                )
-              `,
-              animation: 'pulse 2s infinite'
-            }}
-          />
-        )}
+        {/* ENHANCED TSUNAMI VISUALIZATION */}
+        <TsunamiVisualization
+          impactLocation={impactLocation}
+          currentTimeline={currentTimeline}
+          currentTimeIndex={currentTimeIndex}
+          enhancedResults={enhancedResults}
+        />
 
         {/* FOREST FIRE VISUALIZATION */}
         {currentTimeline && currentTimeline.time > 7200 && ( // After 2 hours

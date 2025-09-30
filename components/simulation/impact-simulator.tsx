@@ -13,15 +13,15 @@ import { Play, Pause, RotateCcw, MapPin, Zap, Users, Building, Thermometer } fro
 import { calculateImpact, type ImpactParameters, type ImpactResults } from "@/lib/calculations/impact";
 import { calculateEnhancedImpact, type EnhancedImpactResults } from "@/lib/calculations/enhanced-impact-simulator";
 
-// Dynamic import for Leaflet map to avoid SSR issues
-const LeafletImpactMap = dynamic(() => import("./leaflet-impact-map"), { 
+// Dynamic import for D3 map to avoid SSR issues
+const D3ImpactMap = dynamic(() => import("./d3-impact-map"), { 
   ssr: false,
   loading: () => (
     <div className="h-full w-full bg-slate-100 flex items-center justify-center rounded-lg">
       <div className="text-center space-y-2">
         <div className="text-lg font-semibold">Loading Interactive Map...</div>
         <div className="text-sm text-muted-foreground">
-          Initializing Leaflet components
+          Initializing D3.js components
         </div>
       </div>
     </div>
@@ -86,6 +86,10 @@ export function ImpactSimulator() {
   const [asteroids, setAsteroids] = useState<Asteroid[]>([]);
   const [populationData, setPopulationData] = useState<any[]>([]);
   const [infrastructureData, setInfrastructureData] = useState<any[]>([]);
+  
+  // Loading and error states
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [dataError, setDataError] = useState<string | null>(null);
 
   // Load data on component mount
   useEffect(() => {
@@ -111,8 +115,11 @@ export function ImpactSimulator() {
         setAsteroids(asteroidsData.asteroids || []);
         setPopulationData(populationData.population_density_data || []);
         setInfrastructureData(infrastructureData.infrastructure_locations || []);
+        setIsLoadingData(false);
+        setDataError(null);
       } catch (error) {
         console.error('Failed to load data:', error);
+        setDataError('Failed to load simulation data. Using fallback data.');
         // Fallback data if loading fails
         setAsteroids([
           {
@@ -126,6 +133,7 @@ export function ImpactSimulator() {
             impact_probability: 0.001,
           }
         ]);
+        setIsLoadingData(false);
       }
     };
     
@@ -366,16 +374,27 @@ export function ImpactSimulator() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Control Panel */}
-          <div className="lg:col-span-1 space-y-4">
+          <div className="lg:col-span-1 space-y-4 max-h-screen overflow-y-auto">
             {/* Asteroid Selection */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Asteroid Selection</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {asteroids.length > 0 ? (
+                {dataError && (
+                  <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-3 py-2 rounded text-sm mb-2">
+                    ⚠️ {dataError}
+                  </div>
+                )}
+                
+                {isLoadingData ? (
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    <span>Loading asteroids...</span>
+                  </div>
+                ) : asteroids.length > 0 ? (
                   <div className="space-y-2">
                     <select
                       className="w-full p-2 border rounded bg-background text-foreground"
@@ -394,7 +413,7 @@ export function ImpactSimulator() {
                     </select>
                   </div>
                 ) : (
-                  <div className="text-sm text-muted-foreground">Loading asteroids...</div>
+                  <div className="text-sm text-red-600">No asteroids available</div>
                 )}
 
                 {selectedAsteroid && (
@@ -462,67 +481,28 @@ export function ImpactSimulator() {
 
                 <Button
                   onClick={runSimulation}
-                  disabled={!selectedAsteroid || isSimulating}
+                  disabled={!selectedAsteroid || isSimulating || isLoadingData}
                   className="w-full"
                 >
-                  {isSimulating ? "Simulating..." : "Run Simulation"}
+                  {isSimulating ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Simulating...</span>
+                    </div>
+                  ) : isLoadingData ? "Loading..." : "Run Simulation"}
                 </Button>
 
                 {isSimulating && (
-                  <Progress value={66} className="w-full" />
+                  <div className="space-y-2">
+                    <Progress value={66} className="w-full" />
+                    <div className="text-xs text-center text-muted-foreground">
+                      Calculating impact effects...
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Timeline Controls */}
-            {timelineState.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Timeline Control</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setIsPlaying(!isPlaying)}
-                    >
-                      {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setCurrentTimeIndex(0);
-                        setIsPlaying(false);
-                      }}
-                    >
-                      <RotateCcw className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium">
-                      Time: {currentTimeline ? formatTimeAfterImpact(currentTimeline.time) : "0 seconds"} after impact
-                    </label>
-                    <Slider
-                      value={[currentTimeIndex]}
-                      onValueChange={([value]) => {
-                        setCurrentTimeIndex(value);
-                        setIsPlaying(false); // Stop animation when manually adjusting
-                      }}
-                      max={timelineState.length - 1}
-                      min={0}
-                      step={1}
-                      className="mt-2"
-                    />
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Step {currentTimeIndex + 1} of {timelineState.length}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             {/* Impact Data Sidebar */}
             {simulationResults && enhancedResults && currentTimeline && (
@@ -636,9 +616,62 @@ export function ImpactSimulator() {
             )}
           </div>
 
+          {/* Timeline Controls - Sticky Bottom */}
+          {timelineState.length > 0 && (
+            <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+              <Card className="bg-background/95 backdrop-blur-sm border-2">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setIsPlaying(!isPlaying)}
+                        className="bg-background"
+                      >
+                        {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setCurrentTimeIndex(0);
+                          setIsPlaying(false);
+                        }}
+                        className="bg-background"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    <div className="flex-1 min-w-64">
+                      <div className="text-sm font-medium mb-1">
+                        {currentTimeline ? formatTimeAfterImpact(currentTimeline.time) : "0 seconds"} after impact
+                      </div>
+                      <Slider
+                        value={[currentTimeIndex]}
+                        onValueChange={([value]) => {
+                          setCurrentTimeIndex(value);
+                          setIsPlaying(false);
+                        }}
+                        max={timelineState.length - 1}
+                        min={0}
+                        step={1}
+                        className="w-full"
+                      />
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Step {currentTimeIndex + 1} of {timelineState.length}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {/* Main Map Area */}
-          <div className="lg:col-span-2">
-            <Card className="h-[600px]">
+          <div className="lg:col-span-3 relative">
+            <Card className="h-[700px]">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>Impact Visualization</CardTitle>
@@ -661,7 +694,7 @@ export function ImpactSimulator() {
                 </div>
               </CardHeader>
               <CardContent className="h-full p-0">
-                <LeafletImpactMap
+                <D3ImpactMap
                   impactLocation={impactLocation}
                   onLocationChange={setImpactLocation}
                   simulationResults={simulationResults}
@@ -678,17 +711,17 @@ export function ImpactSimulator() {
           </div>
 
           {/* RIGHT SIDE PANEL - Legends and Data */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 max-h-screen overflow-y-auto">
             <div className="space-y-4">
               {/* Climate Data Panel - COMPACT */}
               {currentTimeline && (
                 <Card className="bg-gradient-to-br from-blue-900 to-blue-950 text-white">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Climate Data</CardTitle>
+                    <CardTitle className="text-sm">🌡️ Climate Impact</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2 pt-0">
                     <div className="bg-black/30 rounded p-2">
-                      <div className="text-xs text-blue-200">Temp</div>
+                      <div className="text-xs text-blue-200">Global Temp</div>
                       <div className="text-lg font-bold">
                         -{Math.round((currentTimeIndex / 100) * 15)}°C
                       </div>
@@ -700,9 +733,15 @@ export function ImpactSimulator() {
                       </div>
                     </div>
                     <div className="bg-black/30 rounded p-2">
-                      <div className="text-xs text-gray-200">Pollution</div>
+                      <div className="text-xs text-gray-200">Dust/Debris</div>
                       <div className="text-lg font-bold">
                         +{Math.round((currentTimeIndex / 100) * 95)}%
+                      </div>
+                    </div>
+                    <div className="bg-black/30 rounded p-2">
+                      <div className="text-xs text-green-200">Agriculture</div>
+                      <div className="text-lg font-bold text-red-400">
+                        -{Math.round((currentTimeIndex / 100) * 85)}%
                       </div>
                     </div>
                   </CardContent>
@@ -712,24 +751,51 @@ export function ImpactSimulator() {
               {/* Population Density Legend */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm">Population Density</CardTitle>
+                  <CardTitle className="text-sm">🗺️ Map Legend</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full" style={{backgroundColor: 'rgb(200, 0, 0)'}}></div>
-                    <span className="text-xs">Very High (&gt;10k/km²)</span>
+                <CardContent className="space-y-3">
+                  <div>
+                    <div className="text-xs font-semibold mb-1">Population Density</div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-800"></div>
+                        <span className="text-xs">Very High (&gt;300/km²)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                        <span className="text-xs">High (150-300/km²)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                        <span className="text-xs">Medium (75-150/km²)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <span className="text-xs">Low (25-75/km²)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                        <span className="text-xs">Very Low (&lt;25/km²)</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full" style={{backgroundColor: 'rgb(255, 100, 0)'}}></div>
-                    <span className="text-xs">High (5k-10k/km²)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full" style={{backgroundColor: 'rgb(255, 200, 0)'}}></div>
-                    <span className="text-xs">Medium (1k-5k/km²)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full" style={{backgroundColor: 'rgb(150, 255, 0)'}}></div>
-                    <span className="text-xs">Low (&lt;1k/km²)</span>
+                  
+                  <div>
+                    <div className="text-xs font-semibold mb-1">Effects</div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-blue-600"></div>
+                        <span className="text-xs">🌊 Tsunami Waves</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-blue-300"></div>
+                        <span className="text-xs">❄️ Temperature Drop</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-amber-700"></div>
+                        <span className="text-xs">🕳️ Impact Crater</span>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -738,13 +804,27 @@ export function ImpactSimulator() {
               {currentTimeline && (
                 <Card className="bg-gradient-to-br from-red-900 to-red-950 text-white">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Casualties</CardTitle>
+                    <CardTitle className="text-sm">💀 Human Impact</CardTitle>
                   </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="text-2xl font-bold">
-                      {Math.round(currentTimeline.casualties).toLocaleString()}
+                  <CardContent className="pt-0 space-y-2">
+                    <div>
+                      <div className="text-xl font-bold">
+                        {Math.round(currentTimeline.casualties).toLocaleString()}
+                      </div>
+                      <div className="text-xs text-red-200">Immediate Deaths</div>
                     </div>
-                    <div className="text-xs text-red-200">Deaths</div>
+                    <div>
+                      <div className="text-lg font-bold text-orange-300">
+                        {Math.round(currentTimeline.casualties * 2.5).toLocaleString()}
+                      </div>
+                      <div className="text-xs text-orange-200">Injured</div>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-yellow-300">
+                        {Math.round(currentTimeline.casualties * 10).toLocaleString()}
+                      </div>
+                      <div className="text-xs text-yellow-200">Displaced</div>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -753,17 +833,27 @@ export function ImpactSimulator() {
               {currentTimeline && (
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Phase</CardTitle>
+                    <CardTitle className="text-sm">⏱️ Impact Phase</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="text-sm font-bold">
-                      {currentTimeIndex < 10 ? "Initial Impact" :
-                       currentTimeIndex < 20 ? "Ejecta Spread" :
-                       currentTimeIndex < 40 ? "Regional Devastation" :
-                       "Nuclear Winter"}
+                      {currentTimeIndex < 5 ? "💥 Initial Impact" :
+                       currentTimeIndex < 15 ? "🌋 Ejecta Spread" :
+                       currentTimeIndex < 30 ? "🔥 Regional Devastation" :
+                       currentTimeIndex < 60 ? "🌪️ Global Effects" :
+                       "❄️ Nuclear Winter"}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      {formatTimeAfterImpact(currentTimeline.time)} | {(currentTimeline.damageRadius / 1000).toFixed(0)}km
+                      T+{formatTimeAfterImpact(currentTimeline.time)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Damage radius: {(currentTimeline.damageRadius / 1000).toFixed(0)}km
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                      <div 
+                        className="bg-red-600 h-2 rounded-full transition-all duration-300" 
+                        style={{ width: `${(currentTimeIndex / 100) * 100}%` }}
+                      ></div>
                     </div>
                   </CardContent>
                 </Card>
@@ -771,6 +861,9 @@ export function ImpactSimulator() {
             </div>
           </div>
         </div>
+        
+        {/* Bottom padding to prevent timeline controls from covering content */}
+        <div className="h-24"></div>
       </div>
     </div>
   );
