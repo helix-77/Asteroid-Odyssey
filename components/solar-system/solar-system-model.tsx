@@ -1,10 +1,16 @@
 "use client";
 
-import { useRef, useState, useEffect, Suspense, useMemo } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Sphere, Text, Line } from "@react-three/drei";
+import { useRef, useState, useEffect, useMemo, useCallback } from "react";
+import { Canvas, useFrame, useThree, useLoader } from "@react-three/fiber";
+import {
+  OrbitControls,
+  Sphere,
+  Text,
+  Line,
+  Stars,
+  Html,
+} from "@react-three/drei";
 import * as THREE from "three";
-import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,25 +18,31 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Slider } from "@/components/ui/slider";
-import {
   Search,
-  Filter,
   X,
   AlertTriangle,
-  Shield,
-  Target,
   Settings,
   Play,
   Pause,
+  Zap,
+  Target,
+  Rocket,
+  Shield,
+  TrendingUp,
+  Activity,
+  MapPin,
+  Calendar,
+  Gauge,
+  Flame,
+  ExternalLink,
 } from "lucide-react";
+import Link from "next/link";
 import neoData from "@/data/neo_sample.json";
 import React from "react";
+
+// ============================================================================
+// TYPES & INTERFACES
+// ============================================================================
 
 interface NEOData {
   name: string;
@@ -43,59 +55,442 @@ interface NEOData {
   miss_distance_km?: string | null;
   relative_velocity_km_s?: string | null;
   orbiting_body?: string | null;
-  [key: string]: any; // Allow additional properties
+  [key: string]: any;
 }
 
-// Helper function to get size-based color
+interface ImpactCalculation {
+  kineticEnergy: number; // Joules
+  tntEquivalent: number; // Megatons
+  craterDiameter: number; // km
+  craterDepth: number; // km
+  fireballRadius: number; // km
+  shockwaveRadius: number; // km
+  thermalRadius: number; // km
+  seismicMagnitude: number;
+  estimatedCasualties: number;
+  estimatedInjured: number;
+}
+
+// ============================================================================
+// PHYSICS CALCULATIONS (Scientific Accuracy)
+// ============================================================================
+
+/**
+ * Calculate impact energy and effects using real physics formulas
+ * References:
+ * - Collins et al. (2005): Earth Impact Effects Program
+ * - Holsapple & Housen (2007): Crater scaling laws
+ */
+function calculateImpactPhysics(asteroid: NEOData): ImpactCalculation {
+  // Average diameter in meters
+  const diameter =
+    (asteroid.est_diameter_min_m + asteroid.est_diameter_max_m) / 2;
+
+  // Estimate mass assuming stony asteroid (density ~2700 kg/m³)
+  const radius = diameter / 2;
+  const volume = (4 / 3) * Math.PI * Math.pow(radius, 3);
+  const density = 2700; // kg/m³ for stony asteroids
+  const mass = volume * density; // kg
+
+  // Velocity in m/s (use provided or estimate)
+  const velocityKmS = asteroid.relative_velocity_km_s
+    ? parseFloat(asteroid.relative_velocity_km_s)
+    : 20; // Average impact velocity
+  const velocity = velocityKmS * 1000; // m/s
+
+  // Kinetic Energy: KE = 0.5 * m * v²
+  const kineticEnergy = 0.5 * mass * Math.pow(velocity, 2); // Joules
+
+  // Convert to TNT equivalent (1 ton TNT = 4.184 × 10⁹ J)
+  const tntEquivalent = kineticEnergy / 4.184e15; // Megatons
+
+  // Crater diameter using scaling laws (Collins et al., 2005)
+  // D_crater ≈ 1.8 * D_projectile * (ρ_projectile/ρ_target)^(1/3) * (v/v_sound)^0.44
+  const targetDensity = 2500; // kg/m³ for rock
+  const soundSpeed = 3000; // m/s in rock
+  const craterDiameter =
+    (1.8 *
+      diameter *
+      Math.pow(density / targetDensity, 1 / 3) *
+      Math.pow(velocity / soundSpeed, 0.44)) /
+    1000; // Convert to km
+
+  // Crater depth (typically 1/3 to 1/5 of diameter)
+  const craterDepth = craterDiameter / 4;
+
+  // Fireball radius (for airburst or surface impact)
+  const fireballRadius = 0.028 * Math.pow(tntEquivalent, 0.33); // km
+
+  // Shockwave radius (overpressure > 1 psi, causes structural damage)
+  const shockwaveRadius = 0.5 * Math.pow(tntEquivalent, 0.33); // km
+
+  // Thermal radiation radius (3rd degree burns)
+  const thermalRadius = 0.4 * Math.pow(tntEquivalent, 0.41); // km
+
+  // Seismic magnitude (Richter scale)
+  const seismicMagnitude = 0.67 * Math.log10(kineticEnergy) - 5.87;
+
+  // Casualty estimates (very rough, based on population density)
+  const affectedArea = Math.PI * Math.pow(shockwaveRadius, 2); // km²
+  const avgPopDensity = 50; // people per km² (global average)
+  const estimatedCasualties = Math.round(affectedArea * avgPopDensity * 0.1);
+  const estimatedInjured = Math.round(affectedArea * avgPopDensity * 0.3);
+
+  return {
+    kineticEnergy,
+    tntEquivalent,
+    craterDiameter,
+    craterDepth,
+    fireballRadius,
+    shockwaveRadius,
+    thermalRadius,
+    seismicMagnitude,
+    estimatedCasualties,
+    estimatedInjured,
+  };
+}
+
+/**
+ * Calculate orbital period using Kepler's Third Law
+ * T² = (4π²/GM) * a³
+ */
+function calculateOrbitalPeriod(semiMajorAxisAU: number): number {
+  const GM_sun = 1.32712440018e20; // m³/s² (Sun's gravitational parameter)
+  const AU = 1.496e11; // meters
+  const a = semiMajorAxisAU * AU;
+  const period = 2 * Math.PI * Math.sqrt(Math.pow(a, 3) / GM_sun);
+  return period / (365.25 * 24 * 3600); // Convert to years
+}
+
+// ============================================================================
+// VISUAL HELPERS
+// ============================================================================
+
 function getSizeBasedColor(diameter: number): string {
-  if (diameter < 100) return "#22c55e"; // Small - Green
-  if (diameter < 500) return "#eab308"; // Medium - Yellow
+  if (diameter < 100) return "#10b981"; // Small - Green
+  if (diameter < 500) return "#f59e0b"; // Medium - Amber
   if (diameter < 1000) return "#f97316"; // Large - Orange
   return "#ef4444"; // Massive - Red
 }
 
-// Helper function to generate orbital path points
-function generateOrbitPath(
-  center: [number, number, number],
-  radius: number,
-  eccentricity = 0.1
-): THREE.Vector3[] {
-  const points: THREE.Vector3[] = [];
-  const segments = 64;
+function getThreatLevel(asteroid: NEOData): {
+  level: string;
+  color: string;
+  intensity: number;
+} {
+  const diameter = asteroid.est_diameter_max_m;
+  const isPHA = asteroid.is_potentially_hazardous_asteroid;
 
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    // Create elliptical orbit
-    const r =
-      (radius * (1 - eccentricity * eccentricity)) /
-      (1 + eccentricity * Math.cos(angle));
-    const x = center[0] + r * Math.cos(angle);
-    const z = center[2] + r * Math.sin(angle);
-    const y = center[1] + Math.sin(angle * 3) * 0.2; // Slight vertical variation
-
-    points.push(new THREE.Vector3(x, y, z));
+  if (isPHA && diameter > 1000) {
+    return { level: "CRITICAL", color: "#dc2626", intensity: 1.0 };
+  } else if (isPHA || diameter > 500) {
+    return { level: "HIGH", color: "#f97316", intensity: 0.8 };
+  } else if (diameter > 100) {
+    return { level: "MODERATE", color: "#f59e0b", intensity: 0.6 };
   }
-
-  return points;
+  return { level: "LOW", color: "#10b981", intensity: 0.4 };
 }
 
-const OrbitPath = React.memo(function OrbitPath({
-  center,
-  radius,
-  color = "#ffffff",
-  opacity = 0.3,
-  eccentricity = 0.1,
-}: {
-  center: [number, number, number];
-  radius: number;
-  color?: string;
-  opacity?: number;
-  eccentricity?: number;
-}) {
-  const points = useMemo(
-    () => generateOrbitPath(center, radius, eccentricity),
-    [center, radius, eccentricity]
+// ============================================================================
+// 3D COMPONENTS
+// ============================================================================
+
+/**
+ * Moon orbiting Earth
+ */
+const Moon = React.memo(function Moon() {
+  const meshRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      // Moon orbits Earth at ~384,400 km, scaled to 3 units in our scene
+      const angle = state.clock.elapsedTime * 0.1; // Orbital speed
+      const orbitRadius = 3;
+      const x = orbitRadius * Math.cos(angle);
+      const z = orbitRadius * Math.sin(angle);
+
+      meshRef.current.position.set(x, 0.2, z);
+      meshRef.current.rotation.y += 0.01; // Moon rotation
+    }
+  });
+
+  return (
+    <group>
+      <Sphere ref={meshRef} args={[0.27, 32, 32]}>
+        <meshStandardMaterial color="#9ca3af" roughness={0.9} metalness={0.1} />
+      </Sphere>
+
+      {/* Moon orbit path */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[3, 0.005, 16, 100]} />
+        <meshBasicMaterial color="#6b7280" transparent opacity={0.2} />
+      </mesh>
+    </group>
   );
+});
+
+/**
+ * Enhanced Earth Globe with realistic textures and atmosphere
+ */
+const EarthGlobe = React.memo(function EarthGlobe() {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const atmosphereRef = useRef<THREE.Mesh>(null);
+  const cloudsRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state, delta) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y += delta * 0.05; // Slow Earth rotation
+    }
+    if (cloudsRef.current) {
+      cloudsRef.current.rotation.y += delta * 0.06; // Slightly faster clouds
+    }
+    if (atmosphereRef.current) {
+      const pulse = Math.sin(state.clock.elapsedTime * 0.5) * 0.05 + 1;
+      atmosphereRef.current.scale.setScalar(pulse);
+    }
+  });
+
+  return (
+    <group position={[0, 0, 0]}>
+      {/* Outer atmosphere glow */}
+      <Sphere ref={atmosphereRef} args={[2.3, 64, 64]}>
+        <meshBasicMaterial
+          color="#60a5fa"
+          transparent
+          opacity={0.1}
+          side={THREE.BackSide}
+        />
+      </Sphere>
+
+      {/* Atmosphere layer */}
+      <Sphere args={[2.1, 64, 64]}>
+        <meshPhongMaterial
+          color="#3b82f6"
+          transparent
+          opacity={0.15}
+          side={THREE.BackSide}
+          emissive="#1e40af"
+          emissiveIntensity={0.2}
+        />
+      </Sphere>
+
+      {/* Cloud layer */}
+      <Sphere ref={cloudsRef} args={[2.05, 64, 64]}>
+        <meshPhongMaterial
+          color="#ffffff"
+          transparent
+          opacity={0.3}
+          emissive="#e0f2fe"
+          emissiveIntensity={0.1}
+        />
+      </Sphere>
+
+      {/* Main Earth sphere */}
+      <Sphere ref={meshRef} args={[2, 128, 128]}>
+        <meshPhongMaterial
+          color="#1e40af"
+          emissive="#1e3a8a"
+          emissiveIntensity={0.3}
+          shininess={25}
+          specular="#60a5fa"
+        />
+      </Sphere>
+
+      {/* Earth label */}
+      <Text
+        position={[0, 2.8, 0]}
+        fontSize={0.4}
+        color="#ffffff"
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.03}
+        outlineColor="#000000"
+      >
+        EARTH
+      </Text>
+
+      {/* Equator ring */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[2, 0.01, 16, 100]} />
+        <meshBasicMaterial color="#60a5fa" transparent opacity={0.3} />
+      </mesh>
+    </group>
+  );
+});
+
+/**
+ * Asteroid with enhanced visuals and hover effects
+ */
+const Asteroid3D = React.memo(function Asteroid3D({
+  asteroid,
+  orbitRadius,
+  orbitAngle,
+  onClick,
+  isSelected,
+  orbitSpeed,
+}: {
+  asteroid: NEOData;
+  orbitRadius: number;
+  orbitAngle: number;
+  onClick: () => void;
+  isSelected: boolean;
+  orbitSpeed: number;
+}) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const trailRef = useRef<THREE.Line>(null);
+  const [hovered, setHovered] = useState(false);
+  const [trailPoints, setTrailPoints] = useState<THREE.Vector3[]>([]);
+
+  const threat = useMemo(() => getThreatLevel(asteroid), [asteroid]);
+  const color = useMemo(
+    () => getSizeBasedColor(asteroid.est_diameter_max_m),
+    [asteroid]
+  );
+
+  const size = useMemo(() => {
+    const diameter = asteroid.est_diameter_max_m;
+    return Math.max(0.03, Math.min(0.15, diameter / 8000));
+  }, [asteroid]);
+
+  // Orbital parameters
+  const orbitParams = useMemo(
+    () => ({
+      speed: 0.02 + Math.random() * 0.03,
+      offset: Math.random() * Math.PI * 2,
+      eccentricity: 0.05 + Math.random() * 0.15,
+      inclination: (Math.random() - 0.5) * 0.3,
+    }),
+    [asteroid.neo_reference_id]
+  );
+
+  useFrame((state) => {
+    if (!meshRef.current) return;
+
+    // Calculate orbital position
+    const time =
+      state.clock.elapsedTime * orbitParams.speed * orbitSpeed +
+      orbitParams.offset;
+    const angle = time;
+
+    // Elliptical orbit with inclination
+    const r =
+      (orbitRadius * (1 - orbitParams.eccentricity)) /
+      (1 + orbitParams.eccentricity * Math.cos(angle));
+    const x = r * Math.cos(angle);
+    const y = r * Math.sin(angle) * Math.sin(orbitParams.inclination);
+    const z = r * Math.sin(angle) * Math.cos(orbitParams.inclination);
+
+    meshRef.current.position.set(x, y, z);
+
+    // Rotation
+    meshRef.current.rotation.x += 0.01;
+    meshRef.current.rotation.y += 0.015;
+
+    // Pulsing effect for hazardous asteroids
+    if (asteroid.is_potentially_hazardous_asteroid) {
+      const pulse = 1 + Math.sin(state.clock.elapsedTime * 3) * 0.2;
+      meshRef.current.scale.setScalar(size * pulse);
+    } else {
+      meshRef.current.scale.setScalar(size);
+    }
+
+    // Trail effect
+    if (orbitSpeed > 0 && state.clock.elapsedTime % 0.1 < 0.016) {
+      setTrailPoints((prev) => {
+        const newPoints = [...prev, new THREE.Vector3(x, y, z)];
+        return newPoints.slice(-30); // Keep last 30 points
+      });
+    }
+  });
+
+  return (
+    <>
+      {/* Asteroid mesh */}
+      <Sphere
+        ref={meshRef}
+        args={[size, 16, 16]}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick();
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+          document.body.style.cursor = "pointer";
+        }}
+        onPointerOut={() => {
+          setHovered(false);
+          document.body.style.cursor = "default";
+        }}
+      >
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={hovered || isSelected ? 1.0 : threat.intensity}
+          roughness={0.9}
+          metalness={0.1}
+        />
+      </Sphere>
+
+      {/* Glow effect when hovered or selected */}
+      {(hovered || isSelected) && meshRef.current && (
+        <Sphere position={meshRef.current.position} args={[size * 1.5, 16, 16]}>
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={0.3}
+            side={THREE.BackSide}
+          />
+        </Sphere>
+      )}
+
+      {/* Label on hover */}
+      {hovered && meshRef.current && (
+        <Html position={meshRef.current.position} center>
+          <div className="bg-black/80 backdrop-blur-sm px-3 py-1 rounded-lg border border-white/20 pointer-events-none">
+            <p className="text-white text-xs font-semibold whitespace-nowrap">
+              {asteroid.name}
+            </p>
+            <p className="text-gray-300 text-[10px]">
+              {Math.round(asteroid.est_diameter_max_m)}m • {threat.level}
+            </p>
+          </div>
+        </Html>
+      )}
+    </>
+  );
+});
+
+/**
+ * Orbital path visualization
+ */
+const OrbitPath = React.memo(function OrbitPath({
+  radius,
+  color,
+  eccentricity = 0.1,
+  inclination = 0,
+}: {
+  radius: number;
+  color: string;
+  eccentricity?: number;
+  inclination?: number;
+}) {
+  const points = useMemo(() => {
+    const pts: THREE.Vector3[] = [];
+    const segments = 128;
+
+    for (let i = 0; i <= segments; i++) {
+      const angle = (i / segments) * Math.PI * 2;
+      const r =
+        (radius * (1 - eccentricity)) / (1 + eccentricity * Math.cos(angle));
+      const x = r * Math.cos(angle);
+      const y = r * Math.sin(angle) * Math.sin(inclination);
+      const z = r * Math.sin(angle) * Math.cos(inclination);
+      pts.push(new THREE.Vector3(x, y, z));
+    }
+
+    return pts;
+  }, [radius, eccentricity, inclination]);
 
   return (
     <Line
@@ -103,329 +498,188 @@ const OrbitPath = React.memo(function OrbitPath({
       color={color}
       lineWidth={1}
       transparent
-      opacity={opacity}
-      dashed={false}
+      opacity={0.15}
     />
   );
 });
 
-const Planet = React.memo(function Planet({
-  position,
-  radius,
-  color,
-  name,
-}: {
-  position: [number, number, number];
-  radius: number;
-  color: string;
-  name: string;
-}) {
-  const meshRef = useRef<THREE.Mesh>(null);
+/**
+ * Particle field for space dust and stars
+ */
+const SpaceParticles = React.memo(function SpaceParticles() {
+  const particlesRef = useRef<THREE.Points>(null);
+
+  const { positions, colors } = useMemo(() => {
+    const count = 8000;
+    const positions = new Float32Array(count * 3);
+    const colors = new Float32Array(count * 3);
+
+    for (let i = 0; i < count; i++) {
+      // Random spherical distribution
+      const radius = 50 + Math.random() * 100;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+
+      positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+      positions[i * 3 + 2] = radius * Math.cos(phi);
+
+      // Color variation (white to blue)
+      const colorVariation = Math.random();
+      colors[i * 3] = 0.8 + colorVariation * 0.2;
+      colors[i * 3 + 1] = 0.8 + colorVariation * 0.2;
+      colors[i * 3 + 2] = 1.0;
+    }
+
+    return { positions, colors };
+  }, []);
 
   useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y += 0.01;
+    if (particlesRef.current) {
+      particlesRef.current.rotation.y += 0.0001;
+      particlesRef.current.rotation.x += 0.00005;
     }
   });
 
-  return (
-    <group position={position}>
-      <Sphere ref={meshRef} args={[radius, 32, 32]}>
-        <meshStandardMaterial color={color} />
-      </Sphere>
-      <Text
-        position={[0, radius + 0.5, 0]}
-        fontSize={0.3}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-      >
-        {name}
-      </Text>
-    </group>
-  );
-});
-
-const AsteroidPoint = React.memo(function AsteroidPoint({
-  asteroid,
-  basePosition,
-  orbitRadius,
-  onClick,
-  isSelected,
-  scale = 1,
-  orbitSpeedMultiplier = 1,
-}: {
-  asteroid: NEOData;
-  basePosition: [number, number, number];
-  orbitRadius: number;
-  onClick: () => void;
-  isSelected: boolean;
-  scale?: number;
-  orbitSpeedMultiplier?: number;
-}) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [hovered, setHovered] = useState(false);
-
-  // Use size-based coloring instead of just hazard level
-  const sizeColor = useMemo(
-    () => getSizeBasedColor(asteroid.est_diameter_max_m),
-    [asteroid.est_diameter_max_m]
-  );
-  const hazardGlow = asteroid.is_potentially_hazardous_asteroid;
-
-  const size = useMemo(
-    () =>
-      Math.max(0.02, Math.min(0.1, asteroid.est_diameter_max_m / 10000)) *
-      scale,
-    [asteroid.est_diameter_max_m, scale]
-  );
-
-  // Orbital animation parameters (memoized for performance)
-  const orbitParams = useMemo(
-    () => ({
-      speed: 0.01 + Math.random() * 1.5,
-      offset: Math.random() * Math.PI * 2,
-      eccentricity: 0.1 + Math.random() * 0.3,
-    }),
-    [asteroid.neo_reference_id]
-  );
-
-  useFrame((state) => {
-    if (meshRef.current) {
-      // Orbital motion with speed multiplier
-      const time =
-        state.clock.elapsedTime * orbitParams.speed * orbitSpeedMultiplier +
-        orbitParams.offset;
-      const angle = time * 0.1; // Orbital angle
-
-      // Calculate elliptical orbit position
-      const r =
-        (orbitRadius *
-          (1 - orbitParams.eccentricity * orbitParams.eccentricity)) /
-        (1 + orbitParams.eccentricity * Math.cos(angle));
-      const x = basePosition[0] + r * Math.cos(angle);
-      const z = basePosition[2] + r * Math.sin(angle);
-      const y = basePosition[1] + Math.sin(angle * 3) * 0.2; // Slight vertical oscillation
-
-      meshRef.current.position.set(x, y, z);
-
-      // Rotation with speed multiplier
-      meshRef.current.rotation.x += 0.02 * orbitSpeedMultiplier;
-      meshRef.current.rotation.y += 0.02 * orbitSpeedMultiplier;
-
-      // Hazardous asteroid pulsing effect
-      if (hazardGlow) {
-        const intensity = 0.8 + Math.sin(state.clock.elapsedTime * 3) * 0.4;
-        meshRef.current.scale.setScalar(size * (1 + intensity * 0.3));
-      } else {
-        meshRef.current.scale.setScalar(size);
-      }
-    }
-  });
-
-  const handlePointerOver = useMemo(() => () => setHovered(true), []);
-  const handlePointerOut = useMemo(() => () => setHovered(false), []);
+  const geometry = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    return geo;
+  }, [positions, colors]);
 
   return (
-    <Sphere
-      ref={meshRef}
-      position={basePosition}
-      args={[size, 8, 8]}
-      onClick={onClick}
-      onPointerOver={handlePointerOver}
-      onPointerOut={handlePointerOut}
-    >
-      <meshStandardMaterial
-        color={sizeColor}
-        emissive={sizeColor}
-        emissiveIntensity={hovered || isSelected ? 0.6 : hazardGlow ? 0.4 : 0.2}
-        transparent={hazardGlow}
-        opacity={hazardGlow ? 0.9 : 1.0}
+    <points ref={particlesRef} geometry={geometry}>
+      <pointsMaterial
+        size={0.15}
+        vertexColors
+        transparent
+        opacity={0.8}
+        sizeAttenuation
+        blending={THREE.AdditiveBlending}
       />
-    </Sphere>
+    </points>
   );
 });
 
+/**
+ * Main 3D Scene
+ */
 const SolarSystemScene = React.memo(function SolarSystemScene({
   asteroids,
   onAsteroidClick,
   selectedAsteroid,
-  cameraZoom,
   orbitSpeed,
   showOrbitPaths,
 }: {
   asteroids: NEOData[];
   onAsteroidClick: (asteroid: NEOData) => void;
   selectedAsteroid: NEOData | null;
-  cameraZoom: number;
   orbitSpeed: number;
   showOrbitPaths: boolean;
 }) {
   const { camera } = useThree();
 
   useEffect(() => {
-    camera.position.set(0, 12, 20);
+    camera.position.set(0, 8, 20);
     camera.lookAt(0, 0, 0);
   }, [camera]);
 
-  // Group asteroids by orbiting body with performance optimization
+  // Group asteroids by distance
   const asteroidGroups = useMemo(() => {
-    const groups: {
-      [key: string]: {
-        asteroids: NEOData[];
-        center: [number, number, number];
-        radius: number;
-      }[];
-    } = {
-      earth: [],
-      mars: [],
-      venus: [],
-      other: [],
-    };
-
-    // Limit asteroids for performance - show only first 200 for smooth animation
-    const limitedAsteroids = asteroids.slice(0, 200);
-
-    limitedAsteroids.forEach((asteroid, index) => {
-      const orbitingBody = asteroid.orbiting_body?.toLowerCase() || "other";
-      const distance = 4 + (index % 3) * 2 + Math.random() * 3;
-      const center: [number, number, number] =
-        orbitingBody === "mars"
-          ? [8, 0, 0]
-          : orbitingBody === "venus"
-          ? [-6, 0, 3]
-          : [0, 0, 0]; // Earth is default
-
-      const groupKey =
-        orbitingBody === "earth" ||
-        orbitingBody === "mars" ||
-        orbitingBody === "venus"
-          ? orbitingBody
-          : "other";
-      groups[groupKey].push({
-        asteroids: [asteroid],
-        center,
-        radius: distance,
-      });
-    });
-
-    return groups;
+    return asteroids.slice(0, 150).map((asteroid, index) => ({
+      asteroid,
+      radius: 4 + (index % 5) * 1.5 + Math.random() * 2,
+      angle: (index / asteroids.length) * Math.PI * 2,
+    }));
   }, [asteroids]);
-
-  // Memoized lighting setup
-  const lighting = useMemo(
-    () => (
-      <>
-        <ambientLight intensity={0.3} />
-        <pointLight position={[15, 15, 15]} intensity={1.5} />
-        <pointLight position={[-10, -10, -10]} intensity={0.8} />
-        <pointLight position={[0, -15, 0]} intensity={0.5} color="#4f46e5" />
-      </>
-    ),
-    []
-  );
-
-  // Memoized planets
-  const planets = useMemo(
-    () => (
-      <>
-        <Planet
-          position={[0, 0, 0]}
-          radius={1.2}
-          color="#1e40af"
-          name="Earth"
-        />
-        <Planet position={[8, 0, 0]} radius={0.5} color="#dc2626" name="Mars" />
-        <Planet
-          position={[-6, 0, 3]}
-          radius={0.7}
-          color="#f59e0b"
-          name="Venus"
-        />
-      </>
-    ),
-    []
-  );
 
   return (
     <>
-      {lighting}
-      {planets}
+      {/* Space particles */}
+      <SpaceParticles />
 
-      {/* Orbital Paths - conditionally rendered */}
-      {showOrbitPaths &&
-        Object.entries(asteroidGroups).map(([bodyName, groups]) =>
-          groups.map((group, groupIndex) => (
+      {/* Lighting */}
+      <ambientLight intensity={0.3} />
+      <pointLight position={[10, 10, 10]} intensity={1.5} color="#ffffff" />
+      <pointLight position={[-10, -10, -10]} intensity={0.5} color="#60a5fa" />
+      <directionalLight position={[0, 5, 5]} intensity={0.8} color="#fbbf24" />
+
+      {/* Earth at center */}
+      <EarthGlobe />
+
+      {/* Moon orbiting Earth */}
+      <Moon />
+
+      {/* Orbital paths */}
+      {showOrbitPaths && (
+        <>
+          {[4, 5.5, 7, 8.5, 10, 11.5].map((radius, i) => (
             <OrbitPath
-              key={`${bodyName}-orbit-${groupIndex}`}
-              center={group.center}
-              radius={group.radius}
-              color={
-                bodyName === "earth"
-                  ? "#1e40af"
-                  : bodyName === "mars"
-                  ? "#dc2626"
-                  : "#f59e0b"
-              }
-              opacity={0.2}
-              eccentricity={0.1 + Math.random() * 0.2}
+              key={`orbit-${i}`}
+              radius={radius}
+              color="#3b82f6"
+              eccentricity={0.05 + i * 0.02}
+              inclination={(i - 3) * 0.05}
             />
-          ))
-        )}
-
-      {/* Asteroids */}
-      {Object.entries(asteroidGroups).map(([bodyName, groups]) =>
-        groups.map((group, groupIndex) =>
-          group.asteroids.map((asteroid, asteroidIndex) => (
-            <AsteroidPoint
-              key={asteroid.neo_reference_id}
-              asteroid={asteroid}
-              basePosition={group.center}
-              orbitRadius={group.radius}
-              onClick={() => onAsteroidClick(asteroid)}
-              isSelected={
-                selectedAsteroid?.neo_reference_id === asteroid.neo_reference_id
-              }
-              scale={cameraZoom}
-              orbitSpeedMultiplier={orbitSpeed}
-            />
-          ))
-        )
+          ))}
+        </>
       )}
 
+      {/* Asteroids */}
+      {asteroidGroups.map(({ asteroid, radius, angle }) => (
+        <Asteroid3D
+          key={asteroid.neo_reference_id}
+          asteroid={asteroid}
+          orbitRadius={radius}
+          orbitAngle={angle}
+          onClick={() => onAsteroidClick(asteroid)}
+          isSelected={
+            selectedAsteroid?.neo_reference_id === asteroid.neo_reference_id
+          }
+          orbitSpeed={orbitSpeed}
+        />
+      ))}
+
+      {/* Camera controls */}
       <OrbitControls
-        enablePan={true}
-        enableZoom={true}
-        enableRotate={true}
-        enableDamping={true}
+        enablePan
+        enableZoom
+        enableRotate
+        enableDamping
         dampingFactor={0.05}
         rotateSpeed={0.5}
         zoomSpeed={0.8}
-        panSpeed={0.8}
-        maxDistance={100}
-        minDistance={0.5}
+        minDistance={5}
+        maxDistance={50}
         maxPolarAngle={Math.PI * 0.9}
         minPolarAngle={Math.PI * 0.1}
       />
+
+      {/* Fog for depth */}
+      <fog attach="fog" args={["#0a0a0f", 20, 80]} />
     </>
   );
 });
 
-function AsteroidPopup({
+// ============================================================================
+// ENHANCED ASTEROID POPUP
+// ============================================================================
+
+function EnhancedAsteroidPopup({
   asteroid,
   onClose,
 }: {
   asteroid: NEOData;
   onClose: () => void;
 }) {
-  const [activeTab, setActiveTab] = useState("info");
+  const [activeTab, setActiveTab] = useState("overview");
 
-  const hazardLevel = asteroid.is_potentially_hazardous_asteroid
-    ? "HIGH"
-    : "LOW";
-  const hazardColor = asteroid.is_potentially_hazardous_asteroid
-    ? "destructive"
-    : "success";
+  const threat = useMemo(() => getThreatLevel(asteroid), [asteroid]);
+  const impact = useMemo(() => calculateImpactPhysics(asteroid), [asteroid]);
+
+  const avgDiameter =
+    (asteroid.est_diameter_min_m + asteroid.est_diameter_max_m) / 2;
 
   return (
     <AnimatePresence>
@@ -433,158 +687,426 @@ function AsteroidPopup({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/80 backdrop-blur-lg z-50 flex items-center justify-center p-4"
         onClick={onClose}
       >
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="glass-morphism rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden"
+          initial={{ scale: 0.9, opacity: 0, y: 30 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.9, opacity: 0, y: 30 }}
+          transition={{ type: "spring", damping: 20, stiffness: 300 }}
+          className="relative bg-slate-950/98 backdrop-blur-2xl rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-2xl font-bold text-white">
-                  {asteroid.name}
-                </h2>
-                <p className="text-gray-300">ID: {asteroid.neo_reference_id}</p>
+          {/* Header */}
+          <div className="relative p-5 border-b">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="text-2xl font-bold text-white">
+                    {asteroid.name}
+                  </h2>
+                  {asteroid.is_potentially_hazardous_asteroid && (
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ repeat: Infinity, duration: 2 }}
+                    >
+                      <AlertTriangle className="h-5 w-5 text-destructive" />
+                    </motion.div>
+                  )}
+                </div>
+                <p className="text-muted-foreground text-xs font-mono">
+                  {asteroid.neo_reference_id}
+                </p>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant={hazardColor as any}>{hazardLevel} RISK</Badge>
-                <Button variant="ghost" size="sm" onClick={onClose}>
+                <Badge
+                  variant={
+                    threat.level === "CRITICAL" || threat.level === "HIGH"
+                      ? "destructive"
+                      : "secondary"
+                  }
+                >
+                  {threat.level}
+                </Badge>
+                <Button variant="ghost" size="icon" onClick={onClose}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             </div>
+          </div>
 
+          {/* Content */}
+          <div className="relative p-5 overflow-y-auto max-h-[calc(90vh-140px)]">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="info">Info</TabsTrigger>
-                <TabsTrigger value="heatmap">Heatmap</TabsTrigger>
-                <TabsTrigger value="cutscene">Cutscene</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsTrigger value="overview" className="text-sm">
+                  <Activity className="h-3 w-3 mr-1.5" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="impact" className="text-sm">
+                  <Flame className="h-3 w-3 mr-1.5" />
+                  Impact
+                </TabsTrigger>
+                <TabsTrigger value="defense" className="text-sm">
+                  <Shield className="h-3 w-3 mr-1.5" />
+                  Defense
+                </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="info" className="mt-4 space-y-4">
+              {/* Overview Tab */}
+              <TabsContent value="overview" className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <Card className="p-4 glass-morphism">
-                    <h3 className="font-semibold text-white mb-2">
-                      Physical Properties
-                    </h3>
+                  {/* Physical Properties */}
+                  <Card className="p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Target className="h-4 w-4 text-primary" />
+                      <h3 className="text-sm font-semibold">
+                        Physical Properties
+                      </h3>
+                    </div>
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Diameter:</span>
-                        <span className="text-white font-semibold">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Diameter:</span>
+                        <span className="font-semibold">
+                          {Math.round(avgDiameter)} m
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Range:</span>
+                        <span className="font-medium">
                           {Math.round(asteroid.est_diameter_min_m)}-
-                          {Math.round(asteroid.est_diameter_max_m)}m
+                          {Math.round(asteroid.est_diameter_max_m)} m
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Magnitude:</span>
-                        <span className="text-white font-semibold">
-                          {asteroid.absolute_magnitude_h}
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">
+                          Magnitude:
+                        </span>
+                        <span className="font-medium">
+                          H = {asteroid.absolute_magnitude_h}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Velocity:</span>
-                        <span className="text-white font-semibold">
-                          {asteroid.relative_velocity_km_s || "N/A"}{" "}
-                          {asteroid.relative_velocity_km_s ? "km/s" : ""}
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">
+                          Est. Mass:
+                        </span>
+                        <span className="font-medium">
+                          {(
+                            ((4 / 3) *
+                              Math.PI *
+                              Math.pow(avgDiameter / 2, 3) *
+                              2700) /
+                            1e9
+                          ).toFixed(2)}{" "}
+                          × 10⁹ kg
                         </span>
                       </div>
                     </div>
                   </Card>
 
-                  <Card className="p-4 glass-morphism">
-                    <h3 className="font-semibold text-white mb-2">
-                      Orbital Data
-                    </h3>
+                  {/* Orbital Data */}
+                  <Card className="p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <TrendingUp className="h-4 w-4 text-primary" />
+                      <h3 className="text-sm font-semibold">Orbital Data</h3>
+                    </div>
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Orbiting:</span>
-                        <span className="text-white font-semibold">
-                          {asteroid.orbiting_body || "Unknown"}
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Orbiting:</span>
+                        <span className="font-medium">
+                          {asteroid.orbiting_body || "Sun"}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Closest Approach:</span>
-                        <span className="text-white font-semibold">
-                          {asteroid.closest_approach_date || "N/A"}
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Velocity:</span>
+                        <span className="font-semibold">
+                          {asteroid.relative_velocity_km_s
+                            ? `${parseFloat(
+                                asteroid.relative_velocity_km_s
+                              ).toFixed(2)} km/s`
+                            : "~20 km/s"}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Miss Distance:</span>
-                        <span className="text-white font-semibold">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Approach:</span>
+                        <span className="font-medium">
+                          {asteroid.closest_approach_date || "Unknown"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">
+                          Miss Dist:
+                        </span>
+                        <span className="font-medium">
                           {asteroid.miss_distance_km
-                            ? Math.round(
-                                Number.parseFloat(asteroid.miss_distance_km) /
-                                  1000
-                              ).toLocaleString()
-                            : "N/A"}{" "}
-                          {asteroid.miss_distance_km ? "km" : ""}
+                            ? `${(
+                                parseFloat(asteroid.miss_distance_km) / 384400
+                              ).toFixed(2)} LD`
+                            : "N/A"}
                         </span>
                       </div>
                     </div>
                   </Card>
                 </div>
 
-                <Accordion type="single" collapsible>
-                  <AccordionItem value="impact">
-                    <AccordionTrigger className="text-white">
-                      Impact Scenarios
-                    </AccordionTrigger>
-                    <AccordionContent className="text-gray-300">
-                      <div className="space-y-2">
-                        <p>
-                          Potential impact energy: ~
-                          {Math.round(asteroid.est_diameter_max_m / 100)}{" "}
-                          megatons TNT
-                        </p>
-                        <p>
-                          Crater diameter: ~
-                          {Math.round(
-                            (asteroid.est_diameter_max_m * 20) / 1000
-                          )}{" "}
-                          km
-                        </p>
-                        <p>
-                          Blast radius: ~
-                          {Math.round(
-                            (asteroid.est_diameter_max_m * 50) / 1000
-                          )}{" "}
-                          km
-                        </p>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="mitigation">
-                    <AccordionTrigger className="text-white">
-                      Mitigation Strategies
-                    </AccordionTrigger>
-                    <AccordionContent className="text-gray-300">
-                      <div className="space-y-2">
-                        <p>• Kinetic Impactor: 85% success probability</p>
-                        <p>• Nuclear Device: 95% success probability</p>
-                        <p>• Gravity Tractor: 60% success probability</p>
-                        <p>• Solar Sail: 40% success probability</p>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+                {/* Quick Stats */}
+                <Card className="p-4">
+                  <h3 className="text-sm font-semibold mb-3">
+                    Impact Statistics
+                  </h3>
+                  <div className="grid grid-cols-4 gap-3">
+                    <div className="text-center">
+                      <Zap className="h-5 w-5 text-yellow-500 mx-auto mb-1" />
+                      <p className="text-lg font-bold">
+                        {impact.tntEquivalent.toFixed(1)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">MT TNT</p>
+                    </div>
+                    <div className="text-center">
+                      <Target className="h-5 w-5 text-red-500 mx-auto mb-1" />
+                      <p className="text-lg font-bold">
+                        {impact.craterDiameter.toFixed(1)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Crater (km)
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <Flame className="h-5 w-5 text-orange-500 mx-auto mb-1" />
+                      <p className="text-lg font-bold">
+                        {impact.fireballRadius.toFixed(1)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Fireball (km)
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <Gauge className="h-5 w-5 text-purple-500 mx-auto mb-1" />
+                      <p className="text-lg font-bold">
+                        {impact.seismicMagnitude.toFixed(1)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Richter</p>
+                    </div>
+                  </div>
+                </Card>
               </TabsContent>
 
-              <TabsContent value="heatmap" className="mt-4">
-                <div className="h-64 bg-gradient-to-br from-red-900/20 to-orange-900/20 rounded-lg flex items-center justify-center">
-                  <p className="text-white">Risk Heatmap Visualization</p>
-                </div>
+              {/* Impact Analysis Tab */}
+              <TabsContent value="impact" className="space-y-4">
+                <Card className="p-4">
+                  <h3 className="text-sm font-semibold mb-3">
+                    Impact Analysis
+                  </h3>
+
+                  <div className="space-y-4">
+                    {/* Energy Release */}
+                    <div>
+                      <h4 className="text-xs font-semibold text-blue-500/70 mb-2">
+                        Energy Release
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-black/30 p-4 rounded-lg">
+                          <p className="text-gray-400 text-sm mb-1">
+                            Kinetic Energy
+                          </p>
+                          <p className="text-red-400 font-bold text-xl">
+                            {(impact.kineticEnergy / 1e15).toFixed(2)} × 10¹⁵ J
+                          </p>
+                        </div>
+                        <div className="bg-black/30 p-4 rounded-lg">
+                          <p className="text-gray-400 text-sm mb-1">
+                            TNT Equivalent
+                          </p>
+                          <p className="text-red-400 font-bold text-xl">
+                            {impact.tntEquivalent.toFixed(2)} Megatons
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            ~{(impact.tntEquivalent / 15).toFixed(0)}× Hiroshima
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Crater Formation */}
+                    <div>
+                      <h4 className="text-xs font-semibold text-muted-foreground mb-2">
+                        Crater Formation
+                      </h4>
+                      <div className="grid grid-cols-3 gap-2">
+                        <Card className="p-2 text-center">
+                          <p className="text-sm text-muted-foreground">
+                            Diameter
+                          </p>
+                          <p className="font-bold text-sm">
+                            {impact.craterDiameter.toFixed(2)} km
+                          </p>
+                        </Card>
+                        <Card className="p-2 text-center">
+                          <p className="text-sm text-muted-foreground">Depth</p>
+                          <p className="font-bold text-sm">
+                            {impact.craterDepth.toFixed(2)} km
+                          </p>
+                        </Card>
+                        <Card className="p-2 text-center">
+                          <p className="text-sm text-muted-foreground">
+                            Volume
+                          </p>
+                          <p className="font-bold text-sm">
+                            {(
+                              Math.PI *
+                              Math.pow(impact.craterDiameter / 2, 2) *
+                              impact.craterDepth
+                            ).toFixed(1)}{" "}
+                            km³
+                          </p>
+                        </Card>
+                      </div>
+                    </div>
+
+                    {/* Damage Zones */}
+                    <div>
+                      <h4 className="text-xs font-semibold text-muted-foreground mb-2">
+                        Damage Zones
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center justify-between p-2 rounded-md bg-destructive/10">
+                          <span className="font-medium">Fireball</span>
+                          <span className="font-semibold">
+                            {impact.fireballRadius.toFixed(2)} km
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 rounded-md bg-orange-500/10">
+                          <span className="font-medium">Shockwave</span>
+                          <span className="font-semibold">
+                            {impact.shockwaveRadius.toFixed(2)} km
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 rounded-md bg-yellow-500/10">
+                          <span className="font-medium">Thermal</span>
+                          <span className="font-semibold">
+                            {impact.thermalRadius.toFixed(2)} km
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Casualties */}
+                    <div>
+                      <h4 className="text-xs font-semibold text-muted-foreground mb-2">
+                        Estimated Casualties
+                      </h4>
+                      <Card className="p-3">
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Based on 50 people/km² density
+                        </p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Fatalities
+                            </p>
+                            <p className="text-destructive font-bold">
+                              ~{impact.estimatedCasualties.toLocaleString()}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Injured
+                            </p>
+                            <p className="text-orange-500 font-bold">
+                              ~{impact.estimatedInjured.toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </Card>
+                    </div>
+
+                    {/* Seismic Effects */}
+                    <div>
+                      <h4 className="text-xs font-semibold text-muted-foreground mb-2">
+                        Seismic Effects
+                      </h4>
+                      <Card className="p-3">
+                        <p className="text-xs text-muted-foreground mb-1">
+                          Earthquake Magnitude
+                        </p>
+                        <p className="font-bold text-2xl">
+                          {impact.seismicMagnitude.toFixed(1)} Richter
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {impact.seismicMagnitude > 7
+                            ? "Catastrophic damage"
+                            : impact.seismicMagnitude > 6
+                            ? "Major damage"
+                            : impact.seismicMagnitude > 5
+                            ? "Moderate damage"
+                            : "Minor damage"}
+                        </p>
+                      </Card>
+                    </div>
+                  </div>
+                </Card>
               </TabsContent>
 
-              <TabsContent value="cutscene" className="mt-4">
-                <div className="h-64 bg-gradient-to-br from-blue-900/20 to-purple-900/20 rounded-lg flex items-center justify-center">
-                  <p className="text-white">Cinematic Orbit Replay</p>
-                </div>
+              {/* Defense Options Tab */}
+              <TabsContent value="defense" className="space-y-4">
+                <Card className="p-6 bg-gradient-to-br from-primary/10 via-purple-500/5 to-orange-500/5 border-primary/20">
+                  <div className="flex flex-col items-center text-center space-y-4">
+                    <div className="p-4 rounded-full bg-primary/10 border-2 border-primary/30">
+                      <Shield className="h-8 w-8 text-primary" />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-bold">
+                        Planetary Defense Center
+                      </h3>
+                      <p className="text-sm text-muted-foreground max-w-md">
+                        Access our comprehensive deflection strategy calculator with real-time simulations, 
+                        accurate physics calculations, and mission planning tools.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 w-full max-w-sm text-xs">
+                      <div className="p-2 rounded-lg bg-background/50 border">
+                        <Rocket className="h-4 w-4 text-primary mx-auto mb-1" />
+                        <p className="font-medium">5 Strategies</p>
+                        <p className="text-muted-foreground">Kinetic, Nuclear, Gravity...</p>
+                      </div>
+                      <div className="p-2 rounded-lg bg-background/50 border">
+                        <Target className="h-4 w-4 text-purple-500 mx-auto mb-1" />
+                        <p className="font-medium">3D Simulation</p>
+                        <p className="text-muted-foreground">Real trajectory modeling</p>
+                      </div>
+                      <div className="p-2 rounded-lg bg-background/50 border">
+                        <Activity className="h-4 w-4 text-cyan-500 mx-auto mb-1" />
+                        <p className="font-medium">Physics Engine</p>
+                        <p className="text-muted-foreground">Accurate calculations</p>
+                      </div>
+                      <div className="p-2 rounded-lg bg-background/50 border">
+                        <Zap className="h-4 w-4 text-orange-500 mx-auto mb-1" />
+                        <p className="font-medium">Mission Planning</p>
+                        <p className="text-muted-foreground">Cost & timeline analysis</p>
+                      </div>
+                    </div>
+
+                    <Link href="/deflection" className="w-full">
+                      <Button 
+                        className="w-full group relative overflow-hidden"
+                        size="lg"
+                      >
+                        <span className="relative z-10 flex items-center gap-2">
+                          Launch Defense Center
+                          <ExternalLink className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        </span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary via-purple-500 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </Button>
+                    </Link>
+
+                    <p className="text-xs text-muted-foreground">
+                      Analyze deflection strategies for <strong>{asteroid.name}</strong>
+                    </p>
+                  </div>
+                </Card>
               </TabsContent>
             </Tabs>
           </div>
@@ -594,97 +1116,125 @@ function AsteroidPopup({
   );
 }
 
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 export default function SolarSystemModel() {
-  const router = useRouter();
   const [selectedAsteroid, setSelectedAsteroid] = useState<NEOData | null>(
     null
   );
   const [searchTerm, setSearchTerm] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
-  const [orbitSpeed, setOrbitSpeed] = useState(0.3); // New: orbital speed multiplier (slowed down from 1 to 0.3)
-  const [showOrbitPaths, setShowOrbitPaths] = useState(true); // New: toggle orbit paths
-  const [filters, setFilters] = useState({
-    hazardLevel: "all",
-    orbitingBody: "all",
-    sizeRange: [0, 100000],
-  });
+  const [showControls, setShowControls] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [orbitSpeed, setOrbitSpeed] = useState(0.5);
+  const [showOrbitPaths, setShowOrbitPaths] = useState(true);
+  const [filterThreat, setFilterThreat] = useState<string>("all");
+  const [sizeFilter, setSizeFilter] = useState<[number, number]>([0, 10000]);
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const controlsRef = useRef<HTMLDivElement>(null);
 
+  // Filter asteroids
   const filteredAsteroids = useMemo(() => {
     return neoData.filter((asteroid) => {
       const matchesSearch =
         asteroid.name?.toLowerCase().includes(searchTerm.toLowerCase()) ??
         false;
-      const matchesHazard =
-        filters.hazardLevel === "all" ||
-        (filters.hazardLevel === "high" &&
+      const matchesThreat =
+        filterThreat === "all" ||
+        (filterThreat === "high" &&
           asteroid.is_potentially_hazardous_asteroid) ||
-        (filters.hazardLevel === "low" &&
-          !asteroid.is_potentially_hazardous_asteroid);
-      const matchesOrbit =
-        filters.orbitingBody === "all" ||
-        asteroid.orbiting_body?.toLowerCase() ===
-          filters.orbitingBody.toLowerCase();
+        (filterThreat === "low" && !asteroid.is_potentially_hazardous_asteroid);
       const matchesSize =
-        asteroid.est_diameter_max_m >= filters.sizeRange[0] &&
-        asteroid.est_diameter_max_m <= filters.sizeRange[1];
-
-      return matchesSearch && matchesHazard && matchesOrbit && matchesSize;
+        asteroid.est_diameter_max_m >= sizeFilter[0] &&
+        asteroid.est_diameter_max_m <= sizeFilter[1];
+      return matchesSearch && matchesThreat && matchesSize;
     });
-  }, [searchTerm, filters]);
+  }, [searchTerm, filterThreat, sizeFilter]);
 
-  const hazardousCount = useMemo(
-    () =>
-      filteredAsteroids.filter((a) => a.is_potentially_hazardous_asteroid)
-        .length,
+  // Search suggestions
+  const searchSuggestions = useMemo(() => {
+    if (searchTerm.length < 2) return [];
+    return neoData
+      .filter((asteroid) =>
+        asteroid.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      .slice(0, 8);
+  }, [searchTerm]);
+
+  const stats = useMemo(
+    () => ({
+      total: filteredAsteroids.length,
+      hazardous: filteredAsteroids.filter(
+        (a) => a.is_potentially_hazardous_asteroid
+      ).length,
+      avgSize:
+        filteredAsteroids.reduce((sum, a) => sum + a.est_diameter_max_m, 0) /
+        filteredAsteroids.length,
+    }),
     [filteredAsteroids]
   );
 
-  // Memoized callbacks for better performance
-  const handleAsteroidClick = useMemo(
-    () => (asteroid: NEOData) => {
-      setSelectedAsteroid(asteroid);
-    },
-    []
-  );
+  const handleAsteroidClick = useCallback((asteroid: NEOData) => {
+    setSelectedAsteroid(asteroid);
+  }, []);
 
-  const handleClosePopup = useMemo(
-    () => () => {
-      setSelectedAsteroid(null);
-    },
-    []
-  );
+  const handleClosePopup = useCallback(() => {
+    setSelectedAsteroid(null);
+  }, []);
 
-  const handleSearchChange = useMemo(
-    () => (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchTerm(e.target.value);
-    },
-    []
-  );
+  const handleSelectSuggestion = useCallback((asteroid: NEOData) => {
+    setSearchTerm(asteroid.name);
+    setShowSearchSuggestions(false);
+    setSelectedAsteroid(asteroid);
+  }, []);
 
-  // Keyboard shortcuts for quick control
+  // Click outside to close controls
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showControls &&
+        controlsRef.current &&
+        !controlsRef.current.contains(event.target as Node)
+      ) {
+        const target = event.target as HTMLElement;
+        if (!target.closest("[data-controls-button]")) {
+          setShowControls(false);
+        }
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showControls]);
+
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement) return; // Don't trigger when typing in input fields
+      if (e.target instanceof HTMLInputElement) return;
 
       switch (e.key.toLowerCase()) {
-        case " ": // Spacebar to pause/play
+        case " ":
           e.preventDefault();
-          setOrbitSpeed((current) => (current === 0 ? 1 : 0));
+          setOrbitSpeed((current) => (current === 0 ? 0.5 : 0));
           break;
         case "1":
-          setOrbitSpeed(1);
+          setOrbitSpeed(0.5);
           break;
         case "2":
-          setOrbitSpeed(2);
+          setOrbitSpeed(1);
           break;
         case "3":
-          setOrbitSpeed(3);
+          setOrbitSpeed(2);
           break;
         case "o":
           setShowOrbitPaths((current) => !current);
           break;
         case "c":
-          setShowFilters((current) => !current);
+          setShowControls((current) => !current);
+          break;
+        case "?":
+          setShowHelp((current) => !current);
           break;
       }
     };
@@ -694,551 +1244,365 @@ export default function SolarSystemModel() {
   }, []);
 
   return (
-    <div className="min-h-screen relative overflow-hidden space-gradient">
-      {/* Top-right controls */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
-        {/* Animation status indicator */}
-        <div className="flex items-center gap-2 glass-morphism px-3 py-2 rounded-lg">
-          {orbitSpeed === 0 ? (
-            <Pause className="h-4 w-4 text-gray-400" />
-          ) : (
-            <Play className="h-4 w-4 text-green-400" />
-          )}
-          <span className="text-white text-sm font-medium">
-            {orbitSpeed === 0 ? "PAUSED" : `${orbitSpeed}x SPEED`}
-          </span>
-        </div>
-
-        <Button
-          variant="outline"
-          size="lg"
-          onClick={() => setShowFilters(!showFilters)}
-          className="text-white border-white/30 bg-black/20 backdrop-blur-sm hover:bg-black/30 px-6 py-3"
-        >
-          <Settings className="h-5 w-5 mr-2" />
-          Controls
-        </Button>
-      </div>
-
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 20 }}
-            className="absolute right-0 top-0 h-full w-96 bg-black/60 backdrop-blur-xl border-l border-white/20 p-6 space-y-6 z-20 overflow-y-auto"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-500/20 rounded-lg">
-                  <Settings className="h-6 w-6 text-orange-400" />
-                </div>
-                <div>
-                  <h2 className="text-white font-semibold text-xl">
-                    Mission Control
-                  </h2>
-                  <p className="text-gray-300 text-sm">
-                    Search & Filter Asteroids
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowFilters(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-
-            {/* Search Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Search className="h-4 w-4 text-blue-400" />
-                <h3 className="text-white font-medium">SEARCH</h3>
-              </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search by asteroid name..."
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-blue-400 focus:ring-blue-400/30"
-                />
-              </div>
-              {searchTerm && (
-                <p className="text-sm text-gray-400">
-                  Found {filteredAsteroids.length} matching asteroids
-                </p>
-              )}
-            </div>
-
-            {/* Risk Level Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-red-400" />
-                <h3 className="text-white font-medium">THREAT LEVEL</h3>
-              </div>
-              <div className="grid grid-cols-1 gap-2">
-                <Button
-                  variant={
-                    filters.hazardLevel === "all" ? "secondary" : "outline"
-                  }
-                  size="sm"
-                  onClick={() =>
-                    setFilters({
-                      ...filters,
-                      hazardLevel: "all",
-                    })
-                  }
-                  className="justify-start border-white/30"
-                  // className="w-full text-white border-white/30 bg-transparent justify-start"
-                >
-                  <div className="w-3 h-3 rounded-full bg-gray-400 mr-3"></div>
-                  All Asteroids ({neoData.length})
-                </Button>
-                <Button
-                  variant={
-                    filters.hazardLevel === "high" ? "destructive" : "outline"
-                  }
-                  // variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setFilters({
-                      ...filters,
-                      hazardLevel:
-                        filters.hazardLevel === "high" ? "all" : "high",
-                    })
-                  }
-                  // className="justify-start border-white/30"
-                  className="w-full text-white border-white/30 bg-transparent justify-start"
-                >
-                  <div className="w-3 h-3 rounded-full bg-red-500 mr-3"></div>
-                  High Risk (
-                  {
-                    neoData.filter((a) => a.is_potentially_hazardous_asteroid)
-                      .length
-                  }
-                  )
-                </Button>
-                <Button
-                  variant={
-                    filters.hazardLevel === "low" ? "default" : "outline"
-                  }
-                  size="sm"
-                  onClick={() =>
-                    setFilters({
-                      ...filters,
-                      hazardLevel:
-                        filters.hazardLevel === "low" ? "all" : "low",
-                    })
-                  }
-                  className="justify-start text-white border-white/30 bg-green-600/20 hover:bg-green-600/30"
-                >
-                  <div className="w-3 h-3 rounded-full bg-green-500 mr-3"></div>
-                  Low Risk (
-                  {
-                    neoData.filter((a) => !a.is_potentially_hazardous_asteroid)
-                      .length
-                  }
-                  )
-                </Button>
-              </div>
-            </div>
-
-            {/* Orbiting Body Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Target className="h-4 w-4 text-blue-400" />
-                <h3 className="text-white font-medium">ORBITING BODY</h3>
-              </div>
-              <div className="grid grid-cols-1 gap-2">
-                <Button
-                  variant={
-                    filters.orbitingBody === "all" ? "secondary" : "outline"
-                  }
-                  size="sm"
-                  onClick={() =>
-                    setFilters({
-                      ...filters,
-                      orbitingBody: "all",
-                    })
-                  }
-                  className={`justify-start transition-all duration-200 ${
-                    filters.orbitingBody === "all"
-                      ? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-                      : "text-white/80 hover:text-white border-white/20 hover:border-white/40 hover:bg-white/5"
-                  }`}
-                >
-                  <div className="w-3 h-3 rounded-full bg-gray-400 mr-3"></div>
-                  All Bodies
-                  <span className="ml-auto text-xs opacity-70">
-                    ({neoData.length})
-                  </span>
-                </Button>
-                {["Earth", "Mars", "Venus"].map((body) => {
-                  const isSelected =
-                    filters.orbitingBody === body.toLowerCase();
-                  const count = neoData.filter(
-                    (a) => a.orbiting_body?.toLowerCase() === body.toLowerCase()
-                  ).length;
-
-                  return (
-                    <Button
-                      key={body}
-                      variant={isSelected ? "secondary" : "outline"}
-                      size="sm"
-                      onClick={() =>
-                        setFilters({
-                          ...filters,
-                          orbitingBody: isSelected ? "all" : body.toLowerCase(),
-                        })
-                      }
-                      className={`justify-start transition-all duration-200 ${
-                        isSelected
-                          ? `${
-                              body === "Earth"
-                                ? "bg-blue-600 hover:bg-blue-700 border-blue-600"
-                                : body === "Mars"
-                                ? "bg-red-600 hover:bg-red-700 border-red-600"
-                                : "bg-orange-600 hover:bg-orange-700 border-orange-600"
-                            } text-white`
-                          : "text-white/80 hover:text-white border-white/20 hover:border-white/40 hover:bg-white/5"
-                      }`}
-                      disabled={count === 0}
-                    >
-                      <div
-                        className={`w-3 h-3 rounded-full mr-3 ${
-                          body === "Earth"
-                            ? "bg-blue-500"
-                            : body === "Mars"
-                            ? "bg-red-500"
-                            : "bg-orange-500"
-                        } ${isSelected ? "ring-2 ring-white/30" : ""}`}
-                      ></div>
-                      {body}
-                      <span className="ml-auto text-xs opacity-70">
-                        ({count})
-                      </span>
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Size Range Section */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-purple-400" />
-                <h3 className="text-white font-medium">SIZE RANGE</h3>
-              </div>
-              <div className="px-2 space-y-4">
-                <Slider
-                  value={filters.sizeRange}
-                  onValueChange={(value) =>
-                    setFilters({ ...filters, sizeRange: value })
-                  }
-                  max={100000}
-                  min={0}
-                  step={1000}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-sm text-gray-300">
-                  <span>{filters.sizeRange[0].toLocaleString()}m</span>
-                  <span>{filters.sizeRange[1].toLocaleString()}m</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2 bg-green-500/20 rounded border border-green-500/30">
-                    <div className="text-green-400 font-medium">
-                      Small (&lt;100m)
-                    </div>
-                    <div className="text-gray-300">
-                      {neoData.filter((a) => a.est_diameter_max_m < 100).length}{" "}
-                      objects
-                    </div>
-                  </div>
-                  <div className="p-2 bg-yellow-500/20 rounded border border-yellow-500/30">
-                    <div className="text-yellow-400 font-medium">
-                      Medium (100-500m)
-                    </div>
-                    <div className="text-gray-300">
-                      {
-                        neoData.filter(
-                          (a) =>
-                            a.est_diameter_max_m >= 100 &&
-                            a.est_diameter_max_m < 500
-                        ).length
-                      }{" "}
-                      objects
-                    </div>
-                  </div>
-                  <div className="p-2 bg-orange-500/20 rounded border border-orange-500/30">
-                    <div className="text-orange-400 font-medium">
-                      Large (500-1000m)
-                    </div>
-                    <div className="text-gray-300">
-                      {
-                        neoData.filter(
-                          (a) =>
-                            a.est_diameter_max_m >= 500 &&
-                            a.est_diameter_max_m < 1000
-                        ).length
-                      }{" "}
-                      objects
-                    </div>
-                  </div>
-                  <div className="p-2 bg-red-500/20 rounded border border-red-500/30">
-                    <div className="text-red-400 font-medium">
-                      Massive (&gt;1000m)
-                    </div>
-                    <div className="text-gray-300">
-                      {
-                        neoData.filter((a) => a.est_diameter_max_m >= 1000)
-                          .length
-                      }{" "}
-                      objects
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Animation & View Controls */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Settings className="h-4 w-4 text-cyan-400" />
-                <h3 className="text-white font-medium">ANIMATION & VIEW</h3>
-              </div>
-
-              {/* Orbital Speed Control */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-sm text-gray-300">Orbital Speed</label>
-                  <span className="text-xs text-gray-400">
-                    {orbitSpeed.toFixed(1)}x
-                  </span>
-                </div>
-                <Slider
-                  value={[orbitSpeed]}
-                  onValueChange={(value) => setOrbitSpeed(value[0])}
-                  max={5}
-                  min={0}
-                  step={0.1}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-gray-400">
-                  <span>Paused</span>
-                  <span>5x Speed</span>
-                </div>
-              </div>
-
-              {/* Orbit Path Toggle */}
-              <div className="flex items-center justify-between">
-                <label className="text-sm text-gray-300">
-                  Show Orbit Paths
-                </label>
-                <Button
-                  variant={showOrbitPaths ? "secondary" : "outline"}
-                  size="sm"
-                  onClick={() => setShowOrbitPaths(!showOrbitPaths)}
-                  className="text-xs"
-                >
-                  {showOrbitPaths ? "ON" : "OFF"}
-                </Button>
-              </div>
-
-              {/* Quick Speed Presets */}
-              <div className="grid grid-cols-4 gap-1">
-                {[0, 0.5, 1, 2].map((speed) => (
-                  <Button
-                    key={speed}
-                    variant={orbitSpeed === speed ? "secondary" : "outline"}
-                    size="sm"
-                    onClick={() => setOrbitSpeed(speed)}
-                    className="text-xs"
-                  >
-                    {speed === 0 ? "⏸" : `${speed}x`}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="space-y-3 pt-4 border-t border-white/20">
-              <h3 className="text-white font-medium">QUICK ACTIONS</h3>
-              <div className="space-y-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSearchTerm("");
-                    setFilters({
-                      hazardLevel: "all",
-                      orbitingBody: "all",
-                      sizeRange: [0, 100000],
-                    });
-                    setOrbitSpeed(1);
-                    setShowOrbitPaths(true);
-                  }}
-                  className="w-full text-white border-white/30 bg-transparent justify-start"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Reset All Controls
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full text-white border-white/30 bg-transparent justify-start"
-                >
-                  <Shield className="h-4 w-4 mr-2" />
-                  View Simulation
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full text-white border-white/30 bg-transparent justify-start"
-                  onClick={() => router.push("/deflection")}
-                >
-                  <AlertTriangle className="h-4 w-4 mr-2" />
-                  Deflection Strategies
-                </Button>
-              </div>
-            </div>
-
-            {/* Current Results Summary */}
-            <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-              <h4 className="text-white font-medium mb-2">Current Results</h4>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-300">Total Asteroids:</span>
-                  <span className="text-white font-semibold">
-                    {filteredAsteroids.length}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">High Risk:</span>
-                  <span className="text-red-400 font-semibold">
-                    {hazardousCount}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">Low Risk:</span>
-                  <span className="text-green-400 font-semibold">
-                    {filteredAsteroids.length - hazardousCount}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Keyboard Shortcuts Help */}
-            <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
-              <h4 className="text-blue-400 font-medium mb-2 flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                Keyboard Shortcuts
-              </h4>
-              <div className="space-y-1 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-gray-300">Space</span>
-                  <span className="text-white">Pause/Play</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">1, 2, 3</span>
-                  <span className="text-white">Speed</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">O</span>
-                  <span className="text-white">Toggle Orbits</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">C</span>
-                  <span className="text-white">Toggle Panel</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-black">
+      {/* 3D Canvas */}
       <div className="absolute inset-0">
-        <Canvas camera={{ position: [0, 8, 15], fov: 60 }}>
-          <Suspense fallback={null}>
-            <SolarSystemScene
-              asteroids={filteredAsteroids}
-              onAsteroidClick={handleAsteroidClick}
-              selectedAsteroid={selectedAsteroid}
-              cameraZoom={1}
-              orbitSpeed={orbitSpeed}
-              showOrbitPaths={showOrbitPaths}
-            />
-          </Suspense>
+        <Canvas
+          camera={{ position: [0, 8, 20], fov: 60 }}
+          gl={{ antialias: true, alpha: true }}
+        >
+          <SolarSystemScene
+            asteroids={filteredAsteroids}
+            onAsteroidClick={handleAsteroidClick}
+            selectedAsteroid={selectedAsteroid}
+            orbitSpeed={orbitSpeed}
+            showOrbitPaths={showOrbitPaths}
+          />
         </Canvas>
       </div>
 
-      <div className="absolute bottom-6 left-6 flex gap-4 z-10">
-        <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="glass-morphism rounded-lg p-4 min-w-[140px] cursor-pointer hover:bg-white/10 transition-colors"
-          onClick={() => setShowFilters(true)}
-        >
-          <div className="text-center">
-            <div className="text-2xl font-bold text-orange-500">
-              {filteredAsteroids.length}
-            </div>
-            <div className="text-sm text-gray-300">Objects Visible</div>
-            <div className="text-xs text-gray-400 mt-1">
-              of {neoData.length} total
-            </div>
-          </div>
-        </motion.div>
+      {/* UI Overlay */}
+      <div className="relative z-10 pointer-events-none">
+        {/* Top Center Search Bar */}
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 w-full max-w-xs px-4 pointer-events-auto">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
+            <Input
+              type="text"
+              placeholder="Search asteroids by name..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setShowSearchSuggestions(e.target.value.length >= 2);
+              }}
+              onFocus={() => setShowSearchSuggestions(searchTerm.length >= 2)}
+              className="pl-10 pr-4 py-4 bg-black/70 backdrop-blur-xl border-white/30 text-white placeholder:text-gray-500 rounded-2xl text-base"
+            />
 
-        <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="glass-morphism rounded-lg p-4 min-w-[140px] cursor-pointer hover:bg-white/10 transition-colors"
-          onClick={() => {
-            setFilters({ ...filters, hazardLevel: "high" });
-            setShowFilters(true);
-          }}
-        >
-          <div className="text-center">
-            <div className="text-2xl font-bold text-red-500">
-              {hazardousCount}
-            </div>
-            <div className="text-sm text-gray-300">High Risk</div>
-            <div className="text-xs text-gray-400 mt-1">
-              {((hazardousCount / filteredAsteroids.length) * 100).toFixed(1)}%
-              of visible
-            </div>
+            {/* Search Suggestions */}
+            {showSearchSuggestions && searchSuggestions.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute top-full mt-2 w-full bg-black/90 backdrop-blur-xl border border-white/20 rounded-xl overflow-hidden shadow-2xl"
+              >
+                {searchSuggestions.map((asteroid) => {
+                  const threat = getThreatLevel(asteroid);
+                  return (
+                    <button
+                      key={asteroid.neo_reference_id}
+                      onClick={() => handleSelectSuggestion(asteroid)}
+                      className="w-full px-4 py-3 text-left hover:bg-white/10 transition-colors border-b border-white/5 last:border-0"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="text-white font-semibold">
+                            {asteroid.name}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {Math.round(asteroid.est_diameter_max_m)}m •{" "}
+                            {threat.level} Risk
+                          </p>
+                        </div>
+                        {asteroid.is_potentially_hazardous_asteroid && (
+                          <AlertTriangle className="h-4 w-4 text-red-400" />
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </motion.div>
+            )}
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.9 }}
-          className="glass-morphism rounded-lg p-4 min-w-[140px] cursor-pointer hover:bg-white/10 transition-colors"
-          onClick={() => {
-            setFilters({ ...filters, hazardLevel: "low" });
-            setShowFilters(true);
-          }}
-        >
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-500">
-              {filteredAsteroids.length - hazardousCount}
+        {/* Top Right Controls */}
+        <div className="absolute top-6 right-6 pointer-events-auto">
+          <div className="flex items-center gap-3">
+            {/* Speed Control */}
+            <div className="bg-black/60 backdrop-blur-xl px-4 py-2 rounded-xl border border-white/20 flex items-center gap-3">
+              {orbitSpeed === 0 ? (
+                <Pause className="h-4 w-4 text-gray-400" />
+              ) : (
+                <Play className="h-4 w-4 text-green-400" />
+              )}
+              <span className="text-white text-sm font-medium">
+                {orbitSpeed === 0
+                  ? "PAUSED"
+                  : `${orbitSpeed.toFixed(1)}× SPEED`}
+              </span>
             </div>
-            <div className="text-sm text-gray-300">Low Risk</div>
-            <div className="text-xs text-gray-400 mt-1">Safe trajectories</div>
+
+            <Button
+              onClick={() => setShowControls(!showControls)}
+              className="bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/50 text-white"
+              data-controls-button
+            >
+              <Settings className="h-5 w-5 mr-2" />
+              Controls
+            </Button>
           </div>
-        </motion.div>
+        </div>
+
+        {/* Control Panel */}
+        <AnimatePresence>
+          {showControls && (
+            <motion.div
+              ref={controlsRef}
+              initial={{ opacity: 0, x: 300 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 300 }}
+              className="absolute right-6 top-32 w-80 pointer-events-auto"
+            >
+              <Card className="p-6 bg-black/80 backdrop-blur-2xl border-white/20">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-white">Controls</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowControls(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Orbit Speed */}
+                  <div>
+                    <label className="text-sm text-gray-300 mb-2 block">
+                      Orbit Speed: {orbitSpeed.toFixed(1)}×
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="2"
+                      step="0.1"
+                      value={orbitSpeed}
+                      onChange={(e) =>
+                        setOrbitSpeed(parseFloat(e.target.value))
+                      }
+                      className="w-full"
+                    />
+                  </div>
+
+                  {/* Show Orbit Paths */}
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm text-gray-300">
+                      Show Orbit Paths
+                    </label>
+                    <input
+                      type="checkbox"
+                      checked={showOrbitPaths}
+                      onChange={(e) => setShowOrbitPaths(e.target.checked)}
+                      className="w-5 h-5"
+                    />
+                  </div>
+
+                  {/* Filter by Threat */}
+                  <div>
+                    <label className="text-sm text-gray-300 mb-2 block">
+                      Filter by Threat
+                    </label>
+                    <select
+                      value={filterThreat}
+                      onChange={(e) => setFilterThreat(e.target.value)}
+                      className="w-full bg-black/60 border border-white/20 rounded-lg px-3 py-2 text-white"
+                    >
+                      <option value="all">All Asteroids</option>
+                      <option value="high">Hazardous Only</option>
+                      <option value="low">Non-Hazardous Only</option>
+                    </select>
+                  </div>
+
+                  {/* Size Filter */}
+                  <div>
+                    <label className="text-sm text-gray-300 mb-2 block">
+                      Size Range: {sizeFilter[0]}m - {sizeFilter[1]}m
+                    </label>
+                    <div className="space-y-2">
+                      <input
+                        type="range"
+                        min="0"
+                        max="10000"
+                        step="100"
+                        value={sizeFilter[1]}
+                        onChange={(e) =>
+                          setSizeFilter([
+                            sizeFilter[0],
+                            parseInt(e.target.value),
+                          ])
+                        }
+                        className="w-full"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSizeFilter([0, 100])}
+                          className="flex-1 text-xs"
+                        >
+                          Small
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSizeFilter([100, 1000])}
+                          className="flex-1 text-xs"
+                        >
+                          Medium
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSizeFilter([1000, 10000])}
+                          className="flex-1 text-xs"
+                        >
+                          Large
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Help Button */}
+        <button
+          onClick={() => setShowHelp(!showHelp)}
+          className="absolute bottom-6 right-6 w-12 h-12 bg-blue-500/20 hover:bg-blue-500/30 backdrop-blur-xl border border-blue-500/50 rounded-full flex items-center justify-center text-white font-bold text-xl pointer-events-auto transition-all hover:scale-110"
+        >
+          ?
+        </button>
+
+        {/* Help Panel */}
+        <AnimatePresence>
+          {showHelp && (
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              className="absolute bottom-20 right-6 w-96 pointer-events-auto"
+            >
+              <Card className="p-6 bg-black/90 backdrop-blur-2xl border-blue-500/30">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-white">
+                    Keyboard Shortcuts
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowHelp(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Pause/Play</span>
+                    <kbd className="px-2 py-1 bg-white/10 rounded border border-white/20 text-white">
+                      Space
+                    </kbd>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Speed 0.5×</span>
+                    <kbd className="px-2 py-1 bg-white/10 rounded border border-white/20 text-white">
+                      1
+                    </kbd>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Speed 1×</span>
+                    <kbd className="px-2 py-1 bg-white/10 rounded border border-white/20 text-white">
+                      2
+                    </kbd>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Speed 2×</span>
+                    <kbd className="px-2 py-1 bg-white/10 rounded border border-white/20 text-white">
+                      3
+                    </kbd>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Toggle Orbits</span>
+                    <kbd className="px-2 py-1 bg-white/10 rounded border border-white/20 text-white">
+                      O
+                    </kbd>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Toggle Controls</span>
+                    <kbd className="px-2 py-1 bg-white/10 rounded border border-white/20 text-white">
+                      C
+                    </kbd>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Show Help</span>
+                    <kbd className="px-2 py-1 bg-white/10 rounded border border-white/20 text-white">
+                      ?
+                    </kbd>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-white/10">
+                  <h4 className="text-sm font-bold text-blue-400 mb-2">
+                    Data Accuracy
+                  </h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    <strong className="text-white">Asteroid Data:</strong> Real
+                    NEO data from NASA's database with actual sizes, velocities,
+                    and approach dates.
+                  </p>
+                  <p className="text-xs text-gray-400 leading-relaxed mt-2">
+                    <strong className="text-white">Orbital Mechanics:</strong>{" "}
+                    Simplified Keplerian orbits for visualization. Real
+                    asteroids follow complex perturbed trajectories affected by
+                    multiple gravitational bodies.
+                  </p>
+                  <p className="text-xs text-gray-400 leading-relaxed mt-2">
+                    <strong className="text-white">Impact Calculations:</strong>{" "}
+                    Based on peer-reviewed scaling laws (Collins et al., 2005)
+                    but simplified for educational purposes.
+                  </p>
+                  <p className="text-xs text-gray-400 leading-relaxed mt-2">
+                    <strong className="text-white">Visualization:</strong>{" "}
+                    Orbital speeds and distances are scaled for better viewing.
+                    Not to actual scale.
+                  </p>
+                </div>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* <div className="relative z-10 pointer-events-none"> */}
+      {/* Left Stats Panel */}
+      <div className="absolute left-6 top-1/2 -translate-y-1/2 pointer-events-auto space-y-4 ">
+        <div className="bg-black/60 backdrop-blur-xl px-5 py-4 rounded-xl border border-blue-500/30 flex flex-col items-center">
+          <p className="text-xs text-gray-400 mb-1">Tracked</p>
+          <p className="text-sm font-bold text-blue-400">{stats.total}</p>
+        </div>
+        <div className="bg-black/60 backdrop-blur-xl px-5 py-4 rounded-xl border border-red-500/30 flex flex-col items-center">
+          <p className="text-xs text-gray-400 mb-1">Hazardous</p>
+          <p className="text-sm font-bold text-red-400">{stats.hazardous}</p>
+        </div>
+        <div className="bg-black/60 backdrop-blur-xl px-5 py-4 rounded-xl border border-green-500/30 flex flex-col items-center">
+          <p className="text-xs text-gray-400 mb-1">Avg Size</p>
+          <p className="text-sm font-bold text-green-400">
+            {Math.round(stats.avgSize)}m
+          </p>
+        </div>
       </div>
 
       {/* Asteroid Popup */}
       {selectedAsteroid && (
-        <AsteroidPopup asteroid={selectedAsteroid} onClose={handleClosePopup} />
+        <EnhancedAsteroidPopup
+          asteroid={selectedAsteroid}
+          onClose={handleClosePopup}
+        />
       )}
     </div>
   );
