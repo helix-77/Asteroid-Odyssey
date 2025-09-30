@@ -200,11 +200,11 @@ export function ImpactSimulator() {
     setIsSimulating(false);
   };
 
-  // Generate ACTUAL WORKING timeline progression
+  // Generate GLOBAL IMPACT timeline progression
   const generateTimeline = (results: ImpactResults, enhanced?: EnhancedImpactResults): TimelineState[] => {
     const timeline: TimelineState[] = [];
-    const maxTime = 3600; // 1 hour 
-    const steps = 50; // More steps for VISIBLE animation
+    const maxTime = 31536000; // 1 YEAR for long-term aftermath
+    const steps = 100; // More detailed progression
     
     for (let i = 0; i <= steps; i++) {
       const time = (i / steps) * maxTime;
@@ -217,25 +217,33 @@ export function ImpactSimulator() {
       let economicDamage: number;
       
       if (enhanced) {
-        // SIMPLE BUT VISIBLE progression that actually changes
+        // GLOBAL IMPACT PROGRESSION over 1 year
         
-        // Crater forms instantly but grows slightly over first few frames
-        craterRadius = Math.max(100, enhanced.geological.craterDiameter * 500 * (0.5 + progress * 0.5));
+        // Crater is permanent
+        craterRadius = enhanced.geological.craterDiameter * 500;
         
-        // Damage spreads outward in VISIBLE waves
-        const baseRadius = 5000; // 5km base
-        const maxRadius = Math.max(50000, enhanced.geological.seismicEffects.damageRadius * 1000); // Convert to meters
+        // GLOBAL EFFECTS that spread across continents
+        const globalRadius = 20037508; // Half Earth's circumference in meters
         
-        // Create visible expanding waves
-        if (progress < 0.2) {
-          // First 20% - immediate blast
-          damageRadius = baseRadius + (maxRadius * 0.3 * (progress / 0.2));
-        } else if (progress < 0.6) {
-          // Next 40% - secondary shockwave
-          damageRadius = maxRadius * 0.3 + (maxRadius * 0.4 * ((progress - 0.2) / 0.4));
+        if (progress < 0.001) {
+          // First 0.1% (8.7 hours) - Initial impact and immediate effects
+          damageRadius = Math.min(enhanced.geological.seismicEffects.damageRadius * 1000, 500000); // Up to 500km
+        } else if (progress < 0.01) {
+          // Next 0.9% (3.6 days) - Regional devastation spreads
+          const regionalProgress = (progress - 0.001) / 0.009;
+          damageRadius = 500000 + (2000000 * regionalProgress); // Up to 2000km
+        } else if (progress < 0.1) {
+          // Next 9% (36 days) - Continental effects
+          const continentalProgress = (progress - 0.01) / 0.09;
+          damageRadius = 2000000 + (5000000 * continentalProgress); // Up to 5000km
+        } else if (progress < 0.5) {
+          // Next 40% (146 days) - Global climate effects
+          const globalProgress = (progress - 0.1) / 0.4;
+          damageRadius = 5000000 + (globalRadius * 0.5 * globalProgress); // Hemisphere
         } else {
-          // Final 40% - full extent
-          damageRadius = maxRadius * 0.7 + (maxRadius * 0.3 * ((progress - 0.6) / 0.4));
+          // Final 50% (183 days) - Worldwide aftermath
+          const worldwideProgress = (progress - 0.5) / 0.5;
+          damageRadius = globalRadius * 0.5 + (globalRadius * 0.5 * worldwideProgress); // Full globe
         }
         
         // Casualties accumulate in waves
@@ -318,7 +326,7 @@ export function ImpactSimulator() {
         }
         return nextIndex;
       });
-    }, 200); // Faster animation - 200ms per step
+    }, 100); // Very fast animation - 100ms per step for dramatic effect
     
     return () => clearInterval(interval);
   }, [isPlaying, timelineState.length]);
@@ -331,6 +339,16 @@ export function ImpactSimulator() {
       case "low": return "bg-yellow-600";
       default: return "bg-gray-600";
     }
+  };
+
+  // Format time after impact for display
+  const formatTimeAfterImpact = (seconds: number): string => {
+    if (seconds < 60) return `${Math.round(seconds)} seconds`;
+    if (seconds < 3600) return `${Math.round(seconds / 60)} minutes`;
+    if (seconds < 86400) return `${Math.round(seconds / 3600)} hours`;
+    if (seconds < 2592000) return `${Math.round(seconds / 86400)} days`;
+    if (seconds < 31536000) return `${Math.round(seconds / 2592000)} months`;
+    return `${Math.round(seconds / 31536000)} years`;
   };
 
   // Current timeline data
@@ -484,7 +502,7 @@ export function ImpactSimulator() {
 
                   <div>
                     <label className="text-sm font-medium">
-                      Time: {currentTimeline ? Math.round(currentTimeline.time / 60) : 0} minutes after impact
+                      Time: {currentTimeline ? formatTimeAfterImpact(currentTimeline.time) : "0 seconds"} after impact
                     </label>
                     <Slider
                       value={[currentTimeIndex]}
