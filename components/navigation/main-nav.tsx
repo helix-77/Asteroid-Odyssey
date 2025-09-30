@@ -27,16 +27,10 @@ const navigation = [
     description: "Calculate asteroid impacts",
   },
   {
-    name: "Deflection Center",
+    name: "Mitigation Center",
     href: "/deflection",
     icon: Shield,
     description: "Plan deflection missions",
-  },
-  {
-    name: "Defense Academy",
-    href: "/game",
-    icon: Gamepad2,
-    description: "Story mode and achievements",
   },
 ]
 
@@ -100,9 +94,8 @@ export function MainNav() {
                       key={item.name}
                       href={item.href}
                       onClick={() => setIsOpen(false)}
-                      className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                        isActive ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                      }`}
+                      className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${isActive ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                        }`}
                     >
                       <Icon className="h-5 w-5" />
                       <div>
