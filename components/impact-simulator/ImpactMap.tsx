@@ -1,369 +1,255 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
-import * as d3 from "d3";
-import { feature } from "topojson-client";
-import type { Asteroid } from "@/lib/types";
-import { calculateImpactEffects } from "@/lib/calculations/impact-calculator";
-import { BasicMap } from "./BasicMap";
-import populationData from "@/data/population_density.json";
-import infrastructureData from "@/data/critical_infrastructure.json";
+import { useEffect, useRef, useState } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 interface ImpactMapProps {
-  asteroid: Asteroid | null;
   impactLocation: { lat: number; lng: number } | null;
-  currentTime: number;
-  mapView: string;
-  dataLayer: string;
-  onMapClick: (lat: number, lng: number) => void;
-  onDataUpdate: (data: any) => void;
+  onLocationSelect: (lat: number, lng: number) => void;
+  craterRadius?: number; // in meters
+  destructionZones?: {
+    total: number; // km
+    severe: number; // km
+    moderate: number; // km
+  };
+  showAnimation?: boolean;
+  tsunamiData?: {
+    triggered: boolean;
+    waveHeight: number;
+    affectedCoastline: number;
+  };
 }
 
-const ImpactMap: React.FC<ImpactMapProps> = ({
-  asteroid,
+export default function ImpactMap({
   impactLocation,
-  currentTime,
-  mapView,
-  dataLayer,
-  onMapClick,
-  onDataUpdate,
-}) => {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const [mapData, setMapData] = useState<any>(null);
-  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [mapError, setMapError] = useState(false);
+  onLocationSelect,
+  craterRadius = 0,
+  destructionZones,
+  showAnimation = false,
+  tsunamiData,
+}: ImpactMapProps) {
+  const mapRef = useRef<L.Map | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const impactMarkerRef = useRef<L.CircleMarker | null>(null);
+  const craterCircleRef = useRef<L.Circle | null>(null);
+  const destructionCirclesRef = useRef<L.Circle[]>([]);
+  const animationFrameRef = useRef<number>(0);
 
-  // Load map data
+  // Initialize map
   useEffect(() => {
-    // Use CDN world data for immediate functionality
-    fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
-      .then(response => response.json())
-      .then(data => {
-        setMapData({ world: data, countries: null });
-      })
-      .catch(error => {
-        console.error("Error loading map data:", error);
-        setMapError(true);
-      });
-  }, []);
+    if (!containerRef.current || mapRef.current) return;
 
-  // Update dimensions on resize
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (svgRef.current) {
-        const rect = svgRef.current.getBoundingClientRect();
-        const width = rect.width > 0 ? rect.width : window.innerWidth - 320; // Subtract sidebar width
-        const height = rect.height > 0 ? rect.height : window.innerHeight - 200; // Subtract header/controls
-        setDimensions({ width, height });
-      }
-    };
-    
-    // Multiple attempts to get dimensions
-    updateDimensions();
-    const timer1 = setTimeout(updateDimensions, 50);
-    const timer2 = setTimeout(updateDimensions, 200);
-    const timer3 = setTimeout(updateDimensions, 500);
-    
-    window.addEventListener("resize", updateDimensions);
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-      window.removeEventListener("resize", updateDimensions);
-    };
-  }, []);
-
-  // Calculate impact effects
-  const impactEffects = useMemo(() => {
-    if (!asteroid || !impactLocation) return null;
-    
-    const size = asteroid.size || asteroid.diameter || 100;
-    const velocity = asteroid.velocity || 15;
-    
-    return calculateImpactEffects({
-      asteroidDiameter: size,
-      velocity: velocity,
-      density: 3000, // kg/m³ average for stony asteroids
-      impactAngle: 45,
-      targetType: "land",
+    // Create map with satellite imagery
+    const map = L.map(containerRef.current, {
+      center: [40.7128, -74.006], // Default to New York
+      zoom: 4,
+      zoomControl: true,
+      attributionControl: true,
     });
-  }, [asteroid, impactLocation]);
 
-  // Create population density color scale
-  const populationColorScale = useMemo(() => {
-    return d3.scaleSequential()
-      .domain([0, 1000])
-      .interpolator(d3.interpolateYlOrRd);
-  }, []);
+    // Add OpenStreetMap tile layer (realistic geography)
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19,
+    }).addTo(map);
 
-  // Create habitability color scale
-  const habitabilityColorScale = useMemo(() => {
-    return d3.scaleSequential()
-      .domain([0, 100])
-      .interpolator(d3.interpolateGreens);
-  }, []);
+    // Add click handler for location selection
+    map.on("click", (e: L.LeafletMouseEvent) => {
+      onLocationSelect(e.latlng.lat, e.latlng.lng);
+    });
 
-  // Draw the map
+    mapRef.current = map;
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [onLocationSelect]);
+
+  // Update impact location and visualizations
   useEffect(() => {
-    if (!svgRef.current || !mapData) return;
+    if (!mapRef.current || !impactLocation) return;
 
-    const svg = d3.select(svgRef.current);
-    svg.selectAll("*").remove();
+    const map = mapRef.current;
 
-    const { width, height } = dimensions;
+    // Remove existing markers and circles
+    if (impactMarkerRef.current) {
+      impactMarkerRef.current.remove();
+    }
+    if (craterCircleRef.current) {
+      craterCircleRef.current.remove();
+    }
+    destructionCirclesRef.current.forEach((circle) => circle.remove());
+    destructionCirclesRef.current = [];
 
-    // Create projection based on view
-    let projection = d3.geoNaturalEarth1();
-    let scale = width / 6;
-    let center: [number, number] = [0, 0];
+    // Center map on impact location
+    map.setView([impactLocation.lat, impactLocation.lng], 8);
 
-    switch (mapView) {
-      case "northAmerica":
-        center = [-100, 45];
-        scale = width / 3;
-        break;
-      case "southAmerica":
-        center = [-60, -15];
-        scale = width / 3;
-        break;
-      case "europe":
-        center = [10, 50];
-        scale = width / 2.5;
-        break;
-      case "asia":
-        center = [85, 35];
-        scale = width / 4;
-        break;
-      case "africa":
-        center = [20, 0];
-        scale = width / 3;
-        break;
-      case "oceania":
-        center = [135, -25];
-        scale = width / 3.5;
-        break;
+    // Add impact marker
+    const marker = L.circleMarker([impactLocation.lat, impactLocation.lng], {
+      radius: 8,
+      fillColor: "#ff0000",
+      color: "#fff",
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 0.8,
+    }).addTo(map);
+
+    marker.bindPopup("<b>Impact Location</b><br>Click to simulate impact");
+    impactMarkerRef.current = marker;
+
+    // Add crater circle if radius is provided
+    if (craterRadius > 0) {
+      const crater = L.circle([impactLocation.lat, impactLocation.lng], {
+        radius: craterRadius,
+        fillColor: "#000000",
+        color: "#8B4513",
+        weight: 3,
+        opacity: 1,
+        fillOpacity: 0.7,
+      }).addTo(map);
+
+      crater.bindPopup(`<b>Crater</b><br>Diameter: ${(craterRadius * 2 / 1000).toFixed(2)} km`);
+      craterCircleRef.current = crater;
     }
 
-    projection
-      .scale(scale)
-      .center(center)
-      .translate([width / 2, height / 2]);
+    // Add destruction zones
+    if (destructionZones) {
+      // Total destruction zone (red)
+      const totalCircle = L.circle([impactLocation.lat, impactLocation.lng], {
+        radius: destructionZones.total * 1000, // Convert km to meters
+        fillColor: "#ff0000",
+        color: "#ff0000",
+        weight: 2,
+        opacity: 0.6,
+        fillOpacity: 0.3,
+      }).addTo(map);
+      totalCircle.bindPopup(`<b>Total Destruction</b><br>Radius: ${destructionZones.total.toFixed(2)} km`);
+      destructionCirclesRef.current.push(totalCircle);
 
-    const path = d3.geoPath().projection(projection);
+      // Severe destruction zone (orange)
+      const severeCircle = L.circle([impactLocation.lat, impactLocation.lng], {
+        radius: destructionZones.severe * 1000,
+        fillColor: "#ff8800",
+        color: "#ff8800",
+        weight: 2,
+        opacity: 0.5,
+        fillOpacity: 0.2,
+      }).addTo(map);
+      severeCircle.bindPopup(`<b>Severe Destruction</b><br>Radius: ${destructionZones.severe.toFixed(2)} km`);
+      destructionCirclesRef.current.push(severeCircle);
 
-    // Create map group
-    const mapGroup = svg.append("g");
+      // Moderate destruction zone (yellow)
+      const moderateCircle = L.circle([impactLocation.lat, impactLocation.lng], {
+        radius: destructionZones.moderate * 1000,
+        fillColor: "#ffff00",
+        color: "#ffff00",
+        weight: 2,
+        opacity: 0.4,
+        fillOpacity: 0.15,
+      }).addTo(map);
+      moderateCircle.bindPopup(`<b>Moderate Destruction</b><br>Radius: ${destructionZones.moderate.toFixed(2)} km`);
+      destructionCirclesRef.current.push(moderateCircle);
 
-    // Add zoom behavior
-    const zoom = d3.zoom()
-      .scaleExtent([1, 8])
-      .on("zoom", (event) => {
-        mapGroup.attr("transform", event.transform);
-      });
-
-    svg.call(zoom as any);
-
-    // Draw ocean background - BEFORE creating mapGroup
-    svg.insert("rect", ":first-child")
-      .attr("width", width)
-      .attr("height", height)
-      .attr("fill", "#e8f4f8");
-
-    // Draw countries
-    let countries;
-    if (mapData.world.objects) {
-      countries = feature(mapData.world, mapData.world.objects.countries);
-    } else {
-      countries = mapData.countries;
+      // Fit bounds to show all zones
+      const bounds = moderateCircle.getBounds();
+      map.fitBounds(bounds, { padding: [50, 50] });
     }
+  }, [impactLocation, craterRadius, destructionZones]);
 
-    if (countries && countries.features) {
-      mapGroup.selectAll("path.country")
-        .data(countries.features)
-        .enter()
-        .append("path")
-        .attr("class", "country")
-        .attr("d", path as any)
-        .attr("fill", (d: any) => {
-          // Color based on data layer
-          if (dataLayer === "population") {
-            const countryName = d.properties.name || d.properties.NAME;
-            const popData = populationData.find((p: any) => 
-              p.Country === countryName
-            );
-            if (popData) {
-              const density = typeof popData.Density === "string" 
-                ? parseInt(popData.Density.replace(",", ""))
-                : popData.Density;
-              return populationColorScale(density);
-            }
-            return "#f0f0f0";
-          } else if (dataLayer === "habitability") {
-            // Dummy habitability data
-            return habitabilityColorScale(70 + Math.random() * 30);
-          } else if (dataLayer === "tsunami") {
-            // Coastal areas more at risk
-            const centroid = d3.geoCentroid(d);
-            const distToCoast = Math.abs(centroid[1]); // Simple approximation
-            return distToCoast < 30 ? "#ff6b6b" : "#ffd93d";
-          } else if (dataLayer === "tectonic") {
-            // Tectonic plate boundaries - simplified
-            return "#f0f0f0";
-          }
-          return "#f0f0f0";
-        })
-        .attr("stroke", "#333")
-        .attr("stroke-width", 0.5)
-        .on("click", function(event, d) {
-          const [x, y] = d3.pointer(event);
-          const inverted = projection.invert!([x, y]);
-          if (inverted) {
-            const [lng, lat] = inverted;
-            onMapClick(lat, lng);
-          }
+  // Impact animation
+  useEffect(() => {
+    if (!showAnimation || !impactLocation || !mapRef.current) return;
+
+    let frame = 0;
+    const maxFrames = 60;
+    const animate = () => {
+      frame++;
+      
+      if (frame <= maxFrames && impactMarkerRef.current) {
+        // Pulsing effect
+        const scale = 1 + Math.sin((frame / maxFrames) * Math.PI * 4) * 0.5;
+        const opacity = 1 - (frame / maxFrames) * 0.3;
+        
+        impactMarkerRef.current.setStyle({
+          radius: 8 * scale,
+          fillOpacity: opacity,
         });
-    }
 
-    // Draw infrastructure points
-    if (dataLayer === "infrastructure" && infrastructureData) {
-      const infrastructure = infrastructureData.facilities || [];
-      
-      mapGroup.selectAll("circle.infrastructure")
-        .data(infrastructure)
-        .enter()
-        .append("circle")
-        .attr("class", "infrastructure")
-        .attr("cx", (d: any) => {
-          const coords = projection([d.longitude, d.latitude]);
-          return coords ? coords[0] : 0;
-        })
-        .attr("cy", (d: any) => {
-          const coords = projection([d.longitude, d.latitude]);
-          return coords ? coords[1] : 0;
-        })
-        .attr("r", 3)
-        .attr("fill", (d: any) => {
-          const typeColors: any = {
-            military: "#ff0000",
-            energy: "#ff9900",
-            cultural: "#9900ff",
-            civilian: "#00ff00"
-          };
-          return typeColors[d.type] || "#666";
-        })
-        .attr("opacity", 0.7);
-    }
+        // Expand destruction circles
+        destructionCirclesRef.current.forEach((circle, index) => {
+          const progress = Math.min(1, frame / (maxFrames * 0.8));
+          circle.setStyle({
+            fillOpacity: (0.3 - index * 0.05) * (1 - progress * 0.5),
+          });
+        });
 
-    // Draw impact location and effects
-    if (impactLocation && impactEffects) {
-      const coords = projection([impactLocation.lng, impactLocation.lat]);
-      
-      if (coords) {
-        // Calculate crater size based on time
-        const maxCraterRadius = Math.min(50, impactEffects.craterDiameter / 1000);
-        const craterRadius = (maxCraterRadius * Math.min(currentTime / 10, 1));
-
-        // Draw expanding damage zones
-        if (currentTime > 0) {
-          // Thermal radiation zone
-          const thermalRadius = (impactEffects.thermalRadius / 1000) * (currentTime / 100);
-          mapGroup.append("circle")
-            .attr("cx", coords[0])
-            .attr("cy", coords[1])
-            .attr("r", Math.min(thermalRadius, 200))
-            .attr("fill", "orange")
-            .attr("opacity", 0.2)
-            .attr("stroke", "orange")
-            .attr("stroke-width", 1);
-
-          // Blast wave zone
-          const blastRadius = (impactEffects.blastRadius / 1000) * (currentTime / 100);
-          mapGroup.append("circle")
-            .attr("cx", coords[0])
-            .attr("cy", coords[1])
-            .attr("r", Math.min(blastRadius * 0.5, 150))
-            .attr("fill", "red")
-            .attr("opacity", 0.3)
-            .attr("stroke", "red")
-            .attr("stroke-width", 1);
-        }
-
-        // Draw crater (appears after impact)
-        if (currentTime > 5) {
-          mapGroup.append("circle")
-            .attr("cx", coords[0])
-            .attr("cy", coords[1])
-            .attr("r", craterRadius)
-            .attr("fill", "#2c2c2c")
-            .attr("stroke", "#000")
-            .attr("stroke-width", 2);
-        }
-
-        // Draw impact marker (before impact)
-        if (currentTime <= 5) {
-          mapGroup.append("circle")
-            .attr("cx", coords[0])
-            .attr("cy", coords[1])
-            .attr("r", 5)
-            .attr("fill", "red")
-            .attr("stroke", "white")
-            .attr("stroke-width", 2)
-            .attr("class", "pulse");
+        animationFrameRef.current = requestAnimationFrame(animate);
+      } else {
+        // Reset animation
+        if (impactMarkerRef.current) {
+          impactMarkerRef.current.setStyle({
+            radius: 8,
+            fillOpacity: 0.8,
+          });
         }
       }
-    }
+    };
 
-    // Update impact data for sidebar
-    if (impactEffects && currentTime > 0) {
-      const timeYears = currentTime; // Assuming 1 unit = 1 year
-      const casualties = Math.floor(impactEffects.estimatedCasualties * (currentTime / 100));
-      const economicDamage = (impactEffects.economicDamage || 1000000000) * (currentTime / 100);
-      
-      onDataUpdate({
-        casualties,
-        economicDamage,
-        craterSize: impactEffects.craterDiameter,
-        affectedArea: impactEffects.affectedArea || 1000,
-        temperature: 15 - (currentTime / 10), // Global cooling effect
-        co2Level: 410 + (currentTime * 0.5),
-        sunlightReduction: Math.min(currentTime, 80),
-      });
-    }
+    animate();
 
-  }, [mapData, dimensions, mapView, dataLayer, impactLocation, currentTime, impactEffects]);
-
-  // Use BasicMap as fallback if D3 map fails
-  if (mapError || !mapData) {
-    return (
-      <BasicMap
-        onMapClick={onMapClick}
-        impactLocation={impactLocation}
-        currentTime={currentTime}
-        asteroid={asteroid}
-      />
-    );
-  }
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [showAnimation, impactLocation]);
 
   return (
-    <svg
-      ref={svgRef}
-      className="w-full h-full"
-      style={{ cursor: "crosshair", display: "block", minHeight: "500px" }}
-    >
-      <defs>
-        <style>{`
-          .pulse {
-            animation: pulse 1.5s infinite;
-          }
-          @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-          }
-        `}</style>
-      </defs>
-    </svg>
-  );
-};
+    <div className="relative w-full h-full">
+      <div ref={containerRef} className="w-full h-full rounded-lg overflow-hidden border-2 border-border" />
+      
+      {!impactLocation && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 pointer-events-none">
+          <div className="bg-background/90 p-6 rounded-lg border-2 border-border text-center">
+            <p className="text-lg font-semibold mb-2">Click on the map to select impact location</p>
+            <p className="text-sm text-muted-foreground">Choose where the asteroid will strike</p>
+          </div>
+        </div>
+      )}
 
-export default ImpactMap;
+      {/* Legend */}
+      {destructionZones && (
+        <div className="absolute bottom-4 right-4 bg-background/95 p-4 rounded-lg border-2 border-border shadow-lg">
+          <h3 className="font-semibold mb-2 text-sm">Destruction Zones</h3>
+          <div className="space-y-1 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-red-500/50 border border-red-500" />
+              <span>Total Destruction ({destructionZones.total.toFixed(1)} km)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-orange-500/50 border border-orange-500" />
+              <span>Severe Damage ({destructionZones.severe.toFixed(1)} km)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-yellow-500/50 border border-yellow-500" />
+              <span>Moderate Damage ({destructionZones.moderate.toFixed(1)} km)</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tsunami Warning */}
+      {tsunamiData?.triggered && (
+        <div className="absolute top-4 left-4 bg-blue-500/90 text-white p-4 rounded-lg border-2 border-blue-700 shadow-lg animate-pulse">
+          <h3 className="font-bold mb-1">⚠️ TSUNAMI WARNING</h3>
+          <p className="text-sm">Wave Height: {tsunamiData.waveHeight.toFixed(1)}m</p>
+          <p className="text-sm">Affected Coastline: {tsunamiData.affectedCoastline.toFixed(0)}km</p>
+        </div>
+      )}
+    </div>
+  );
+}
