@@ -52,12 +52,25 @@ const ImpactMap: React.FC<ImpactMapProps> = ({
     const updateDimensions = () => {
       if (svgRef.current) {
         const rect = svgRef.current.getBoundingClientRect();
-        setDimensions({ width: rect.width, height: rect.height });
+        const width = rect.width > 0 ? rect.width : window.innerWidth - 320; // Subtract sidebar width
+        const height = rect.height > 0 ? rect.height : window.innerHeight - 200; // Subtract header/controls
+        setDimensions({ width, height });
       }
     };
+    
+    // Multiple attempts to get dimensions
     updateDimensions();
+    const timer1 = setTimeout(updateDimensions, 50);
+    const timer2 = setTimeout(updateDimensions, 200);
+    const timer3 = setTimeout(updateDimensions, 500);
+    
     window.addEventListener("resize", updateDimensions);
-    return () => window.removeEventListener("resize", updateDimensions);
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      window.removeEventListener("resize", updateDimensions);
+    };
   }, []);
 
   // Calculate impact effects
@@ -150,8 +163,8 @@ const ImpactMap: React.FC<ImpactMapProps> = ({
 
     svg.call(zoom as any);
 
-    // Draw ocean background
-    svg.append("rect")
+    // Draw ocean background - BEFORE creating mapGroup
+    svg.insert("rect", ":first-child")
       .attr("width", width)
       .attr("height", height)
       .attr("fill", "#e8f4f8");
@@ -334,10 +347,8 @@ const ImpactMap: React.FC<ImpactMapProps> = ({
   return (
     <svg
       ref={svgRef}
-      className="w-full h-full block"
-      style={{ cursor: "crosshair", minHeight: "400px" }}
-      viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
-      preserveAspectRatio="xMidYMid meet"
+      className="w-full h-full"
+      style={{ cursor: "crosshair", display: "block", minHeight: "500px" }}
     >
       <defs>
         <style>{`
