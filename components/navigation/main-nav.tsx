@@ -22,7 +22,7 @@ const navigation = [
   },
   {
     name: "Impact Simulator",
-    href: "/simulation",
+    href: "/impact-simulator",
     icon: BarChart3,
     description: "Calculate asteroid impacts",
   },
