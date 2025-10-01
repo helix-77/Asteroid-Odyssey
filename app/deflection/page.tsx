@@ -303,7 +303,7 @@ export default function DeflectionPage() {
       <div className="container mx-auto px-4 py-6">
         {/* Main Interface */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="glass-morphism grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mb-6">
+          <TabsList className="glass-morphism grid w-full grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-6">
             <TabsTrigger
               value="overview"
               className="flex items-center gap-2 text-xs sm:text-sm text-white data-[state=active]:text-black"
@@ -311,6 +311,7 @@ export default function DeflectionPage() {
               <Activity className="h-4 w-4" />
               Overview
             </TabsTrigger>
+            {/* Defense Map tab hidden but code preserved
             <TabsTrigger
               value="defense-map"
               className="flex items-center gap-2 text-xs sm:text-sm text-white data-[state=active]:text-black"
@@ -318,6 +319,7 @@ export default function DeflectionPage() {
               <Map className="h-4 w-4" />
               Defense Map
             </TabsTrigger>
+            */}
             <TabsTrigger
               value="strategies"
               className="flex items-center gap-2 text-xs sm:text-sm text-white data-[state=active]:text-black"
