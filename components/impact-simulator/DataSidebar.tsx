@@ -29,8 +29,8 @@ export const DataSidebar: React.FC<DataSidebarProps> = ({
   };
 
   return (
-    <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
-      <div className="p-4 space-y-4">
+    <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto" style={{ color: '#000' }}>
+      <div className="p-4 space-y-4" style={{ color: '#000' }}>
         {/* Asteroid Info */}
         <div className="border-b border-gray-200 pb-4">
           <h3 className="text-sm font-semibold text-gray-800 mb-2">Asteroid Information</h3>

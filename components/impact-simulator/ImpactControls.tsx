@@ -17,9 +17,10 @@ export const ImpactControls: React.FC<ImpactControlsProps> = ({
     <div className="h-12 bg-white border-b border-gray-200 px-4 flex items-center gap-4">
       {/* Region Selector */}
       <div className="flex items-center gap-2">
-        <label className="text-xs text-gray-600">Region:</label>
+        <label className="text-xs text-gray-600" style={{ color: '#4b5563' }}>Region:</label>
         <select
           className="text-xs px-2 py-1 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+          style={{ color: '#000', backgroundColor: '#fff' }}
           value={mapView}
           onChange={(e) => onMapViewChange(e.target.value)}
         >
@@ -35,7 +36,7 @@ export const ImpactControls: React.FC<ImpactControlsProps> = ({
 
       {/* Data Layer Toggle */}
       <div className="flex items-center gap-1">
-        <span className="text-xs text-gray-600 mr-2">View:</span>
+        <span className="text-xs text-gray-600 mr-2" style={{ color: '#4b5563' }}>View:</span>
         {[
           { value: "population", label: "Population" },
           { value: "habitability", label: "Habitability" },
@@ -51,6 +52,7 @@ export const ImpactControls: React.FC<ImpactControlsProps> = ({
                 ? "bg-blue-500 text-white"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
+            style={dataLayer === layer.value ? { color: '#fff' } : { color: '#374151' }}
           >
             {layer.label}
           </button>

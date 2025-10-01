@@ -10,9 +10,10 @@ interface AsteroidSelectorProps {
 export const AsteroidSelector: React.FC<AsteroidSelectorProps> = ({ onSelect, selected }) => {
   return (
     <div className="flex items-center gap-2">
-      <label className="text-sm text-gray-600">Select Asteroid:</label>
+      <label className="text-sm text-gray-600" style={{ color: '#4b5563' }}>Select Asteroid:</label>
       <select
         className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500"
+        style={{ color: '#000', backgroundColor: '#fff' }}
         value={selected?.id || ""}
         onChange={(e) => {
           const asteroid = asteroidData.asteroids.find(a => a.id === e.target.value);

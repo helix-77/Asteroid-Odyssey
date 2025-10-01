@@ -68,10 +68,10 @@ export default function ImpactSimulatorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 light" style={{ colorScheme: 'light' }}>
       {/* Top Bar */}
       <div className="h-16 bg-white shadow-sm border-b border-gray-200 px-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-800">Asteroid Impact Simulator</h1>
+        <h1 className="text-xl font-semibold text-gray-800" style={{ color: '#1f2937' }}>Asteroid Impact Simulator</h1>
         <AsteroidSelector 
           onSelect={setSelectedAsteroid}
           selected={selectedAsteroid}
