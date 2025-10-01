@@ -1,0 +1,184 @@
+{
+  "facilities": [
+    {
+      "id": "mil_001",
+      "name": "Pentagon",
+      "type": "military",
+      "latitude": 38.8719,
+      "longitude": -77.0563,
+      "importance": "critical",
+      "country": "USA"
+    },
+    {
+      "id": "mil_002",
+      "name": "Cheyenne Mountain",
+      "type": "military",
+      "latitude": 38.7439,
+      "longitude": -104.8461,
+      "importance": "critical",
+      "country": "USA"
+    },
+    {
+      "id": "energy_001",
+      "name": "Three Gorges Dam",
+      "type": "energy",
+      "latitude": 30.8275,
+      "longitude": 111.0032,
+      "importance": "critical",
+      "country": "China"
+    },
+    {
+      "id": "energy_002",
+      "name": "Bruce Nuclear Plant",
+      "type": "energy",
+      "latitude": 44.3200,
+      "longitude": -81.6000,
+      "importance": "critical",
+      "country": "Canada"
+    },
+    {
+      "id": "energy_003",
+      "name": "Zaporizhzhia Nuclear Plant",
+      "type": "energy",
+      "latitude": 47.5073,
+      "longitude": 34.5852,
+      "importance": "critical",
+      "country": "Ukraine"
+    },
+    {
+      "id": "cultural_001",
+      "name": "Louvre Museum",
+      "type": "cultural",
+      "latitude": 48.8606,
+      "longitude": 2.3376,
+      "importance": "high",
+      "country": "France"
+    },
+    {
+      "id": "cultural_002",
+      "name": "Vatican City",
+      "type": "cultural",
+      "latitude": 41.9029,
+      "longitude": 12.4534,
+      "importance": "critical",
+      "country": "Vatican"
+    },
+    {
+      "id": "cultural_003",
+      "name": "Taj Mahal",
+      "type": "cultural",
+      "latitude": 27.1751,
+      "longitude": 78.0421,
+      "importance": "high",
+      "country": "India"
+    },
+    {
+      "id": "civilian_001",
+      "name": "JFK International Airport",
+      "type": "civilian",
+      "latitude": 40.6413,
+      "longitude": -73.7781,
+      "importance": "critical",
+      "country": "USA"
+    },
+    {
+      "id": "civilian_002",
+      "name": "Port of Shanghai",
+      "type": "civilian",
+      "latitude": 31.2304,
+      "longitude": 121.4737,
+      "importance": "critical",
+      "country": "China"
+    },
+    {
+      "id": "civilian_003",
+      "name": "Tokyo Station",
+      "type": "civilian",
+      "latitude": 35.6812,
+      "longitude": 139.7671,
+      "importance": "critical",
+      "country": "Japan"
+    },
+    {
+      "id": "energy_004",
+      "name": "Guri Dam",
+      "type": "energy",
+      "latitude": 7.7611,
+      "longitude": -63.0000,
+      "importance": "critical",
+      "country": "Venezuela"
+    },
+    {
+      "id": "military_003",
+      "name": "Kremlin",
+      "type": "military",
+      "latitude": 55.7520,
+      "longitude": 37.6175,
+      "importance": "critical",
+      "country": "Russia"
+    },
+    {
+      "id": "civilian_004",
+      "name": "Sydney Opera House",
+      "type": "cultural",
+      "latitude": -33.8568,
+      "longitude": 151.2153,
+      "importance": "high",
+      "country": "Australia"
+    },
+    {
+      "id": "energy_005",
+      "name": "Itaipu Dam",
+      "type": "energy",
+      "latitude": -25.4084,
+      "longitude": -54.5882,
+      "importance": "critical",
+      "country": "Brazil"
+    },
+    {
+      "id": "civilian_005",
+      "name": "London Heathrow",
+      "type": "civilian",
+      "latitude": 51.4700,
+      "longitude": -0.4543,
+      "importance": "critical",
+      "country": "UK"
+    },
+    {
+      "id": "military_004",
+      "name": "Norfolk Naval Base",
+      "type": "military",
+      "latitude": 36.9486,
+      "longitude": -76.3310,
+      "importance": "critical",
+      "country": "USA"
+    },
+    {
+      "id": "cultural_004",
+      "name": "Pyramids of Giza",
+      "type": "cultural",
+      "latitude": 29.9792,
+      "longitude": 31.1342,
+      "importance": "critical",
+      "country": "Egypt"
+    },
+    {
+      "id": "energy_006",
+      "name": "South Texas Nuclear",
+      "type": "energy",
+      "latitude": 28.7950,
+      "longitude": -96.0489,
+      "importance": "high",
+      "country": "USA"
+    },
+    {
+      "id": "civilian_006",
+      "name": "Singapore Port",
+      "type": "civilian",
+      "latitude": 1.2655,
+      "longitude": 103.8186,
+      "importance": "critical",
+      "country": "Singapore"
+    }
+  ]
+}
