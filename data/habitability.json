@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "description": "Stubbed habitability index cells (0..1). Replace with WorldClim/UN Habitat derived rasters.",
+    "sources": [
+      "https://www.worldclim.org/",
+      "https://unhabitat.org/"
+    ]
+  },
+  "cells": [
+    { "lon": -150, "lat": -45, "value": 0.2, "sizeDeg": 2 },
+    { "lon": -120, "lat": -30, "value": 0.3, "sizeDeg": 2 },
+    { "lon": -90,  "lat": -15, "value": 0.4, "sizeDeg": 2 },
+    { "lon": -60,  "lat":  0,  "value": 0.6, "sizeDeg": 2 },
+    { "lon": -30,  "lat":  15, "value": 0.7, "sizeDeg": 2 },
+    { "lon": 0,    "lat":  0,  "value": 0.8, "sizeDeg": 2 },
+    { "lon": 30,   "lat":  10, "value": 0.7, "sizeDeg": 2 },
+    { "lon": 60,   "lat":  25, "value": 0.6, "sizeDeg": 2 },
+    { "lon": 90,   "lat":  35, "value": 0.5, "sizeDeg": 2 },
+    { "lon": 120,  "lat":  -5, "value": 0.4, "sizeDeg": 2 },
+    { "lon": 150,  "lat": -25, "value": 0.3, "sizeDeg": 2 },
+    { "lon": -150, "lat":  45, "value": 0.5, "sizeDeg": 2 },
+    { "lon": -120, "lat":  35, "value": 0.6, "sizeDeg": 2 },
+    { "lon": -90,  "lat":  30, "value": 0.7, "sizeDeg": 2 },
+    { "lon": -60,  "lat":  45, "value": 0.6, "sizeDeg": 2 },
+    { "lon": -30,  "lat":  55, "value": 0.5, "sizeDeg": 2 },
+    { "lon": 0,    "lat":  60, "value": 0.4, "sizeDeg": 2 },
+    { "lon": 30,   "lat":  50, "value": 0.6, "sizeDeg": 2 },
+    { "lon": 60,   "lat":  40, "value": 0.7, "sizeDeg": 2 },
+    { "lon": 90,   "lat":  20, "value": 0.5, "sizeDeg": 2 },
+    { "lon": 120,  "lat":  10, "value": 0.4, "sizeDeg": 2 },
+    { "lon": 150,  "lat":  5,  "value": 0.3, "sizeDeg": 2 }
+  ]
+}
