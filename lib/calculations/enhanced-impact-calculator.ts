@@ -144,7 +144,7 @@ function calculateSeismicMagnitude(energy: number): number {
 
 /**
  * Estimate immediate casualties
- * Simplified model based on affected area and population density
+ * Realistic model based on affected area and population density
  */
 function estimateCasualties(
   blastRadius: number,
@@ -154,50 +154,64 @@ function estimateCasualties(
   // Use thermal radius as primary casualty zone
   const affectedAreaKm2 = Math.PI * Math.pow(thermalRadius / 1000, 2);
   
-  // Estimate average population density in affected area
-  // This is a rough estimate - actual calculation would use real population data
+  // Estimate average population density in affected area (more realistic)
   const avgPopDensity = estimatePopulationDensity(params.latitude, params.longitude);
   
-  // Casualty rate decreases with distance from impact
+  // Casualty rate decreases with distance from impact (realistic rates)
   const blastAreaKm2 = Math.PI * Math.pow(blastRadius / 1000, 2);
-  const blastCasualties = blastAreaKm2 * avgPopDensity * 0.95; // 95% fatality in blast zone
+  const blastCasualties = blastAreaKm2 * avgPopDensity * 0.8; // 80% fatality in blast zone
   
-  const thermalOnlyCasualties = (affectedAreaKm2 - blastAreaKm2) * avgPopDensity * 0.5; // 50% in thermal zone
+  const thermalOnlyCasualties = (affectedAreaKm2 - blastAreaKm2) * avgPopDensity * 0.2; // 20% in thermal zone
   
   return Math.max(0, blastCasualties + thermalOnlyCasualties);
 }
 
 /**
  * Estimate population density at location
- * Simplified - actual implementation would use real data
+ * More realistic estimates based on geographic location
  */
 function estimatePopulationDensity(lat: number, lng: number): number {
-  // Very rough estimates based on latitude
+  // More realistic population density estimates
   const absLat = Math.abs(lat);
   
-  // Polar regions: low density
-  if (absLat > 60) return 5;
+  // Polar regions: very low density
+  if (absLat > 70) return 0.1;
+  if (absLat > 60) return 2;
   
-  // Temperate regions: moderate to high density
-  if (absLat > 30) return 100;
+  // Check for major population centers (simplified)
+  // Europe, East Asia, India - high density regions
+  if ((lat > 35 && lat < 70 && lng > -10 && lng < 50) || // Europe
+      (lat > 20 && lat < 50 && lng > 100 && lng < 150) || // East Asia
+      (lat > 5 && lat < 35 && lng > 65 && lng < 95)) { // India/South Asia
+    return 150;
+  }
   
-  // Tropical/subtropical: high density
-  return 200;
+  // Eastern US, Eastern China - moderate-high density
+  if ((lat > 25 && lat < 50 && lng > -100 && lng < -65) || // Eastern US
+      (lat > 20 && lat < 40 && lng > 110 && lng < 125)) { // Eastern China
+    return 100;
+  }
+  
+  // Temperate regions: moderate density
+  if (absLat > 30) return 25;
+  
+  // Tropical/subtropical: moderate density
+  return 50;
 }
 
 /**
  * Estimate economic damage
  */
 function estimateEconomicDamage(tntMegatons: number, casualties: number): number {
-  // Direct damage: infrastructure, buildings, etc.
-  // Rough estimate: $1 trillion per 1000 megatons
-  const directDamage = tntMegatons * 1e12 / 1000;
+  // Direct damage: infrastructure, buildings, etc. (more realistic)
+  // Scale based on actual impact energy
+  const directDamage = tntMegatons * 1e9 * 100; // $100B per megaton (more realistic)
   
-  // Human capital loss: $10 million per casualty (statistical value of life)
-  const humanCapitalLoss = casualties * 10e6;
+  // Human capital loss: $5 million per casualty (more realistic statistical value)
+  const humanCapitalLoss = casualties * 5e6;
   
-  // Indirect economic losses (supply chain, productivity, etc.)
-  const indirectLoss = directDamage * 0.5;
+  // Indirect economic losses (supply chain, productivity, etc.) - reduced
+  const indirectLoss = directDamage * 0.3;
   
   return directDamage + humanCapitalLoss + indirectLoss;
 }

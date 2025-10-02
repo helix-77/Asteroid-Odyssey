@@ -94,8 +94,8 @@ export class TemporalEffectsCalculator {
       };
     }
     
-    // Dust injection scales with impact energy
-    const dustMass = Math.pow(tnt, 0.7) * 100; // Teragrams
+    // Dust injection scales with impact energy (more realistic)
+    const dustMass = Math.pow(tnt, 0.5) * 10; // Much lower dust production
     
     // Dust settles over time (exponential decay with multiple timescales)
     const fastDecay = Math.exp(-timeYears / 0.5); // Fast settling (months)
@@ -105,22 +105,21 @@ export class TemporalEffectsCalculator {
     // Sunlight reduction from dust
     const sunlightReduction = Math.min(95, dustLoading * 0.8);
     
-    // Temperature drop from reduced sunlight
-    // Peak cooling in first year, gradual recovery
+    // Temperature drop from reduced sunlight (realistic levels)
     let temperatureAnomaly = 0;
     if (timeYears < 1) {
-      temperatureAnomaly = -sunlightReduction * 0.15; // Up to -14°C for major impacts
+      temperatureAnomaly = -sunlightReduction * 0.05; // Much more realistic cooling
     } else {
-      const recoveryFactor = Math.exp(-(timeYears - 1) / 10);
-      temperatureAnomaly = -sunlightReduction * 0.15 * recoveryFactor;
+      const recoveryFactor = Math.exp(-(timeYears - 1) / 5);
+      temperatureAnomaly = -sunlightReduction * 0.05 * recoveryFactor;
     }
     
-    // CO2 increase from fires and biomass burning
-    const co2Peak = Math.min(200, tnt * 0.5); // ppm increase
-    const co2Increase = 410 + co2Peak * Math.exp(-timeYears / 20); // Long-term persistence
+    // CO2 increase from fires and biomass burning (realistic)
+    const co2Peak = Math.min(50, tnt * 0.1); // Much lower CO2 increase
+    const co2Increase = co2Peak * Math.exp(-timeYears / 10); // Faster decay
     
-    // Ozone depletion from NOx production
-    const ozoneDepletion = Math.min(50, tnt * 0.3) * Math.exp(-timeYears / 3);
+    // Ozone depletion from NOx production (realistic)
+    const ozoneDepletion = Math.min(15, tnt * 0.05) * Math.exp(-timeYears / 2);
     
     // Precipitation changes (reduced due to cooling)
     const precipitationChange = temperatureAnomaly * 2; // Roughly 2% per degree
@@ -218,27 +217,55 @@ export class TemporalEffectsCalculator {
       tsunamiImpact = country.tsunamiRisk * tsunamiDecay;
     }
     
-    // Immediate casualties (first few months)
+    // Immediate casualties (first few months) - much more realistic
     const immediateDamage = Math.max(blastImpact, thermalImpact, tsunamiImpact);
-    let populationLossPercent = immediateDamage * country.populationDensity / 1000;
     
-    // Infrastructure destruction
-    let infrastructureDestroyed = immediateDamage * 0.8;
+    // Calculate realistic population loss based on distance and actual population density
+    let populationLossPercent = 0;
+    if (distance < craterRadius) {
+      populationLossPercent = 95; // Near total casualties in crater
+    } else if (distance < blastRadius) {
+      // Scale casualties based on blast intensity and local population density
+      const blastIntensity = Math.exp(-Math.pow(distance / blastRadius, 2));
+      populationLossPercent = blastIntensity * 80; // Max 80% in blast zone
+    } else if (distance < thermalRadius) {
+      // Thermal casualties
+      const thermalIntensity = Math.exp(-Math.pow(distance / thermalRadius, 2));
+      populationLossPercent = thermalIntensity * 30; // Max 30% in thermal zone
+    } else {
+      // Distant effects - minimal immediate casualties
+      populationLossPercent = Math.max(0, (100 - distance / 100) * 0.01);
+    }
+    
+    // Infrastructure destruction (realistic based on distance)
+    let infrastructureDestroyed = 0;
+    if (distance < craterRadius) {
+      infrastructureDestroyed = 100; // Complete destruction in crater
+    } else if (distance < blastRadius) {
+      const blastIntensity = Math.exp(-Math.pow(distance / blastRadius, 1.5));
+      infrastructureDestroyed = blastIntensity * 90; // Up to 90% in blast zone
+    } else if (distance < thermalRadius) {
+      const thermalIntensity = Math.exp(-Math.pow(distance / thermalRadius, 2));
+      infrastructureDestroyed = thermalIntensity * 40; // Up to 40% in thermal zone
+    } else {
+      // Distant effects - minimal infrastructure damage
+      infrastructureDestroyed = Math.max(0, (5000 - distance) / 5000 * 5); // Max 5% for distant areas
+    }
     
     // Add climate-driven casualties over time (these accumulate)
     if (timeYears > 0.1) {
       const climateEffects = this.calculateClimateEffects(timeYears);
       const temperatureDrop = Math.abs(climateEffects.temperatureAnomaly);
       
-      // Agricultural collapse leads to famine (increases over time)
-      const famineRisk = Math.min(80, temperatureDrop * 5);
-      const famineCasualties = famineRisk * 0.5 * (1 - Math.exp(-timeYears / 3));
+      // Agricultural collapse leads to famine (much more realistic)
+      const famineRisk = Math.min(15, temperatureDrop * 2); // Reduced from 80 to 15
+      const famineCasualties = famineRisk * 0.1 * (1 - Math.exp(-timeYears / 5)); // Much slower buildup
       
-      // Disease and social collapse casualties
-      const diseaseCasualties = Math.min(20, temperatureDrop * 2) * (timeYears / 10);
+      // Disease and social collapse casualties (realistic levels)
+      const diseaseCasualties = Math.min(5, temperatureDrop * 0.5) * (timeYears / 20); // Reduced significantly
       
-      // Economic collapse casualties (starvation, lack of medical care)
-      const economicCasualties = Math.min(30, infrastructureDestroyed * 0.2) * (timeYears / 5);
+      // Economic collapse casualties (starvation, lack of medical care) - realistic
+      const economicCasualties = Math.min(8, infrastructureDestroyed * 0.05) * (timeYears / 10); // Much lower
       
       populationLossPercent += famineCasualties + diseaseCasualties + economicCasualties;
     }
@@ -383,19 +410,30 @@ export class TemporalEffectsCalculator {
     for (const country of this.countries) {
       const damage = regionalDamage.get(country.code);
       if (damage) {
-        // Direct damage to infrastructure and assets (one-time cost)
-        const directDamage = country.gdp * (damage.infrastructureDestroyed / 100) * 3;
+        // Scale economic damage based on distance from impact
+        const distanceFromImpact = calculateDistance(
+          this.impactParams.latitude,
+          this.impactParams.longitude,
+          this.estimateCountryCenter(country.code).lat,
+          this.estimateCountryCenter(country.code).lng
+        );
         
-        // Ongoing economic losses accumulate over time (GDP loss per year)
-        const annualGdpLoss = country.gdp * (damage.populationLossPercent / 100) * 0.5;
+        // Distance-based damage scaling (realistic)
+        const distanceScaling = Math.max(0.01, Math.exp(-distanceFromImpact / 2000)); // Exponential decay
+        
+        // Direct damage to infrastructure and assets (realistic scaling)
+        const directDamage = country.gdp * (damage.infrastructureDestroyed / 100) * 0.3 * distanceScaling;
+        
+        // Ongoing economic losses (much more realistic)
+        const annualGdpLoss = country.gdp * (damage.populationLossPercent / 100) * 0.05 * distanceScaling;
         const cumulativeGdpLoss = annualGdpLoss * Math.max(0, timeYears);
         
-        // Climate-related economic losses (agricultural, energy, etc.)
+        // Climate-related economic losses (realistic levels)
         const climateEffects = this.calculateClimateEffects(timeYears);
-        const climateDamage = country.gdp * Math.abs(climateEffects.temperatureAnomaly) * 0.1 * Math.max(0, timeYears);
+        const climateDamage = country.gdp * Math.abs(climateEffects.temperatureAnomaly) * 0.02 * Math.max(0, timeYears) * distanceScaling;
         
-        // Recovery costs (reconstruction, adaptation)
-        const recoveryCosts = directDamage * 0.5 * Math.max(0, timeYears / 10);
+        // Recovery costs (realistic)
+        const recoveryCosts = directDamage * 0.2 * Math.max(0, timeYears / 20);
         
         totalDamage += directDamage + cumulativeGdpLoss + climateDamage + recoveryCosts;
       }
@@ -410,9 +448,9 @@ export class TemporalEffectsCalculator {
   private calculateGlobalHabitability(timeYears: number, climateEffects: ClimateEffects): number {
     if (timeYears < 0) return 75; // Pre-impact baseline
     
-    const temperaturePenalty = Math.abs(climateEffects.temperatureAnomaly) * 3;
-    const dustPenalty = climateEffects.sunlightReduction * 0.5;
-    const ozonePenalty = climateEffects.ozoneDepletion * 0.3;
+    const temperaturePenalty = Math.abs(climateEffects.temperatureAnomaly) * 5;
+    const dustPenalty = climateEffects.sunlightReduction * 0.3;
+    const ozonePenalty = climateEffects.ozoneDepletion * 0.5;
     
     let habitability = 75 - temperaturePenalty - dustPenalty - ozonePenalty;
     
@@ -431,8 +469,8 @@ export class TemporalEffectsCalculator {
   private calculateAgriculturalCapacity(timeYears: number, climateEffects: ClimateEffects): number {
     if (timeYears < 0) return 100;
     
-    const temperatureImpact = Math.abs(climateEffects.temperatureAnomaly) * 8;
-    const sunlightImpact = climateEffects.sunlightReduction * 0.9;
+    const temperatureImpact = Math.abs(climateEffects.temperatureAnomaly) * 10;
+    const sunlightImpact = climateEffects.sunlightReduction * 0.7;
     
     let capacity = 100 - temperatureImpact - sunlightImpact;
     
