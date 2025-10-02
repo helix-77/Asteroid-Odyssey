@@ -1,0 +1,172 @@
+{
+  "facilities": [
+    {"name": "Pentagon", "type": "military", "latitude": 38.8719, "longitude": -77.0563, "importance": 5, "country": "USA"},
+    {"name": "NORAD", "type": "military", "latitude": 38.7446, "longitude": -104.8461, "importance": 5, "country": "USA"},
+    {"name": "Fort Bragg", "type": "military", "latitude": 35.1391, "longitude": -79.0062, "importance": 4, "country": "USA"},
+    {"name": "Naval Station Norfolk", "type": "military", "latitude": 36.9466, "longitude": -76.3273, "importance": 4, "country": "USA"},
+    {"name": "Edwards AFB", "type": "military", "latitude": 34.9054, "longitude": -117.8839, "importance": 4, "country": "USA"},
+    {"name": "Hoover Dam", "type": "energy", "latitude": 36.0161, "longitude": -114.7377, "importance": 5, "country": "USA"},
+    {"name": "Grand Coulee Dam", "type": "energy", "latitude": 47.9551, "longitude": -118.9817, "importance": 4, "country": "USA"},
+    {"name": "Palo Verde Nuclear", "type": "energy", "latitude": 33.3881, "longitude": -112.8619, "importance": 5, "country": "USA"},
+    {"name": "Indian Point Nuclear", "type": "energy", "latitude": 41.2711, "longitude": -73.9524, "importance": 4, "country": "USA"},
+    {"name": "Texas Oil Refinery Hub", "type": "energy", "latitude": 29.7604, "longitude": -95.3698, "importance": 5, "country": "USA"},
+    {"name": "Statue of Liberty", "type": "cultural", "latitude": 40.6892, "longitude": -74.0445, "importance": 4, "country": "USA"},
+    {"name": "Golden Gate Bridge", "type": "cultural", "latitude": 37.8199, "longitude": -122.4783, "importance": 4, "country": "USA"},
+    {"name": "Mount Rushmore", "type": "cultural", "latitude": 43.8791, "longitude": -103.4591, "importance": 3, "country": "USA"},
+    {"name": "White House", "type": "civilian", "latitude": 38.8977, "longitude": -77.0365, "importance": 5, "country": "USA"},
+    {"name": "CDC Headquarters", "type": "civilian", "latitude": 33.7990, "longitude": -84.3260, "importance": 5, "country": "USA"},
+    {"name": "NASA Kennedy Space Center", "type": "civilian", "latitude": 28.5729, "longitude": -80.6490, "importance": 5, "country": "USA"},
+    {"name": "Los Angeles Port", "type": "civilian", "latitude": 33.7405, "longitude": -118.2720, "importance": 5, "country": "USA"},
+    {"name": "Chicago O'Hare Airport", "type": "civilian", "latitude": 41.9742, "longitude": -87.9073, "importance": 4, "country": "USA"},
+    {"name": "New York Stock Exchange", "type": "civilian", "latitude": 40.7069, "longitude": -74.0113, "importance": 5, "country": "USA"},
+    {"name": "Silicon Valley Tech Hub", "type": "civilian", "latitude": 37.3875, "longitude": -122.0575, "importance": 5, "country": "USA"},
+    
+    {"name": "Kremlin", "type": "military", "latitude": 55.7520, "longitude": 37.6175, "importance": 5, "country": "Russia"},
+    {"name": "Plesetsk Cosmodrome", "type": "military", "latitude": 62.9275, "longitude": 40.5772, "importance": 4, "country": "Russia"},
+    {"name": "Severomorsk Naval Base", "type": "military", "latitude": 69.0700, "longitude": 33.4170, "importance": 4, "country": "Russia"},
+    {"name": "Sayano-Shushenskaya Dam", "type": "energy", "latitude": 52.8200, "longitude": 91.3200, "importance": 5, "country": "Russia"},
+    {"name": "Leningrad Nuclear Plant", "type": "energy", "latitude": 60.2500, "longitude": 29.0333, "importance": 4, "country": "Russia"},
+    {"name": "Hermitage Museum", "type": "cultural", "latitude": 59.9398, "longitude": 30.3146, "importance": 4, "country": "Russia"},
+    {"name": "Red Square", "type": "cultural", "latitude": 55.7539, "longitude": 37.6208, "importance": 4, "country": "Russia"},
+    {"name": "Moscow Metro Hub", "type": "civilian", "latitude": 55.7558, "longitude": 37.6173, "importance": 4, "country": "Russia"},
+    
+    {"name": "Zhongnanhai", "type": "military", "latitude": 39.9075, "longitude": 116.3972, "importance": 5, "country": "China"},
+    {"name": "Three Gorges Dam", "type": "energy", "latitude": 30.8239, "longitude": 111.0031, "importance": 5, "country": "China"},
+    {"name": "Daya Bay Nuclear", "type": "energy", "latitude": 22.6000, "longitude": 114.5500, "importance": 4, "country": "China"},
+    {"name": "Shanghai Port", "type": "civilian", "latitude": 31.2304, "longitude": 121.4737, "importance": 5, "country": "China"},
+    {"name": "Forbidden City", "type": "cultural", "latitude": 39.9163, "longitude": 116.3972, "importance": 5, "country": "China"},
+    {"name": "Great Wall", "type": "cultural", "latitude": 40.4319, "longitude": 116.5704, "importance": 5, "country": "China"},
+    {"name": "Beijing Capital Airport", "type": "civilian", "latitude": 40.0799, "longitude": 116.6031, "importance": 5, "country": "China"},
+    {"name": "Shenzhen Tech Hub", "type": "civilian", "latitude": 22.5431, "longitude": 114.0579, "importance": 5, "country": "China"},
+    
+    {"name": "Tokyo Imperial Palace", "type": "military", "latitude": 35.6852, "longitude": 139.7528, "importance": 4, "country": "Japan"},
+    {"name": "Fukushima Daiichi", "type": "energy", "latitude": 37.4211, "longitude": 141.0328, "importance": 5, "country": "Japan"},
+    {"name": "Tokyo Electric Grid", "type": "energy", "latitude": 35.6762, "longitude": 139.6503, "importance": 5, "country": "Japan"},
+    {"name": "Mount Fuji", "type": "cultural", "latitude": 35.3606, "longitude": 138.7274, "importance": 5, "country": "Japan"},
+    {"name": "Hiroshima Peace Memorial", "type": "cultural", "latitude": 34.3955, "longitude": 132.4536, "importance": 4, "country": "Japan"},
+    {"name": "Tokyo Stock Exchange", "type": "civilian", "latitude": 35.6764, "longitude": 139.7773, "importance": 5, "country": "Japan"},
+    {"name": "Narita Airport", "type": "civilian", "latitude": 35.7720, "longitude": 140.3929, "importance": 4, "country": "Japan"},
+    
+    {"name": "Red Fort Delhi", "type": "military", "latitude": 28.6562, "longitude": 77.2410, "importance": 3, "country": "India"},
+    {"name": "Bhabha Atomic Center", "type": "energy", "latitude": 19.0176, "longitude": 72.8561, "importance": 5, "country": "India"},
+    {"name": "Tarapur Nuclear", "type": "energy", "latitude": 19.8333, "longitude": 72.6667, "importance": 4, "country": "India"},
+    {"name": "Taj Mahal", "type": "cultural", "latitude": 27.1751, "longitude": 78.0421, "importance": 5, "country": "India"},
+    {"name": "Mumbai Port", "type": "civilian", "latitude": 18.9388, "longitude": 72.8354, "importance": 5, "country": "India"},
+    {"name": "Bangalore Tech Hub", "type": "civilian", "latitude": 12.9716, "longitude": 77.5946, "importance": 5, "country": "India"},
+    
+    {"name": "Buckingham Palace", "type": "military", "latitude": 51.5014, "longitude": -0.1419, "importance": 4, "country": "UK"},
+    {"name": "Sizewell Nuclear", "type": "energy", "latitude": 52.2133, "longitude": 1.6208, "importance": 4, "country": "UK"},
+    {"name": "Big Ben", "type": "cultural", "latitude": 51.5007, "longitude": -0.1246, "importance": 4, "country": "UK"},
+    {"name": "Stonehenge", "type": "cultural", "latitude": 51.1789, "longitude": -1.8262, "importance": 4, "country": "UK"},
+    {"name": "London Stock Exchange", "type": "civilian", "latitude": 51.5151, "longitude": -0.0931, "importance": 5, "country": "UK"},
+    {"name": "Heathrow Airport", "type": "civilian", "latitude": 51.4700, "longitude": -0.4543, "importance": 5, "country": "UK"},
+    
+    {"name": "Élysée Palace", "type": "military", "latitude": 48.8707, "longitude": 2.3164, "importance": 4, "country": "France"},
+    {"name": "Flamanville Nuclear", "type": "energy", "latitude": 49.5333, "longitude": -1.8833, "importance": 4, "country": "France"},
+    {"name": "Eiffel Tower", "type": "cultural", "latitude": 48.8584, "longitude": 2.2945, "importance": 5, "country": "France"},
+    {"name": "Louvre Museum", "type": "cultural", "latitude": 48.8606, "longitude": 2.3376, "importance": 5, "country": "France"},
+    {"name": "Charles de Gaulle Airport", "type": "civilian", "latitude": 49.0097, "longitude": 2.5479, "importance": 4, "country": "France"},
+    
+    {"name": "Bundestag", "type": "military", "latitude": 52.5186, "longitude": 13.3761, "importance": 4, "country": "Germany"},
+    {"name": "Brokdorf Nuclear", "type": "energy", "latitude": 53.8517, "longitude": 9.3456, "importance": 4, "country": "Germany"},
+    {"name": "Brandenburg Gate", "type": "cultural", "latitude": 52.5163, "longitude": 13.3777, "importance": 4, "country": "Germany"},
+    {"name": "Neuschwanstein Castle", "type": "cultural", "latitude": 47.5576, "longitude": 10.7498, "importance": 4, "country": "Germany"},
+    {"name": "Frankfurt Airport", "type": "civilian", "latitude": 50.0379, "longitude": 8.5622, "importance": 5, "country": "Germany"},
+    
+    {"name": "Brasília Palace", "type": "military", "latitude": -15.7998, "longitude": -47.8908, "importance": 4, "country": "Brazil"},
+    {"name": "Itaipu Dam", "type": "energy", "latitude": -25.4078, "longitude": -54.5886, "importance": 5, "country": "Brazil"},
+    {"name": "Angra Nuclear", "type": "energy", "latitude": -23.0067, "longitude": -44.4567, "importance": 4, "country": "Brazil"},
+    {"name": "Christ the Redeemer", "type": "cultural", "latitude": -22.9519, "longitude": -43.2105, "importance": 5, "country": "Brazil"},
+    {"name": "São Paulo Stock Exchange", "type": "civilian", "latitude": -23.5505, "longitude": -46.6333, "importance": 5, "country": "Brazil"},
+    {"name": "Santos Port", "type": "civilian", "latitude": -23.9618, "longitude": -46.3322, "importance": 5, "country": "Brazil"},
+    
+    {"name": "Parliament House Canberra", "type": "military", "latitude": -35.3081, "longitude": 149.1245, "importance": 4, "country": "Australia"},
+    {"name": "Sydney Opera House", "type": "cultural", "latitude": -33.8568, "longitude": 151.2153, "importance": 5, "country": "Australia"},
+    {"name": "Sydney Harbor Bridge", "type": "cultural", "latitude": -33.8523, "longitude": 151.2108, "importance": 4, "country": "Australia"},
+    {"name": "Melbourne Port", "type": "civilian", "latitude": -37.8283, "longitude": 144.9294, "importance": 4, "country": "Australia"},
+    
+    {"name": "National Palace Mexico", "type": "military", "latitude": 19.4326, "longitude": -99.1332, "importance": 4, "country": "Mexico"},
+    {"name": "Laguna Verde Nuclear", "type": "energy", "latitude": 19.7222, "longitude": -96.4139, "importance": 4, "country": "Mexico"},
+    {"name": "Chichen Itza", "type": "cultural", "latitude": 20.6843, "longitude": -88.5678, "importance": 5, "country": "Mexico"},
+    {"name": "Teotihuacan", "type": "cultural", "latitude": 19.6925, "longitude": -98.8438, "importance": 4, "country": "Mexico"},
+    
+    {"name": "Blue House Seoul", "type": "military", "latitude": 37.5867, "longitude": 126.9748, "importance": 4, "country": "South Korea"},
+    {"name": "Kori Nuclear", "type": "energy", "latitude": 35.3167, "longitude": 129.2917, "importance": 4, "country": "South Korea"},
+    {"name": "Gyeongbokgung Palace", "type": "cultural", "latitude": 37.5796, "longitude": 126.9770, "importance": 4, "country": "South Korea"},
+    {"name": "Incheon Airport", "type": "civilian", "latitude": 37.4602, "longitude": 126.4407, "importance": 5, "country": "South Korea"},
+    
+    {"name": "Jakarta Presidential Palace", "type": "military", "latitude": -6.1701, "longitude": 106.8229, "importance": 4, "country": "Indonesia"},
+    {"name": "Borobudur Temple", "type": "cultural", "latitude": -7.6079, "longitude": 110.2038, "importance": 4, "country": "Indonesia"},
+    {"name": "Jakarta Port", "type": "civilian", "latitude": -6.1045, "longitude": 106.8779, "importance": 4, "country": "Indonesia"},
+    
+    {"name": "Casa Rosada", "type": "military", "latitude": -34.6083, "longitude": -58.3712, "importance": 4, "country": "Argentina"},
+    {"name": "Atucha Nuclear", "type": "energy", "latitude": -33.9667, "longitude": -59.2000, "importance": 4, "country": "Argentina"},
+    {"name": "Buenos Aires Port", "type": "civilian", "latitude": -34.6037, "longitude": -58.3816, "importance": 4, "country": "Argentina"},
+    
+    {"name": "Union Buildings Pretoria", "type": "military", "latitude": -25.7461, "longitude": 28.2314, "importance": 4, "country": "South Africa"},
+    {"name": "Koeberg Nuclear", "type": "energy", "latitude": -33.6767, "longitude": 18.4333, "importance": 4, "country": "South Africa"},
+    {"name": "Cape Town Port", "type": "civilian", "latitude": -33.9069, "longitude": 18.4232, "importance": 4, "country": "South Africa"},
+    
+    {"name": "Cairo Citadel", "type": "military", "latitude": 30.0296, "longitude": 31.2600, "importance": 3, "country": "Egypt"},
+    {"name": "Aswan High Dam", "type": "energy", "latitude": 23.9704, "longitude": 32.8774, "importance": 5, "country": "Egypt"},
+    {"name": "Pyramids of Giza", "type": "cultural", "latitude": 29.9792, "longitude": 31.1342, "importance": 5, "country": "Egypt"},
+    {"name": "Suez Canal", "type": "civilian", "latitude": 30.5852, "longitude": 32.2654, "importance": 5, "country": "Egypt"},
+    
+    {"name": "Aso Rock", "type": "military", "latitude": 9.0765, "longitude": 7.4898, "importance": 4, "country": "Nigeria"},
+    {"name": "Lagos Port", "type": "civilian", "latitude": 6.4474, "longitude": 3.3903, "importance": 5, "country": "Nigeria"},
+    
+    {"name": "Saudi Aramco HQ", "type": "energy", "latitude": 26.3927, "longitude": 50.1772, "importance": 5, "country": "Saudi Arabia"},
+    {"name": "Mecca", "type": "cultural", "latitude": 21.4225, "longitude": 39.8262, "importance": 5, "country": "Saudi Arabia"},
+    {"name": "Medina", "type": "cultural", "latitude": 24.5247, "longitude": 39.5692, "importance": 5, "country": "Saudi Arabia"},
+    
+    {"name": "Tehran Parliament", "type": "military", "latitude": 35.7006, "longitude": 51.4013, "importance": 4, "country": "Iran"},
+    {"name": "Bushehr Nuclear", "type": "energy", "latitude": 28.9933, "longitude": 50.8781, "importance": 5, "country": "Iran"},
+    {"name": "Persepolis", "type": "cultural", "latitude": 29.9344, "longitude": 52.8906, "importance": 4, "country": "Iran"},
+    
+    {"name": "Grand Palace Bangkok", "type": "military", "latitude": 13.7500, "longitude": 100.4917, "importance": 4, "country": "Thailand"},
+    {"name": "Bangkok Port", "type": "civilian", "latitude": 13.6540, "longitude": 100.5938, "importance": 4, "country": "Thailand"},
+    
+    {"name": "Malacañang Palace", "type": "military", "latitude": 14.5995, "longitude": 120.9942, "importance": 4, "country": "Philippines"},
+    {"name": "Manila Port", "type": "civilian", "latitude": 14.5833, "longitude": 120.9667, "importance": 4, "country": "Philippines"},
+    
+    {"name": "Hanoi Citadel", "type": "military", "latitude": 21.0341, "longitude": 105.8372, "importance": 3, "country": "Vietnam"},
+    {"name": "Ho Chi Minh Port", "type": "civilian", "latitude": 10.7756, "longitude": 106.7019, "importance": 4, "country": "Vietnam"},
+    
+    {"name": "Wawel Castle", "type": "cultural", "latitude": 50.0544, "longitude": 19.9356, "importance": 4, "country": "Poland"},
+    {"name": "Warsaw Stock Exchange", "type": "civilian", "latitude": 52.2297, "longitude": 21.0122, "importance": 4, "country": "Poland"},
+    
+    {"name": "Royal Palace Amsterdam", "type": "military", "latitude": 52.3740, "longitude": 4.8897, "importance": 4, "country": "Netherlands"},
+    {"name": "Rotterdam Port", "type": "civilian", "latitude": 51.9225, "longitude": 4.4792, "importance": 5, "country": "Netherlands"},
+    
+    {"name": "Colosseum", "type": "cultural", "latitude": 41.8902, "longitude": 12.4922, "importance": 5, "country": "Italy"},
+    {"name": "Vatican City", "type": "cultural", "latitude": 41.9029, "longitude": 12.4534, "importance": 5, "country": "Italy"},
+    {"name": "Venice", "type": "cultural", "latitude": 45.4408, "longitude": 12.3155, "importance": 4, "country": "Italy"},
+    
+    {"name": "Acropolis", "type": "cultural", "latitude": 37.9715, "longitude": 23.7257, "importance": 5, "country": "Greece"},
+    {"name": "Piraeus Port", "type": "civilian", "latitude": 37.9485, "longitude": 23.6395, "importance": 4, "country": "Greece"},
+    
+    {"name": "Alhambra", "type": "cultural", "latitude": 37.1760, "longitude": -3.5881, "importance": 4, "country": "Spain"},
+    {"name": "Sagrada Familia", "type": "cultural", "latitude": 41.4036, "longitude": 2.1744, "importance": 4, "country": "Spain"},
+    {"name": "Barcelona Port", "type": "civilian", "latitude": 41.3518, "longitude": 2.1739, "importance": 4, "country": "Spain"},
+    
+    {"name": "Hagia Sophia", "type": "cultural", "latitude": 41.0086, "longitude": 28.9802, "importance": 5, "country": "Turkey"},
+    {"name": "Istanbul Port", "type": "civilian", "latitude": 41.0082, "longitude": 28.9784, "importance": 5, "country": "Turkey"},
+    
+    {"name": "Machu Picchu", "type": "cultural", "latitude": -13.1631, "longitude": -72.5450, "importance": 5, "country": "Peru"},
+    {"name": "Lima Port", "type": "civilian", "latitude": -12.0464, "longitude": -77.0428, "importance": 4, "country": "Peru"},
+    
+    {"name": "Cartagena Port", "type": "civilian", "latitude": 10.3910, "longitude": -75.4794, "importance": 4, "country": "Colombia"},
+    
+    {"name": "Quito Historic Center", "type": "cultural", "latitude": -0.2201, "longitude": -78.5123, "importance": 4, "country": "Ecuador"},
+    
+    {"name": "Petra", "type": "cultural", "latitude": 30.3285, "longitude": 35.4444, "importance": 5, "country": "Jordan"},
+    
+    {"name": "Burj Khalifa", "type": "cultural", "latitude": 25.1972, "longitude": 55.2744, "importance": 4, "country": "UAE"},
+    {"name": "Dubai Port", "type": "civilian", "latitude": 25.2854, "longitude": 55.3324, "importance": 5, "country": "UAE"},
+    
+    {"name": "Angkor Wat", "type": "cultural", "latitude": 13.4125, "longitude": 103.8670, "importance": 5, "country": "Cambodia"},
+    
+    {"name": "Singapore Port", "type": "civilian", "latitude": 1.2644, "longitude": 103.8220, "importance": 5, "country": "Singapore"},
+    {"name": "Marina Bay", "type": "cultural", "latitude": 1.2834, "longitude": 103.8607, "importance": 4, "country": "Singapore"}
+  ]
+}
