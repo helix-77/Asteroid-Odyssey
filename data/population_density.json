@@ -1,157 +1,85 @@
 {
-  "population_density_data": [
+  "metadata": {
+    "source": "Stub data for demonstration",
+    "resolution": "Country-level approximation",
+    "year": 2024,
+    "unit": "people per km²"
+  },
+  "regions": [
     {
-      "region": "North America",
-      "coordinates": [
-        {
-          "lat": 40.7128,
-          "lng": -74.006,
-          "density": 11000,
-          "name": "New York City"
-        },
-        {
-          "lat": 34.0522,
-          "lng": -118.2437,
-          "density": 3200,
-          "name": "Los Angeles"
-        },
-        { "lat": 41.8781, "lng": -87.6298, "density": 4600, "name": "Chicago" },
-        { "lat": 29.7604, "lng": -95.3698, "density": 1500, "name": "Houston" },
-        { "lat": 33.4484, "lng": -112.074, "density": 1200, "name": "Phoenix" },
-        { "lat": 25.7617, "lng": -80.1918, "density": 12000, "name": "Miami" },
-        { "lat": 43.6532, "lng": -79.3832, "density": 4400, "name": "Toronto" },
-        {
-          "lat": 49.2827,
-          "lng": -123.1207,
-          "density": 5500,
-          "name": "Vancouver"
-        }
-      ]
+      "name": "Monaco",
+      "density": 26150,
+      "coordinates": [7.4167, 43.7333]
     },
     {
-      "region": "Europe",
-      "coordinates": [
-        { "lat": 51.5074, "lng": -0.1278, "density": 5500, "name": "London" },
-        { "lat": 48.8566, "lng": 2.3522, "density": 21000, "name": "Paris" },
-        { "lat": 52.52, "lng": 13.405, "density": 4100, "name": "Berlin" },
-        { "lat": 41.9028, "lng": 12.4964, "density": 2200, "name": "Rome" },
-        { "lat": 55.7558, "lng": 37.6176, "density": 4900, "name": "Moscow" },
-        { "lat": 52.3676, "lng": 4.9041, "density": 5200, "name": "Amsterdam" },
-        { "lat": 59.9311, "lng": 10.7579, "density": 1500, "name": "Oslo" },
-        { "lat": 59.3293, "lng": 18.0686, "density": 4800, "name": "Stockholm" }
-      ]
+      "name": "Singapore",
+      "density": 8358,
+      "coordinates": [103.8198, 1.3521]
     },
     {
-      "region": "Asia",
-      "coordinates": [
-        { "lat": 35.6762, "lng": 139.6503, "density": 6200, "name": "Tokyo" },
-        {
-          "lat": 22.3193,
-          "lng": 114.1694,
-          "density": 6800,
-          "name": "Hong Kong"
-        },
-        {
-          "lat": 1.3521,
-          "lng": 103.8198,
-          "density": 7800,
-          "name": "Singapore"
-        },
-        { "lat": 37.5665, "lng": 126.978, "density": 16000, "name": "Seoul" },
-        { "lat": 39.9042, "lng": 116.4074, "density": 1300, "name": "Beijing" },
-        {
-          "lat": 31.2304,
-          "lng": 121.4737,
-          "density": 3800,
-          "name": "Shanghai"
-        },
-        { "lat": 19.076, "lng": 72.8777, "density": 21000, "name": "Mumbai" },
-        { "lat": 28.6139, "lng": 77.209, "density": 11000, "name": "Delhi" },
-        { "lat": 6.2088, "lng": 106.8456, "density": 15000, "name": "Jakarta" },
-        { "lat": 14.5995, "lng": 120.9842, "density": 42000, "name": "Manila" }
-      ]
+      "name": "Hong Kong",
+      "density": 6659,
+      "coordinates": [114.1694, 22.3193]
     },
     {
-      "region": "Africa",
-      "coordinates": [
-        {
-          "lat": -26.2041,
-          "lng": 28.0473,
-          "density": 2400,
-          "name": "Johannesburg"
-        },
-        {
-          "lat": -33.9249,
-          "lng": 18.4241,
-          "density": 1500,
-          "name": "Cape Town"
-        },
-        { "lat": 6.5244, "lng": 3.3792, "density": 4200, "name": "Lagos" },
-        { "lat": -1.2921, "lng": 36.8219, "density": 4800, "name": "Nairobi" },
-        { "lat": 30.0444, "lng": 31.2357, "density": 19000, "name": "Cairo" },
-        { "lat": 33.8869, "lng": 35.5131, "density": 1000, "name": "Beirut" }
-      ]
+      "name": "Bangladesh",
+      "density": 1265,
+      "coordinates": [90.3563, 23.685]
     },
     {
-      "region": "South America",
-      "coordinates": [
-        {
-          "lat": -23.5505,
-          "lng": -46.6333,
-          "density": 7200,
-          "name": "São Paulo"
-        },
-        {
-          "lat": -22.9068,
-          "lng": -43.1729,
-          "density": 5200,
-          "name": "Rio de Janeiro"
-        },
-        {
-          "lat": -34.6118,
-          "lng": -58.396,
-          "density": 15000,
-          "name": "Buenos Aires"
-        },
-        { "lat": -12.0464, "lng": -77.0428, "density": 3200, "name": "Lima" },
-        { "lat": 4.711, "lng": -74.0721, "density": 4200, "name": "Bogotá" },
-        {
-          "lat": -33.4489,
-          "lng": -70.6693,
-          "density": 4800,
-          "name": "Santiago"
-        }
-      ]
+      "name": "Netherlands",
+      "density": 508,
+      "coordinates": [5.2913, 52.1326]
     },
     {
-      "region": "Oceania",
-      "coordinates": [
-        { "lat": -33.8688, "lng": 151.2093, "density": 2000, "name": "Sydney" },
-        {
-          "lat": -37.8136,
-          "lng": 144.9631,
-          "density": 1900,
-          "name": "Melbourne"
-        },
-        {
-          "lat": -27.4698,
-          "lng": 153.0251,
-          "density": 900,
-          "name": "Brisbane"
-        },
-        {
-          "lat": -36.8485,
-          "lng": 174.7633,
-          "density": 1200,
-          "name": "Auckland"
-        },
-        {
-          "lat": -41.2865,
-          "lng": 174.7762,
-          "density": 200,
-          "name": "Wellington"
-        }
-      ]
+      "name": "India",
+      "density": 464,
+      "coordinates": [78.9629, 20.5937]
+    },
+    {
+      "name": "Japan",
+      "density": 347,
+      "coordinates": [138.2529, 36.2048]
+    },
+    {
+      "name": "Germany",
+      "density": 240,
+      "coordinates": [10.4515, 51.1657]
+    },
+    {
+      "name": "United Kingdom",
+      "density": 281,
+      "coordinates": [-3.436, 55.3781]
+    },
+    {
+      "name": "China",
+      "density": 153,
+      "coordinates": [104.1954, 35.8617]
+    },
+    {
+      "name": "United States",
+      "density": 36,
+      "coordinates": [-95.7129, 37.0902]
+    },
+    {
+      "name": "Brazil",
+      "density": 25,
+      "coordinates": [-51.9253, -14.235]
+    },
+    {
+      "name": "Russia",
+      "density": 9,
+      "coordinates": [105.3188, 61.524]
+    },
+    {
+      "name": "Canada",
+      "density": 4,
+      "coordinates": [-106.3468, 56.1304]
+    },
+    {
+      "name": "Australia",
+      "density": 3,
+      "coordinates": [133.7751, -25.2744]
     }
   ]
 }

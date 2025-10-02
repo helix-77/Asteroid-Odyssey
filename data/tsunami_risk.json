@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "description": "Stubbed tsunami risk index cells (0..1). Replace with NOAA tsunami catalogs and coastal exposure datasets.",
+    "sources": [
+      "https://www.ngdc.noaa.gov/hazard/tsu_db.shtml",
+      "https://www.openstreetmap.org/"
+    ]
+  },
+  "cells": [
+    { "lon": -140, "lat":  30, "value": 0.8, "sizeDeg": 2 },
+    { "lon": -125, "lat":  40, "value": 0.6, "sizeDeg": 2 },
+    { "lon": -75,  "lat":  20, "value": 0.5, "sizeDeg": 2 },
+    { "lon": -10,  "lat":  35, "value": 0.4, "sizeDeg": 2 },
+    { "lon":  20,  "lat":  35, "value": 0.5, "sizeDeg": 2 },
+    { "lon":  60,  "lat":  15, "value": 0.7, "sizeDeg": 2 },
+    { "lon": 100,  "lat":  10, "value": 0.9, "sizeDeg": 2 },
+    { "lon": 130,  "lat":  20, "value": 0.8, "sizeDeg": 2 },
+    { "lon": 150,  "lat": -10, "value": 0.7, "sizeDeg": 2 },
+    { "lon":  80,  "lat": -20, "value": 0.6, "sizeDeg": 2 }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "description": "Stubbed tectonic activity index cells (0..1). Replace with USGS/Global Seismic Hazard data.",
+    "sources": [
+      "https://www.usgs.gov/",
+      "https://gdis.noa.gr/en/global-seismic-hazard-assessment-program-gshap/"
+    ]
+  },
+  "cells": [
+    { "lon": -120, "lat": 35,  "value": 0.8, "sizeDeg": 2 },
+    { "lon": -70,  "lat": -30, "value": 0.7, "sizeDeg": 2 },
+    { "lon":  10,  "lat":  40, "value": 0.3, "sizeDeg": 2 },
+    { "lon":  80,  "lat":  30, "value": 0.9, "sizeDeg": 2 },
+    { "lon": 100,  "lat":  35, "value": 0.8, "sizeDeg": 2 },
+    { "lon": 140,  "lat":  38, "value": 0.9, "sizeDeg": 2 },
+    { "lon":  60,  "lat":  -5, "value": 0.6, "sizeDeg": 2 },
+    { "lon":  20,  "lat":  30, "value": 0.4, "sizeDeg": 2 }
+  ]
+}

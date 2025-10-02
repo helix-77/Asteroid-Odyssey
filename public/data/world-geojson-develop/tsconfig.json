@@ -1,8 +1,0 @@
-{
-    "compilerOptions": {
-        "strict": true,
-        "checkJs": true,
-        "allowJs": true,
-        "resolveJsonModule": true
-    }
-}

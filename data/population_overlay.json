@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "description": "Stubbed population density overlay cells (people per km^2). Replace with WorldPop/GPW raster at runtime or preprocessed grid.",
+    "sources": [
+      "https://www.worldpop.org/",
+      "https://sedac.ciesin.columbia.edu/data/collection/gpw-v4"
+    ]
+  },
+  "cells": [
+    { "lon": -120, "lat": 35,  "value": 1200, "sizeDeg": 1.5 },
+    { "lon": -80,  "lat":  25, "value": 900,  "sizeDeg": 1.5 },
+    { "lon": -3,   "lat":  52, "value": 700,  "sizeDeg": 1.5 },
+    { "lon":  2,   "lat":  49, "value": 1000, "sizeDeg": 1.5 },
+    { "lon":  77,  "lat":  28, "value": 3000, "sizeDeg": 1.5 },
+    { "lon":  90,  "lat":  23, "value": 3500, "sizeDeg": 1.5 },
+    { "lon": 116,  "lat":  40, "value": 1800, "sizeDeg": 1.5 },
+    { "lon": 139,  "lat":  36, "value": 2500, "sizeDeg": 1.5 },
+    { "lon": -58,  "lat": -34, "value": 1200, "sizeDeg": 1.5 },
+    { "lon":  18,  "lat": -34, "value": 400,  "sizeDeg": 1.5 }
+  ]
+}

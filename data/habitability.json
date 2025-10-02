@@ -1,0 +1,111 @@
+{
+  "metadata": {
+    "source": "Stub data based on climate and geography",
+    "description": "Habitability index (0-100) for major regions",
+    "factors": [
+      "temperature",
+      "precipitation",
+      "elevation",
+      "soil_quality",
+      "water_access"
+    ]
+  },
+  "regions": [
+    {
+      "name": "Mediterranean Europe",
+      "habitability": 95,
+      "coordinates": [12.0, 42.0],
+      "factors": {
+        "temperature": 85,
+        "precipitation": 75,
+        "elevation": 90,
+        "soil_quality": 85,
+        "water_access": 95
+      }
+    },
+    {
+      "name": "Temperate North America",
+      "habitability": 92,
+      "coordinates": [-95.0, 40.0],
+      "factors": {
+        "temperature": 80,
+        "precipitation": 85,
+        "elevation": 95,
+        "soil_quality": 90,
+        "water_access": 90
+      }
+    },
+    {
+      "name": "East Asia Coastal",
+      "habitability": 88,
+      "coordinates": [120.0, 35.0],
+      "factors": {
+        "temperature": 75,
+        "precipitation": 80,
+        "elevation": 85,
+        "soil_quality": 85,
+        "water_access": 85
+      }
+    },
+    {
+      "name": "Northern Europe",
+      "habitability": 85,
+      "coordinates": [10.0, 60.0],
+      "factors": {
+        "temperature": 70,
+        "precipitation": 90,
+        "elevation": 85,
+        "soil_quality": 80,
+        "water_access": 95
+      }
+    },
+    {
+      "name": "Tropical Highlands",
+      "habitability": 75,
+      "coordinates": [-75.0, 0.0],
+      "factors": {
+        "temperature": 85,
+        "precipitation": 70,
+        "elevation": 60,
+        "soil_quality": 75,
+        "water_access": 70
+      }
+    },
+    {
+      "name": "Arid Regions",
+      "habitability": 35,
+      "coordinates": [25.0, 25.0],
+      "factors": {
+        "temperature": 40,
+        "precipitation": 20,
+        "elevation": 70,
+        "soil_quality": 30,
+        "water_access": 25
+      }
+    },
+    {
+      "name": "Arctic Regions",
+      "habitability": 25,
+      "coordinates": [-100.0, 75.0],
+      "factors": {
+        "temperature": 15,
+        "precipitation": 40,
+        "elevation": 50,
+        "soil_quality": 20,
+        "water_access": 60
+      }
+    },
+    {
+      "name": "Antarctic",
+      "habitability": 5,
+      "coordinates": [0.0, -85.0],
+      "factors": {
+        "temperature": 5,
+        "precipitation": 10,
+        "elevation": 30,
+        "soil_quality": 5,
+        "water_access": 20
+      }
+    }
+  ]
+}
