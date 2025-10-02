@@ -11,14 +11,12 @@ import asteroids from "@/data/asteroids.json";
 // Import components directly
 import { ImpactMap } from "@/components/impact-simulator/impact-map-simple";
 import { ImpactStats } from "@/components/impact-simulator/impact-stats";
-import {
-  SimulationControls,
-  useSimulationKeyboard,
-} from "@/components/impact-simulator/simulation-controls";
+import { SimulationControls } from "@/components/impact-simulator/simulation-controls";
 import { AsteroidSelector } from "@/components/impact-simulator/asteroid-selector";
 import { LayerControls } from "@/components/impact-simulator/layer-controls";
 import { MapLegend } from "@/components/impact-simulator/map-legend";
 import { RegionSelector } from "@/components/impact-simulator/region-selector";
+import { HelpButton } from "@/components/impact-simulator/help-button";
 
 const TIME_STEPS = [
   { id: 0, label: "Pre-Impact", description: "Asteroid approaching" },
@@ -46,21 +44,17 @@ export default function ImpactSimulatorPage() {
     (a) => a.id === state.selectedAsteroidId
   )!;
 
-  // Animation loop
+  // Animation loop - SINGLE IMPACT ONLY
   useEffect(() => {
     if (!state.isPlaying || !state.impactLocation) return;
 
     const interval = setInterval(() => {
       setAnimationProgress((prev) => {
-        const increment = 0.02 * state.playbackSpeed;
+        const increment = 0.01 * state.playbackSpeed; // SLOWER: Reduced from 0.02 to 0.01
         if (prev >= 1) {
-          setState((s) => {
-            if (s.timeStep >= TIME_STEPS.length - 1) {
-              return { ...s, isPlaying: false };
-            }
-            return { ...s, timeStep: s.timeStep + 1 };
-          });
-          return 0;
+          // SINGLE IMPACT: Stop after one complete animation
+          setState((s) => ({ ...s, isPlaying: false }));
+          return 1; // Keep at 100% to show final state
         }
         return prev + increment;
       });
@@ -118,11 +112,6 @@ export default function ImpactSimulatorPage() {
     setImpactResults(null);
   }, []);
 
-  const handleTimeStepChange = useCallback((step: number) => {
-    setState((s) => ({ ...s, timeStep: step, isPlaying: false }));
-    setAnimationProgress(0);
-  }, []);
-
   const handleAsteroidChange = useCallback(
     (asteroidId: string) => {
       setState((s) => ({ ...s, selectedAsteroidId: asteroidId }));
@@ -144,15 +133,25 @@ export default function ImpactSimulatorPage() {
   );
 
   // Add keyboard shortcuts
-  useSimulationKeyboard(
-    state.impactLocation !== null,
-    state.isPlaying,
-    state.timeStep,
-    TIME_STEPS.length - 1,
-    handlePlayPause,
-    handleReset,
-    handleTimeStepChange
-  );
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!state.impactLocation) return;
+
+      switch (e.code) {
+        case "Space":
+          e.preventDefault();
+          handlePlayPause();
+          break;
+        case "KeyR":
+          e.preventDefault();
+          handleReset();
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [state.impactLocation, handlePlayPause, handleReset]);
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -160,10 +159,12 @@ export default function ImpactSimulatorPage() {
       <header className="border-b border-border bg-card px-6 py-3">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold">Asteroid Impact Simulator</h1>
-            <p className="text-sm text-muted-foreground">
-              Scientific 2D impact modeling with real-time visualization
-            </p>
+            <LayerControls
+              activeLayer={state.activeLayer}
+              onLayerChange={(layer) =>
+                setState((s) => ({ ...s, activeLayer: layer }))
+              }
+            />
           </div>
           <div className="flex items-center gap-4">
             <RegionSelector
@@ -172,11 +173,20 @@ export default function ImpactSimulatorPage() {
                 setState((s) => ({ ...s, selectedRegion: region }))
               }
             />
-            <AsteroidSelector
-              asteroids={asteroids.asteroids}
-              selectedId={state.selectedAsteroidId}
-              onSelect={handleAsteroidChange}
-            />
+            <div className="flex flex-col gap-2">
+              <AsteroidSelector
+                asteroids={asteroids.asteroids}
+                selectedId={state.selectedAsteroidId}
+                onSelect={handleAsteroidChange}
+              />
+              <SimulationControls
+                isPlaying={state.isPlaying}
+                hasImpact={state.impactLocation !== null}
+                onPlayPause={handlePlayPause}
+                onReset={handleReset}
+              />
+            </div>
+            <HelpButton />
           </div>
         </div>
       </header>
@@ -194,16 +204,6 @@ export default function ImpactSimulatorPage() {
             animationProgress={animationProgress}
             onMapClick={handleMapClick}
           />
-
-          {/* Layer Controls - moved to top right */}
-          <div className="absolute top-4 right-4">
-            <LayerControls
-              activeLayer={state.activeLayer}
-              onLayerChange={(layer) =>
-                setState((s) => ({ ...s, activeLayer: layer }))
-              }
-            />
-          </div>
 
           {/* Map Legend - moved to bottom right */}
           <div className="absolute bottom-4 right-4">
@@ -223,44 +223,6 @@ export default function ImpactSimulatorPage() {
           animationProgress={animationProgress}
         />
       </div>
-
-      {/* Instructions Modal - moved outside map for better visibility */}
-      {!state.impactLocation && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-          <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg p-6 shadow-xl max-w-md mx-4">
-            <h3 className="font-semibold mb-2">How to Use</h3>
-            <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-              <li>Select an asteroid from the dropdown above</li>
-              <li>Choose a region or use global view</li>
-              <li>Click anywhere on the map to simulate an impact</li>
-              <li>Use timeline controls to see effects over time</li>
-              <li>Toggle layers to view different data overlays</li>
-            </ol>
-            <div className="mt-4 p-3 bg-muted/50 rounded text-xs">
-              <p className="font-medium mb-1">⚠️ Scientific Accuracy</p>
-              <p className="text-muted-foreground">
-                Calculations based on established impact models with clear
-                provenance indicators
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Timeline Controls */}
-      <SimulationControls
-        isPlaying={state.isPlaying}
-        timeStep={state.timeStep}
-        timeSteps={TIME_STEPS}
-        playbackSpeed={state.playbackSpeed}
-        hasImpact={state.impactLocation !== null}
-        onPlayPause={handlePlayPause}
-        onReset={handleReset}
-        onTimeStepChange={handleTimeStepChange}
-        onSpeedChange={(speed) =>
-          setState((s) => ({ ...s, playbackSpeed: speed }))
-        }
-      />
     </div>
   );
 }

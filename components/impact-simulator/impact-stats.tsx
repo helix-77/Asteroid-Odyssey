@@ -2,15 +2,8 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Info, AlertTriangle, CheckCircle } from "lucide-react";
+import { Info, AlertTriangle } from "lucide-react";
 import { type ImpactLocation } from "./types";
 
 interface ImpactStatsProps {
@@ -60,9 +53,9 @@ export function ImpactStats({
               </div>
               <div>
                 <p className="text-muted-foreground">Threat Level</p>
-                <Badge variant={getThreatVariant(asteroid.threat_level)}>
+                <p className="font-medium capitalize">
                   {asteroid.threat_level}
-                </Badge>
+                </p>
               </div>
             </div>
           </CardContent>
@@ -103,53 +96,69 @@ export function ImpactStats({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <StatItem
                 label="Kinetic Energy"
-                value={impactResults.energyJ.value}
+                value={impactResults.energyJ?.value || 0}
                 unit="J"
-                provenance={impactResults.energyJ}
+                provenance={impactResults.energyJ || {}}
                 formatter={formatEnergy}
                 testId="stat-Kinetic energy"
               />
               <StatItem
                 label="TNT Equivalent"
-                value={impactResults.megatonsTNT.value}
+                value={impactResults.megatonsTNT?.value || 0}
                 unit="Mt"
-                provenance={impactResults.megatonsTNT}
+                provenance={impactResults.megatonsTNT || {}}
                 formatter={formatMegatons}
               />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
+        <Card className="space-gradient">
+          <CardHeader className="text-red-600">
             <CardTitle>Human Impact</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <StatItem
               label="Population Casualties"
-              value={impactResults.casualties.value * effectMultiplier}
+              value={(impactResults.casualties?.value || 0) * effectMultiplier}
               unit="people"
-              provenance={impactResults.casualties}
+              provenance={impactResults.casualties || {}}
               formatter={formatCasualties}
             />
             <StatItem
               label="Economic Damage"
-              value={impactResults.economicDamageUSD.value * effectMultiplier}
+              value={
+                (impactResults.economicDamageUSD?.value || 0) * effectMultiplier
+              }
               unit="USD"
-              provenance={impactResults.economicDamageUSD}
+              provenance={impactResults.economicDamageUSD || {}}
               formatter={formatEconomic}
             />
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">Habitable Land Lost</p>
                 <p className="font-medium">
-                  {Math.min(effectMultiplier * 15, 95).toFixed(1)}%
+                  {Math.min(
+                    (impactResults.climate?.habitabilityLossPct?.value || 0) *
+                      effectMultiplier,
+                    95
+                  ).toFixed(1)}
+                  %
                 </p>
               </div>
               <div>
                 <p className="text-muted-foreground">Infrastructure</p>
                 <p className="font-medium">
-                  {Math.floor(effectMultiplier * 45)}% damaged
+                  {Math.floor(
+                    Math.min(
+                      (impactResults.blastRadiiKm?.overpressure5psi?.value ||
+                        0) *
+                        effectMultiplier *
+                        2,
+                      100
+                    )
+                  )}
+                  % damaged
                 </p>
               </div>
             </div>
@@ -157,16 +166,18 @@ export function ImpactStats({
         </Card>
 
         {/* Physical Effects */}
-        <Card>
-          <CardHeader>
+        <Card className="space-gradient">
+          <CardHeader className="text-blue-600">
             <CardTitle>Physical Effects</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <StatItem
               label="Crater Radius"
-              value={impactResults.craterRadiusKm.value * effectMultiplier}
+              value={
+                (impactResults.craterRadiusKm?.value || 0) * effectMultiplier
+              }
               unit="km"
-              provenance={impactResults.craterRadiusKm}
+              provenance={impactResults.craterRadiusKm || {}}
               formatter={formatDistance}
               testId="stat-Crater radius"
             />
@@ -177,31 +188,37 @@ export function ImpactStats({
                 <StatItem
                   label="Total Destruction (20 psi)"
                   value={
-                    impactResults.blastRadiiKm.overpressure20psi.value *
-                    effectMultiplier
+                    (impactResults.blastRadiiKm?.overpressure20psi?.value ||
+                      0) * effectMultiplier
                   }
                   unit="km"
-                  provenance={impactResults.blastRadiiKm.overpressure20psi}
+                  provenance={
+                    impactResults.blastRadiiKm?.overpressure20psi || {}
+                  }
                   formatter={formatDistance}
                 />
                 <StatItem
                   label="Heavy Damage (10 psi)"
                   value={
-                    impactResults.blastRadiiKm.overpressure10psi.value *
-                    effectMultiplier
+                    (impactResults.blastRadiiKm?.overpressure10psi?.value ||
+                      0) * effectMultiplier
                   }
                   unit="km"
-                  provenance={impactResults.blastRadiiKm.overpressure10psi}
+                  provenance={
+                    impactResults.blastRadiiKm?.overpressure10psi || {}
+                  }
                   formatter={formatDistance}
                 />
                 <StatItem
                   label="Moderate Damage (5 psi)"
                   value={
-                    impactResults.blastRadiiKm.overpressure5psi.value *
+                    (impactResults.blastRadiiKm?.overpressure5psi?.value || 0) *
                     effectMultiplier
                   }
                   unit="km"
-                  provenance={impactResults.blastRadiiKm.overpressure5psi}
+                  provenance={
+                    impactResults.blastRadiiKm?.overpressure5psi || {}
+                  }
                   formatter={formatDistance}
                 />
               </div>
@@ -209,42 +226,74 @@ export function ImpactStats({
           </CardContent>
         </Card>
 
-        {/* Human Impact */}
-
         {/* Environmental Effects */}
-        <Card>
-          <CardHeader>
+        <Card className="space-gradient">
+          <CardHeader className="text-green-600">
             <CardTitle>Environmental Effects</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <StatItem
               label="Global Temperature Shift"
-              value={impactResults.climate.tempChangeC.value * effectMultiplier}
+              value={
+                (impactResults.climate?.tempChangeC?.value || 0) *
+                effectMultiplier
+              }
               unit="°C"
-              provenance={impactResults.climate.tempChangeC}
+              provenance={impactResults.climate?.tempChangeC || {}}
               formatter={formatTemperature}
             />
             <StatItem
               label="Sunlight Access"
               value={
                 100 -
-                impactResults.climate.habitabilityLossPct.value *
+                (impactResults.climate?.habitabilityLossPct?.value || 0) *
                   effectMultiplier
               }
               unit="%"
-              provenance={impactResults.climate.habitabilityLossPct}
+              provenance={impactResults.climate?.habitabilityLossPct || {}}
               formatter={formatPercentage}
             />
             <StatItem
               label="CO₂ Levels"
               value={
                 420 +
-                impactResults.climate.co2IncreasePpm.value * effectMultiplier
+                (impactResults.climate?.co2IncreasePpm?.value || 0) *
+                  effectMultiplier
               }
               unit="ppm"
-              provenance={impactResults.climate.co2IncreasePpm}
+              provenance={impactResults.climate?.co2IncreasePpm || {}}
               formatter={formatCO2}
             />
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-muted-foreground">Affected Area</p>
+                <p className="font-medium">
+                  {(
+                    Math.PI *
+                    Math.pow(
+                      impactResults.blastRadiiKm?.overpressure1psi?.value || 0,
+                      2
+                    ) *
+                    effectMultiplier
+                  ).toFixed(0)}{" "}
+                  km²
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Seismic Magnitude</p>
+                <p className="font-medium">
+                  {Math.max(
+                    0,
+                    Math.log10(
+                      (impactResults.energyJ?.value || 1) * effectMultiplier
+                    ) *
+                      0.67 -
+                      5.87
+                  ).toFixed(1)}{" "}
+                  Mw
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -258,22 +307,74 @@ export function ImpactStats({
               <StatItem
                 label="Wave Height"
                 value={
-                  impactResults.tsunami.waveHeightM.value * effectMultiplier
+                  (impactResults.tsunami?.waveHeightM?.value || 0) *
+                  effectMultiplier
                 }
                 unit="m"
-                provenance={impactResults.tsunami.waveHeightM}
+                provenance={impactResults.tsunami?.waveHeightM || {}}
                 formatter={formatDistance}
               />
               <StatItem
                 label="Coastal Reach"
                 value={Math.min(effectMultiplier * 25, 50)}
                 unit="km inland"
-                provenance={impactResults.tsunami.waveHeightM}
+                provenance={impactResults.tsunami?.waveHeightM || {}}
                 formatter={formatDistance}
               />
             </CardContent>
           </Card>
         )}
+
+        {/* FORMULA SUMMARY - Instead of confidence badges */}
+        <Card className="space-gradient border border-yellow-500">
+          <CardHeader>
+            <CardTitle className="text-yellow-600">
+              Calculation Methods
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-xs">
+            <div>
+              <p className="font-medium text-sm mb-1">Physics Formulas Used:</p>
+              <div className="space-y-1 text-muted-foreground">
+                <p>
+                  • <strong>Kinetic Energy:</strong> KE = ½mv² (fundamental
+                  physics)
+                </p>
+                <p>
+                  • <strong>TNT Equivalent:</strong> 1 Mt = 4.184×10¹⁵ J
+                </p>
+                <p>
+                  • <strong>Blast Radii:</strong> r ∝ yield^(1/3) (nuclear
+                  scaling)
+                </p>
+                <p>
+                  • <strong>Crater Size:</strong> Holsapple-Housen scaling laws
+                </p>
+                <p>
+                  • <strong>Casualties:</strong> Zonal fatality rates ×
+                  population density
+                </p>
+                <p>
+                  • <strong>Climate:</strong> Soot/ejecta fraction models
+                </p>
+                {impactLocation.terrain === "water" && (
+                  <p>
+                    • <strong>Tsunami:</strong> Wave height ∝ energy^(1/4)
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="pt-2 border-t">
+              <p className="font-medium text-sm mb-1">Data Sources:</p>
+              <div className="space-y-1 text-muted-foreground">
+                <p>• Nuclear weapons effects (Glasstone & Dolan 1977)</p>
+                <p>• Impact crater scaling (Holsapple & Housen 2007)</p>
+                <p>• Population casualty rates (empirical studies)</p>
+                <p>• Economic damage models (VSL + infrastructure)</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
@@ -296,37 +397,12 @@ function StatItem({
   formatter,
   testId,
 }: StatItemProps) {
-  const confidenceIcon = getConfidenceIcon(provenance.confidence);
-  const methodColor = getMethodColor(provenance.method);
-
+  // REMOVED: All confidence badges and method labels as requested
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="cursor-help" data-testid={testId}>
-            <div className="flex items-center justify-between">
-              <p className="text-muted-foreground text-xs">{label}</p>
-              <div className="flex items-center gap-1">
-                {confidenceIcon}
-                <Badge variant="outline" className={`text-xs ${methodColor}`}>
-                  {provenance.method}
-                </Badge>
-              </div>
-            </div>
-            <p className="font-medium">{formatter(value)}</p>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <div className="space-y-1">
-            <p className="font-medium">Method: {provenance.method}</p>
-            <p>Confidence: {provenance.confidence}</p>
-            {provenance.source && (
-              <p className="text-xs">{provenance.source}</p>
-            )}
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <div data-testid={testId}>
+      <p className="text-muted-foreground text-xs">{label}</p>
+      <p className="font-medium">{formatter(value || 0)}</p>
+    </div>
   );
 }
 
@@ -336,7 +412,7 @@ function getEffectMultiplier(
 ): number {
   switch (timeStep) {
     case 0:
-      return 0; // Pre-impact
+      return 1.0; // FIXED: Show full calculations even pre-impact
     case 1:
       return 0.5 + animationProgress * 0.5; // Impact: 50-100%
     case 2:
@@ -350,44 +426,9 @@ function getEffectMultiplier(
   }
 }
 
-function getThreatVariant(level: string) {
-  switch (level) {
-    case "high":
-      return "destructive" as const;
-    case "medium":
-      return "secondary" as const;
-    case "low":
-      return "outline" as const;
-    default:
-      return "outline" as const;
-  }
-}
+// REMOVED: getThreatVariant function as requested
 
-function getConfidenceIcon(confidence: string) {
-  switch (confidence) {
-    case "high":
-      return <CheckCircle className="h-3 w-3 text-green-500" />;
-    case "medium":
-      return <Info className="h-3 w-3 text-yellow-500" />;
-    case "low":
-      return <AlertTriangle className="h-3 w-3 text-red-500" />;
-    default:
-      return <Info className="h-3 w-3 text-gray-500" />;
-  }
-}
-
-function getMethodColor(method: string): string {
-  switch (method) {
-    case "model":
-      return "text-green-600";
-    case "estimate":
-      return "text-yellow-600";
-    case "probabilistic":
-      return "text-red-600";
-    default:
-      return "text-gray-600";
-  }
-}
+// REMOVED: Confidence and method functions as requested
 
 function formatMass(mass: number): string {
   if (mass >= 1e15) return `${(mass / 1e15).toFixed(1)} Pt`;

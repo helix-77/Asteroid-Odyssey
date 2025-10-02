@@ -12,7 +12,7 @@ interface LayerControlsProps {
 const LAYERS = [
   {
     id: "population",
-    label: "Population Density",
+    label: "Population",
     icon: "👥",
     color: "bg-blue-500",
   },
@@ -22,10 +22,10 @@ const LAYERS = [
     icon: "⛰️",
     color: "bg-green-500",
   },
-  { id: "tsunami", label: "Tsunami Risk", icon: "🌊", color: "bg-blue-600" },
+  { id: "tsunami", label: "Tsunami", icon: "🌊", color: "bg-blue-600" },
   {
     id: "tectonic",
-    label: "Tectonic Activity",
+    label: "Tectonic",
     icon: "⚡",
     color: "bg-orange-500",
   },
@@ -36,20 +36,18 @@ export function LayerControls({
   onLayerChange,
 }: LayerControlsProps) {
   return (
-    <Card className="p-2 bg-background/95 backdrop-blur-sm shadow-lg">
-      <div className="space-y-1">
-        <div className="text-xs font-semibold text-muted-foreground px-2 mb-2">
-          Map Layers
-        </div>
+    <Card className="p-1 bg-background/95 backdrop-blur-sm shadow-lg">
+      <div className="flex gap-1">
         {LAYERS.map((layer) => (
           <Button
             key={layer.id}
             size="sm"
             variant={activeLayer === layer.id ? "default" : "ghost"}
             onClick={() => onLayerChange(layer.id)}
-            className="w-full justify-start text-sm"
+            className="px-2 py-1 text-xs h-auto"
+            title={layer.label}
           >
-            <span className="mr-2">{layer.icon}</span>
+            <span className="mr-1">{layer.icon}</span>
             {layer.label}
           </Button>
         ))}
