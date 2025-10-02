@@ -105,7 +105,7 @@ export function DataSidebar({
           <div className="bg-yellow-50 rounded p-2">
             <div className="text-[10px] text-slate-500 uppercase mb-0.5">Habitability Index</div>
             <div className="text-lg text-yellow-700 font-semibold">
-              {(impactData.habitabilityIndex * 100).toFixed(0)}%
+              {impactData.habitabilityIndex.toFixed(0)}%
             </div>
           </div>
 
@@ -113,7 +113,7 @@ export function DataSidebar({
           <div className="bg-green-50 rounded p-2">
             <div className="text-[10px] text-slate-500 uppercase mb-0.5">Agricultural Capacity</div>
             <div className="text-lg text-green-700 font-semibold">
-              {(impactData.agriculturalCapacity * 100).toFixed(0)}%
+              {impactData.agriculturalCapacity.toFixed(0)}%
             </div>
           </div>
 
@@ -121,7 +121,7 @@ export function DataSidebar({
           <div className="flex justify-between items-center py-1">
             <span className="text-xs text-slate-600">Water Quality</span>
             <span className="text-sm font-medium">
-              {(impactData.waterQuality * 100).toFixed(0)}%
+              {impactData.waterQuality.toFixed(0)}%
             </span>
           </div>
 

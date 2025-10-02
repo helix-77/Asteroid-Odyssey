@@ -222,29 +222,35 @@ export class TemporalEffectsCalculator {
     const immediateDamage = Math.max(blastImpact, thermalImpact, tsunamiImpact);
     let populationLossPercent = immediateDamage * country.populationDensity / 1000;
     
-    // Add climate-driven casualties over time
+    // Infrastructure destruction
+    let infrastructureDestroyed = immediateDamage * 0.8;
+    
+    // Add climate-driven casualties over time (these accumulate)
     if (timeYears > 0.1) {
       const climateEffects = this.calculateClimateEffects(timeYears);
       const temperatureDrop = Math.abs(climateEffects.temperatureAnomaly);
       
-      // Agricultural collapse leads to famine
+      // Agricultural collapse leads to famine (increases over time)
       const famineRisk = Math.min(80, temperatureDrop * 5);
-      const famineCasualties = famineRisk * 0.3 * (1 - Math.exp(-timeYears / 2));
+      const famineCasualties = famineRisk * 0.5 * (1 - Math.exp(-timeYears / 3));
       
-      populationLossPercent += famineCasualties;
+      // Disease and social collapse casualties
+      const diseaseCasualties = Math.min(20, temperatureDrop * 2) * (timeYears / 10);
+      
+      // Economic collapse casualties (starvation, lack of medical care)
+      const economicCasualties = Math.min(30, infrastructureDestroyed * 0.2) * (timeYears / 5);
+      
+      populationLossPercent += famineCasualties + diseaseCasualties + economicCasualties;
     }
     
     populationLossPercent = Math.min(95, populationLossPercent);
     const populationLoss = country.population * populationLossPercent / 100;
     
-    // Infrastructure destruction
-    let infrastructureDestroyed = immediateDamage * 0.8;
-    
-    // Recovery over time (starts after 1 year)
-    if (timeYears > 1) {
-      const recoveryRate = 0.05; // 5% per year
-      const recovered = (timeYears - 1) * recoveryRate * 100;
-      infrastructureDestroyed = Math.max(0, infrastructureDestroyed - recovered);
+    // Recovery over time (starts after 5 years, very slow)
+    if (timeYears > 5) {
+      const recoveryRate = 0.02; // 2% per year
+      const recovered = (timeYears - 5) * recoveryRate * 100;
+      infrastructureDestroyed = Math.max(infrastructureDestroyed * 0.1, infrastructureDestroyed - recovered);
     }
     
     // Agricultural loss
@@ -252,10 +258,10 @@ export class TemporalEffectsCalculator {
     const climaticAgLoss = Math.abs(this.calculateClimateEffects(timeYears).temperatureAnomaly) * 8;
     let agriculturalLoss = Math.min(100, immediateAgLoss + climaticAgLoss);
     
-    // Agricultural recovery (slower than infrastructure)
-    if (timeYears > 2) {
-      const agRecovery = (timeYears - 2) * 0.03 * 100;
-      agriculturalLoss = Math.max(0, agriculturalLoss - agRecovery);
+    // Agricultural recovery (slower than infrastructure, starts after 3 years)
+    if (timeYears > 3) {
+      const agRecovery = (timeYears - 3) * 0.015 * 100; // 1.5% per year
+      agriculturalLoss = Math.max(agriculturalLoss * 0.2, agriculturalLoss - agRecovery);
     }
     
     // Forest loss
@@ -316,11 +322,11 @@ export class TemporalEffectsCalculator {
           recoveryTime = 5;
         }
         
-        // Recovery progress
+        // Recovery progress (starts much later)
         let recoveryProgress = 0;
-        if (timeYears > 1 && damageLevel < 100) {
-          recoveryProgress = Math.min(100, ((timeYears - 1) / recoveryTime) * 100);
-          damageLevel = damageLevel * (1 - recoveryProgress / 100);
+        if (timeYears > 5 && damageLevel < 100) {
+          recoveryProgress = Math.min(100, ((timeYears - 5) / (recoveryTime * 2)) * 100);
+          damageLevel = Math.max(damageLevel * 0.1, damageLevel * (1 - recoveryProgress / 100));
         }
       }
       
@@ -332,7 +338,7 @@ export class TemporalEffectsCalculator {
         damageLevel,
         operational: damageLevel < 50,
         recoveryTime,
-        recoveryProgress: timeYears > 1 ? Math.min(100, ((timeYears - 1) / recoveryTime) * 100) : 0
+        recoveryProgress: timeYears > 5 ? Math.min(100, ((timeYears - 5) / (recoveryTime * 2)) * 100) : 0
       });
     }
     
@@ -348,10 +354,15 @@ export class TemporalEffectsCalculator {
     
     if (timeYears >= 0) {
       for (const [_, damage] of regionalDamage) {
+        // Cumulative casualties should always increase or stay the same
         cumulative += damage.populationLoss;
         
-        // Immediate casualties (first 6 months)
+        // Immediate casualties (first 6 months) - these are part of cumulative
         if (timeYears < 0.5) {
+          const immediateFactor = Math.max(damage.blastImpact, damage.thermalImpact, damage.tsunamiImpact) / 100;
+          immediate += damage.populationLoss * immediateFactor;
+        } else {
+          // After 6 months, immediate casualties become part of historical record
           const immediateFactor = Math.max(damage.blastImpact, damage.thermalImpact, damage.tsunamiImpact) / 100;
           immediate += damage.populationLoss * immediateFactor;
         }
@@ -372,13 +383,21 @@ export class TemporalEffectsCalculator {
     for (const country of this.countries) {
       const damage = regionalDamage.get(country.code);
       if (damage) {
-        // Direct damage to infrastructure and assets
-        const directDamage = country.gdp * (damage.infrastructureDestroyed / 100) * 2;
+        // Direct damage to infrastructure and assets (one-time cost)
+        const directDamage = country.gdp * (damage.infrastructureDestroyed / 100) * 3;
         
-        // Ongoing economic losses from reduced capacity
-        const ongoingLoss = country.gdp * timeYears * (damage.populationLossPercent / 100);
+        // Ongoing economic losses accumulate over time (GDP loss per year)
+        const annualGdpLoss = country.gdp * (damage.populationLossPercent / 100) * 0.5;
+        const cumulativeGdpLoss = annualGdpLoss * Math.max(0, timeYears);
         
-        totalDamage += directDamage + ongoingLoss;
+        // Climate-related economic losses (agricultural, energy, etc.)
+        const climateEffects = this.calculateClimateEffects(timeYears);
+        const climateDamage = country.gdp * Math.abs(climateEffects.temperatureAnomaly) * 0.1 * Math.max(0, timeYears);
+        
+        // Recovery costs (reconstruction, adaptation)
+        const recoveryCosts = directDamage * 0.5 * Math.max(0, timeYears / 10);
+        
+        totalDamage += directDamage + cumulativeGdpLoss + climateDamage + recoveryCosts;
       }
     }
     
