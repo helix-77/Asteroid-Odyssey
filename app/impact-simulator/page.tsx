@@ -28,7 +28,7 @@ export default function ImpactSimulatorPage() {
   const [asteroids, setAsteroids] = useState<Asteroid[]>([]);
   const [countries, setCountries] = useState<CountryData[]>([]);
   const [infrastructure, setInfrastructure] = useState<InfrastructurePoint[]>([]);
-  const [showHeader, setShowHeader] = useState(true);
+  const [showMainNav, setShowMainNav] = useState(true);
 
   const maxTimeStep = 100; // Represents 50 years
 
@@ -134,9 +134,9 @@ export default function ImpactSimulatorPage() {
       setTimeStep(0);
     }
     setIsPlaying(!isPlaying);
-    // Hide header when playing
+    // Hide main nav when playing
     if (!isPlaying) {
-      setShowHeader(false);
+      setShowMainNav(false);
     }
   };
 
@@ -159,35 +159,42 @@ export default function ImpactSimulatorPage() {
     handleReset();
   };
 
+  // Toggle main navigation visibility and remove padding
+  useEffect(() => {
+    const navElement = document.querySelector('nav');
+    const mainElement = document.querySelector('main');
+    
+    if (navElement) {
+      if (showMainNav) {
+        navElement.style.transform = 'translateY(0)';
+        if (mainElement) {
+          mainElement.style.paddingTop = '4rem'; // 64px
+        }
+      } else {
+        navElement.style.transform = 'translateY(-100%)';
+        if (mainElement) {
+          mainElement.style.paddingTop = '0';
+        }
+      }
+    }
+
+    // Cleanup: restore padding when component unmounts
+    return () => {
+      if (mainElement) {
+        mainElement.style.paddingTop = '4rem';
+      }
+    };
+  }, [showMainNav]);
+
   return (
     <div className="h-screen flex flex-col bg-slate-50 relative">
-      {/* Header - Collapsible */}
-      <div 
-        className={`bg-white border-b border-slate-300 px-4 py-2 transition-transform duration-300 ${
-          showHeader ? 'translate-y-0' : '-translate-y-full'
-        }`}
-        style={{ position: 'relative', zIndex: 10 }}
+      {/* Toggle Navigation Button */}
+      <button
+        onClick={() => setShowMainNav(!showMainNav)}
+        className={`fixed ${showMainNav ? 'top-20' : 'top-2'} right-4 bg-slate-800/90 hover:bg-slate-700 text-white rounded-lg px-3 py-2 text-xs shadow-lg z-[60] transition-all backdrop-blur-sm border border-slate-600`}
       >
-        <div className="flex items-center justify-between">
-          <h1 className="text-sm text-slate-800 font-medium">Asteroid Impact Simulator</h1>
-          <button
-            onClick={() => setShowHeader(!showHeader)}
-            className="text-xs text-slate-500 hover:text-slate-700 px-2 py-1 rounded hover:bg-slate-100"
-          >
-            ▲ Hide
-          </button>
-        </div>
-      </div>
-
-      {/* Show Header Button (when hidden) */}
-      {!showHeader && (
-        <button
-          onClick={() => setShowHeader(true)}
-          className="fixed top-0 left-1/2 -translate-x-1/2 bg-white border border-slate-300 rounded-b-lg px-3 py-1 text-xs text-slate-600 hover:text-slate-800 hover:bg-slate-50 shadow-md z-50 transition-all"
-        >
-          ▼ Show Header
-        </button>
-      )}
+        {showMainNav ? '▲ Hide Nav' : '▼ Show Nav'}
+      </button>
 
       {/* Control Panel */}
       <ControlPanel
