@@ -38,10 +38,17 @@ interface ImpactDataSidebarProps {
 export default function ImpactDataSidebar({ results }: ImpactDataSidebarProps) {
   const AccuracyBadge = ({ accuracy }: { accuracy: string }) => {
     const colors = {
-      measured: "bg-green-500",
-      calculated: "bg-blue-500",
-      estimated: "bg-yellow-500",
-      probability: "bg-orange-500",
+      measured: "bg-green-500 border-green-600",
+      calculated: "bg-blue-500 border-blue-600",
+      estimated: "bg-yellow-500 border-yellow-600",
+      probability: "bg-orange-500 border-orange-600",
+    };
+
+    const icons = {
+      measured: "✓",
+      calculated: "≈",
+      estimated: "~",
+      probability: "?",
     };
 
     return (
@@ -52,17 +59,18 @@ export default function ImpactDataSidebar({ results }: ImpactDataSidebarProps) {
               variant="outline"
               className={`text-xs ${
                 colors[accuracy as keyof typeof colors]
-              } text-white`}
+              } text-white border-2 font-semibold`}
             >
-              {accuracy}
+              {icons[accuracy as keyof typeof icons]} {accuracy}
             </Badge>
           </TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent className="max-w-xs">
+            <p className="text-xs font-semibold mb-1">Accuracy Level: {accuracy.toUpperCase()}</p>
             <p className="text-xs">
-              {accuracy === "measured" && "Based on direct measurements"}
-              {accuracy === "calculated" && "Calculated from physics models"}
-              {accuracy === "estimated" && "Estimated from available data"}
-              {accuracy === "probability" && "Probabilistic estimate"}
+              {accuracy === "measured" && "✓ Based on direct measurements and observations"}
+              {accuracy === "calculated" && "≈ Calculated using validated physics models"}
+              {accuracy === "estimated" && "~ Estimated from available data and models"}
+              {accuracy === "probability" && "? Probabilistic estimate based on scenarios"}
             </p>
           </TooltipContent>
         </Tooltip>

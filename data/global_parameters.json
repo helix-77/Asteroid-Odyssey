@@ -1,0 +1,130 @@
+{
+  "global_statistics": {
+    "earth_land_area_km2": 148940000,
+    "earth_ocean_area_km2": 361132000,
+    "total_human_population": 8000000000,
+    "average_population_density_land": 53.7,
+    "global_gdp_usd": 100000000000000,
+    "average_gdp_per_capita": 12500
+  },
+  "regional_data": {
+    "north_america": {
+      "population_density": 22.9,
+      "gdp_per_capita": 65000,
+      "infrastructure_value_per_km2": 5000000,
+      "military_bases_per_10000km2": 0.8,
+      "nuclear_plants_per_100000km2": 2.1,
+      "hospitals_per_1000km2": 1.5,
+      "schools_per_100km2": 12
+    },
+    "europe": {
+      "population_density": 72.9,
+      "gdp_per_capita": 45000,
+      "infrastructure_value_per_km2": 8000000,
+      "military_bases_per_10000km2": 1.2,
+      "nuclear_plants_per_100000km2": 3.5,
+      "hospitals_per_1000km2": 2.8,
+      "schools_per_100km2": 18
+    },
+    "asia": {
+      "population_density": 150,
+      "gdp_per_capita": 15000,
+      "infrastructure_value_per_km2": 3000000,
+      "military_bases_per_10000km2": 0.6,
+      "nuclear_plants_per_100000km2": 1.8,
+      "hospitals_per_1000km2": 1.2,
+      "schools_per_100km2": 15
+    },
+    "africa": {
+      "population_density": 45,
+      "gdp_per_capita": 5000,
+      "infrastructure_value_per_km2": 500000,
+      "military_bases_per_10000km2": 0.3,
+      "nuclear_plants_per_100000km2": 0.2,
+      "hospitals_per_1000km2": 0.5,
+      "schools_per_100km2": 8
+    },
+    "south_america": {
+      "population_density": 25,
+      "gdp_per_capita": 12000,
+      "infrastructure_value_per_km2": 1500000,
+      "military_bases_per_10000km2": 0.4,
+      "nuclear_plants_per_100000km2": 0.5,
+      "hospitals_per_1000km2": 1.0,
+      "schools_per_100km2": 10
+    },
+    "oceania": {
+      "population_density": 5,
+      "gdp_per_capita": 55000,
+      "infrastructure_value_per_km2": 2000000,
+      "military_bases_per_10000km2": 0.5,
+      "nuclear_plants_per_100000km2": 0.1,
+      "hospitals_per_1000km2": 1.8,
+      "schools_per_100km2": 14
+    }
+  },
+  "impact_parameters": {
+    "crater_formation": {
+      "diameter_to_impactor_ratio_land": 20,
+      "diameter_to_impactor_ratio_ocean": 15,
+      "depth_to_diameter_ratio": 0.2,
+      "ejecta_volume_multiplier": 3.5
+    },
+    "destruction_zones": {
+      "vaporization_overpressure_psi": 1000,
+      "total_destruction_overpressure_psi": 20,
+      "severe_destruction_overpressure_psi": 5,
+      "moderate_destruction_overpressure_psi": 1,
+      "building_collapse_overpressure_psi": 0.5
+    },
+    "casualty_rates": {
+      "vaporization_zone_fatality": 1.0,
+      "total_destruction_fatality": 0.75,
+      "severe_destruction_fatality": 0.35,
+      "moderate_destruction_fatality": 0.15,
+      "building_collapse_fatality": 0.05
+    },
+    "thermal_effects": {
+      "third_degree_burns_cal_cm2": 10,
+      "second_degree_burns_cal_cm2": 5,
+      "first_degree_burns_cal_cm2": 2,
+      "ignition_threshold_cal_cm2": 15
+    },
+    "seismic_effects": {
+      "magnitude_energy_coefficient": 1.5,
+      "magnitude_base": 4.0,
+      "aftershock_multiplier": 10
+    },
+    "tsunami_parameters": {
+      "min_ocean_depth_m": 100,
+      "wave_height_energy_coefficient": 0.4,
+      "coastal_penetration_multiplier": 0.5,
+      "fatality_rate_coastal": 0.3
+    },
+    "climate_effects": {
+      "dust_injection_coefficient": 0.1,
+      "sunlight_reduction_per_km3_dust": 10,
+      "temperature_drop_per_percent_reduction": 0.05,
+      "agriculture_impact_coefficient": 0.8
+    }
+  },
+  "infrastructure_costs": {
+    "average_home_value_usd": 300000,
+    "average_building_value_usd": 500000,
+    "hospital_value_usd": 50000000,
+    "school_value_usd": 10000000,
+    "military_base_value_usd": 5000000000,
+    "power_plant_value_usd": 2000000000,
+    "nuclear_plant_value_usd": 10000000000,
+    "oil_refinery_value_usd": 3000000000,
+    "heritage_site_value_usd": 100000000,
+    "museum_value_usd": 50000000
+  },
+  "recovery_parameters": {
+    "base_recovery_time_years": 5,
+    "recovery_time_per_trillion_damage": 2,
+    "max_recovery_time_years": 50,
+    "food_production_recovery_rate_per_year": 0.1,
+    "infrastructure_rebuild_rate_per_year": 0.15
+  }
+}

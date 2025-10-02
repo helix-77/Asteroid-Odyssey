@@ -121,8 +121,14 @@ export default function ImpactSimulatorPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white">
       {/* Header */}
-      <div className="border-b border-border/50 bg-background/50 backdrop-blur">
-        <div className="fixed bottom-0 left-0 p-4">
+      <div className="border-b border-border/50 bg-background/50 backdrop-blur sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Asteroid Impact Simulator</h1>
+            <p className="text-sm text-muted-foreground">
+              Scientifically accurate impact modeling and visualization
+            </p>
+          </div>
           {impactResults && (
             <Button
               onClick={resetSimulation}
@@ -141,17 +147,44 @@ export default function ImpactSimulatorPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Sidebar - Asteroid Selection */}
           <div className="lg:col-span-3 space-y-4">
-            <AsteroidSelector
-              asteroids={asteroids}
-              selectedAsteroid={selectedAsteroid}
-              onSelect={setSelectedAsteroid}
-            />
+            <Card className="p-4 bg-background/50 backdrop-blur">
+              <h3 className="font-bold text-lg mb-4">Select Asteroid</h3>
+              <AsteroidSelector
+                asteroids={asteroids}
+                selectedAsteroid={selectedAsteroid}
+                onSelect={setSelectedAsteroid}
+              />
+            </Card>
+
+            {selectedAsteroid && (
+              <Card className="p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-2 border-blue-500/50">
+                <h3 className="font-bold text-sm mb-2">Selected Asteroid</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Name:</span>
+                    <span className="font-semibold">{selectedAsteroid.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Size:</span>
+                    <span className="font-semibold">{selectedAsteroid.size}m</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Velocity:</span>
+                    <span className="font-semibold">{selectedAsteroid.velocity} km/s</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Composition:</span>
+                    <span className="font-semibold capitalize">{selectedAsteroid.composition}</span>
+                  </div>
+                </div>
+              </Card>
+            )}
 
             {selectedAsteroid && impactLocation && !impactResults && (
               <Button
                 onClick={runSimulation}
                 disabled={isSimulating}
-                className="w-full gap-2 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600"
+                className="w-full gap-2 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-lg py-6"
                 size="lg"
               >
                 {isSimulating ? (
@@ -172,8 +205,16 @@ export default function ImpactSimulatorPage() {
           {/* Center - Map and Timeline */}
           <div className="lg:col-span-6 space-y-6">
             {/* Map */}
-            <Card className="p-4 bg-background/50 backdrop-blur">
-              <div className="h-[500px]">
+            <Card className="p-4 bg-background/50 backdrop-blur border-2 border-border">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="font-bold text-lg">Impact Visualization</h3>
+                {impactResults && (
+                  <div className="text-xs text-muted-foreground">
+                    Real-time satellite imagery
+                  </div>
+                )}
+              </div>
+              <div className="h-[600px] rounded-lg overflow-hidden border-2 border-border/50">
                 <ImpactMap
                   impactLocation={impactLocation}
                   onLocationSelect={handleLocationSelect}
@@ -215,25 +256,37 @@ export default function ImpactSimulatorPage() {
             {/* Instructions */}
             {!impactResults && (
               <Card className="p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-2 border-blue-500/50">
-                <h3 className="font-bold text-lg mb-3">How to Use</h3>
-                <ol className="space-y-2 text-sm">
-                  <li className="flex gap-2">
-                    <span className="font-bold text-primary">1.</span>
-                    <span>Select an asteroid from the dropdown menu</span>
+                <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+                  <span className="text-2xl">🎯</span> How to Use
+                </h3>
+                <ol className="space-y-3 text-sm">
+                  <li className="flex gap-3 items-start">
+                    <span className="font-bold text-primary text-lg">1.</span>
+                    <div>
+                      <div className="font-semibold">Select an Asteroid</div>
+                      <div className="text-muted-foreground">Choose from real near-Earth asteroids</div>
+                    </div>
                   </li>
-                  <li className="flex gap-2">
-                    <span className="font-bold text-primary">2.</span>
-                    <span>Click on the map to choose an impact location</span>
+                  <li className="flex gap-3 items-start">
+                    <span className="font-bold text-primary text-lg">2.</span>
+                    <div>
+                      <div className="font-semibold">Choose Impact Location</div>
+                      <div className="text-muted-foreground">Click anywhere on the satellite map</div>
+                    </div>
                   </li>
-                  <li className="flex gap-2">
-                    <span className="font-bold text-primary">3.</span>
-                    <span>
-                      Click "Launch Simulation" to calculate impact effects
-                    </span>
+                  <li className="flex gap-3 items-start">
+                    <span className="font-bold text-primary text-lg">3.</span>
+                    <div>
+                      <div className="font-semibold">Launch Simulation</div>
+                      <div className="text-muted-foreground">Watch the impact animation and view results</div>
+                    </div>
                   </li>
-                  <li className="flex gap-2">
-                    <span className="font-bold text-primary">4.</span>
-                    <span>Explore the timeline and detailed impact data</span>
+                  <li className="flex gap-3 items-start">
+                    <span className="font-bold text-primary text-lg">4.</span>
+                    <div>
+                      <div className="font-semibold">Explore Timeline</div>
+                      <div className="text-muted-foreground">See how effects evolve over time</div>
+                    </div>
                   </li>
                 </ol>
               </Card>

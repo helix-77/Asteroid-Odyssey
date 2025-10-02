@@ -19,6 +19,10 @@ interface ImpactMapProps {
     waveHeight: number;
     affectedCoastline: number;
   };
+  blastData?: {
+    fireballRadius: number; // km
+    shockwaveRadius: number; // km
+  };
 }
 
 export default function ImpactMap({
@@ -28,6 +32,7 @@ export default function ImpactMap({
   destructionZones,
   showAnimation = false,
   tsunamiData,
+  blastData,
 }: ImpactMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -35,6 +40,7 @@ export default function ImpactMap({
   const craterCircleRef = useRef<L.Circle | null>(null);
   const destructionCirclesRef = useRef<L.Circle[]>([]);
   const animationFrameRef = useRef<number>(0);
+  const [animationPhase, setAnimationPhase] = useState<'impact' | 'fireball' | 'shockwave' | 'complete'>('impact');
 
   // Initialize map
   useEffect(() => {
@@ -48,10 +54,17 @@ export default function ImpactMap({
       attributionControl: true,
     });
 
-    // Add OpenStreetMap tile layer (realistic geography)
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    // Add satellite/terrain tile layer for realistic geography
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+      attribution: 'Tiles &copy; Esri',
       maxZoom: 19,
+    }).addTo(map);
+
+    // Add labels overlay for better readability
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png", {
+      attribution: '&copy; OpenStreetMap, &copy; CartoDB',
+      maxZoom: 19,
+      pane: 'shadowPane'
     }).addTo(map);
 
     // Add click handler for location selection
@@ -101,98 +114,163 @@ export default function ImpactMap({
     marker.bindPopup("<b>Impact Location</b><br>Click to simulate impact");
     impactMarkerRef.current = marker;
 
-    // Add crater circle if radius is provided
+    // Add crater circle if radius is provided (realistic brown/orange crater)
     if (craterRadius > 0) {
       const crater = L.circle([impactLocation.lat, impactLocation.lng], {
         radius: craterRadius,
-        fillColor: "#000000",
+        fillColor: "#3d2817",
         color: "#8B4513",
-        weight: 3,
+        weight: 4,
         opacity: 1,
-        fillOpacity: 0.7,
+        fillOpacity: 0.85,
       }).addTo(map);
 
-      crater.bindPopup(`<b>Crater</b><br>Diameter: ${(craterRadius * 2 / 1000).toFixed(2)} km`);
+      // Add inner crater detail
+      const innerCrater = L.circle([impactLocation.lat, impactLocation.lng], {
+        radius: craterRadius * 0.6,
+        fillColor: "#1a0f08",
+        color: "#5d3a1a",
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.9,
+      }).addTo(map);
+
+      crater.bindPopup(`<b>Crater</b><br>Diameter: ${(craterRadius * 2 / 1000).toFixed(2)} km<br>Depth: ~${(craterRadius / 5).toFixed(0)}m`);
       craterCircleRef.current = crater;
     }
 
-    // Add destruction zones
+    // Add destruction zones with realistic gradients
     if (destructionZones) {
-      // Total destruction zone (red)
+      // Fireball zone (innermost - white/blue hot)
+      const fireballCircle = L.circle([impactLocation.lat, impactLocation.lng], {
+        radius: destructionZones.total * 1000 * 0.3, // 30% of total destruction
+        fillColor: "#e8f4ff",
+        color: "#4da6ff",
+        weight: 3,
+        opacity: 0.9,
+        fillOpacity: 0.6,
+      }).addTo(map);
+      fireballCircle.bindPopup(`<b>Fireball Zone</b><br>Complete vaporization<br>Radius: ${(destructionZones.total * 0.3).toFixed(2)} km`);
+      destructionCirclesRef.current.push(fireballCircle);
+
+      // Total destruction zone (red/orange - 50% fatalities)
       const totalCircle = L.circle([impactLocation.lat, impactLocation.lng], {
-        radius: destructionZones.total * 1000, // Convert km to meters
-        fillColor: "#ff0000",
+        radius: destructionZones.total * 1000,
+        fillColor: "#ff4500",
         color: "#ff0000",
+        weight: 2,
+        opacity: 0.7,
+        fillOpacity: 0.4,
+      }).addTo(map);
+      totalCircle.bindPopup(`<b>50% Fatalities</b><br>Total Destruction<br>Radius: ${destructionZones.total.toFixed(2)} km`);
+      destructionCirclesRef.current.push(totalCircle);
+
+      // Severe destruction zone (orange/yellow - 3rd degree burns)
+      const severeCircle = L.circle([impactLocation.lat, impactLocation.lng], {
+        radius: destructionZones.severe * 1000,
+        fillColor: "#ff8c00",
+        color: "#ff6600",
         weight: 2,
         opacity: 0.6,
         fillOpacity: 0.3,
       }).addTo(map);
-      totalCircle.bindPopup(`<b>Total Destruction</b><br>Radius: ${destructionZones.total.toFixed(2)} km`);
-      destructionCirclesRef.current.push(totalCircle);
+      severeCircle.bindPopup(`<b>3rd Degree Burns</b><br>Severe Destruction<br>Radius: ${destructionZones.severe.toFixed(2)} km`);
+      destructionCirclesRef.current.push(severeCircle);
 
-      // Severe destruction zone (orange)
-      const severeCircle = L.circle([impactLocation.lat, impactLocation.lng], {
-        radius: destructionZones.severe * 1000,
-        fillColor: "#ff8800",
-        color: "#ff8800",
+      // Moderate destruction zone (yellow - 2nd degree burns)
+      const moderateCircle = L.circle([impactLocation.lat, impactLocation.lng], {
+        radius: destructionZones.moderate * 1000,
+        fillColor: "#ffd700",
+        color: "#ffaa00",
         weight: 2,
         opacity: 0.5,
         fillOpacity: 0.2,
       }).addTo(map);
-      severeCircle.bindPopup(`<b>Severe Destruction</b><br>Radius: ${destructionZones.severe.toFixed(2)} km`);
-      destructionCirclesRef.current.push(severeCircle);
+      moderateCircle.bindPopup(`<b>2nd Degree Burns</b><br>Moderate Damage<br>Radius: ${destructionZones.moderate.toFixed(2)} km`);
+      destructionCirclesRef.current.push(moderateCircle);
 
-      // Moderate destruction zone (yellow)
-      const moderateCircle = L.circle([impactLocation.lat, impactLocation.lng], {
-        radius: destructionZones.moderate * 1000,
-        fillColor: "#ffff00",
-        color: "#ffff00",
-        weight: 2,
+      // Shockwave zone (light yellow - buildings collapse)
+      const shockwaveCircle = L.circle([impactLocation.lat, impactLocation.lng], {
+        radius: destructionZones.moderate * 1000 * 1.5,
+        fillColor: "#ffffe0",
+        color: "#ffdd88",
+        weight: 1,
         opacity: 0.4,
         fillOpacity: 0.15,
       }).addTo(map);
-      moderateCircle.bindPopup(`<b>Moderate Destruction</b><br>Radius: ${destructionZones.moderate.toFixed(2)} km`);
-      destructionCirclesRef.current.push(moderateCircle);
+      shockwaveCircle.bindPopup(`<b>Shockwave</b><br>Buildings Collapse<br>Radius: ${(destructionZones.moderate * 1.5).toFixed(2)} km`);
+      destructionCirclesRef.current.push(shockwaveCircle);
 
       // Fit bounds to show all zones
-      const bounds = moderateCircle.getBounds();
+      const bounds = shockwaveCircle.getBounds();
       map.fitBounds(bounds, { padding: [50, 50] });
     }
   }, [impactLocation, craterRadius, destructionZones]);
 
-  // Impact animation
+  // Enhanced impact animation with realistic phases
   useEffect(() => {
     if (!showAnimation || !impactLocation || !mapRef.current) return;
 
     let frame = 0;
-    const maxFrames = 60;
+    const maxFrames = 120; // Longer animation
+    
     const animate = () => {
       frame++;
+      const progress = frame / maxFrames;
       
       if (frame <= maxFrames && impactMarkerRef.current) {
-        // Pulsing effect
-        const scale = 1 + Math.sin((frame / maxFrames) * Math.PI * 4) * 0.5;
-        const opacity = 1 - (frame / maxFrames) * 0.3;
-        
-        impactMarkerRef.current.setStyle({
-          radius: 8 * scale,
-          fillOpacity: opacity,
-        });
-
-        // Expand destruction circles
-        destructionCirclesRef.current.forEach((circle, index) => {
-          const progress = Math.min(1, frame / (maxFrames * 0.8));
-          circle.setStyle({
-            fillOpacity: (0.3 - index * 0.05) * (1 - progress * 0.5),
+        // Phase 1: Impact flash (0-20%)
+        if (progress < 0.2) {
+          const flashIntensity = Math.sin((progress / 0.2) * Math.PI);
+          impactMarkerRef.current.setStyle({
+            radius: 12 + flashIntensity * 8,
+            fillColor: `rgba(255, ${255 - flashIntensity * 100}, ${255 - flashIntensity * 200}, 1)`,
+            fillOpacity: 1,
           });
+          setAnimationPhase('impact');
+        }
+        // Phase 2: Fireball expansion (20-50%)
+        else if (progress < 0.5) {
+          const fireballProgress = (progress - 0.2) / 0.3;
+          impactMarkerRef.current.setStyle({
+            radius: 12 + fireballProgress * 20,
+            fillColor: `rgba(255, ${100 + fireballProgress * 100}, 0, ${1 - fireballProgress * 0.3})`,
+            fillOpacity: 0.9 - fireballProgress * 0.3,
+          });
+          setAnimationPhase('fireball');
+        }
+        // Phase 3: Shockwave expansion (50-100%)
+        else {
+          const shockwaveProgress = (progress - 0.5) / 0.5;
+          impactMarkerRef.current.setStyle({
+            radius: 32 + shockwaveProgress * 20,
+            fillColor: `rgba(255, 200, 100, ${0.6 - shockwaveProgress * 0.5})`,
+            fillOpacity: 0.6 - shockwaveProgress * 0.5,
+          });
+          setAnimationPhase('shockwave');
+        }
+
+        // Expand destruction circles progressively
+        destructionCirclesRef.current.forEach((circle, index) => {
+          const delay = index * 0.1;
+          const circleProgress = Math.max(0, Math.min(1, (progress - delay) / (1 - delay)));
+          
+          if (circleProgress > 0) {
+            circle.setStyle({
+              fillOpacity: (0.6 - index * 0.1) * (1 - circleProgress * 0.3),
+              opacity: 0.9 - circleProgress * 0.2,
+            });
+          }
         });
 
         animationFrameRef.current = requestAnimationFrame(animate);
       } else {
-        // Reset animation
+        // Animation complete
+        setAnimationPhase('complete');
         if (impactMarkerRef.current) {
           impactMarkerRef.current.setStyle({
             radius: 8,
+            fillColor: '#ff0000',
             fillOpacity: 0.8,
           });
         }
@@ -221,24 +299,41 @@ export default function ImpactMap({
         </div>
       )}
 
-      {/* Legend */}
+      {/* Enhanced Legend */}
       {destructionZones && (
-        <div className="absolute bottom-4 right-4 bg-background/95 p-4 rounded-lg border-2 border-border shadow-lg">
-          <h3 className="font-semibold mb-2 text-sm">Destruction Zones</h3>
-          <div className="space-y-1 text-xs">
+        <div className="absolute bottom-4 right-4 bg-black/90 backdrop-blur-sm p-4 rounded-lg border-2 border-white/20 shadow-2xl">
+          <h3 className="font-bold mb-3 text-sm text-white">Impact Effects</h3>
+          <div className="space-y-2 text-xs text-white/90">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-red-500/50 border border-red-500" />
-              <span>Total Destruction ({destructionZones.total.toFixed(1)} km)</span>
+              <div className="w-5 h-5 rounded-full bg-blue-200/70 border-2 border-blue-400" />
+              <span>Fireball - Vaporization</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-orange-500/50 border border-orange-500" />
-              <span>Severe Damage ({destructionZones.severe.toFixed(1)} km)</span>
+              <div className="w-5 h-5 rounded-full bg-red-500/60 border-2 border-red-600" />
+              <span>50% Fatalities ({destructionZones.total.toFixed(1)} km)</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-yellow-500/50 border border-yellow-500" />
-              <span>Moderate Damage ({destructionZones.moderate.toFixed(1)} km)</span>
+              <div className="w-5 h-5 rounded-full bg-orange-500/50 border-2 border-orange-600" />
+              <span>3rd° Burns ({destructionZones.severe.toFixed(1)} km)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-full bg-yellow-500/40 border-2 border-yellow-600" />
+              <span>2nd° Burns ({destructionZones.moderate.toFixed(1)} km)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-full bg-yellow-200/30 border-2 border-yellow-400" />
+              <span>Buildings Collapse</span>
             </div>
           </div>
+          {animationPhase !== 'complete' && showAnimation && (
+            <div className="mt-3 pt-3 border-t border-white/20">
+              <div className="text-xs text-yellow-400 font-semibold animate-pulse">
+                {animationPhase === 'impact' && '⚡ Impact...'}
+                {animationPhase === 'fireball' && '🔥 Fireball expanding...'}
+                {animationPhase === 'shockwave' && '💨 Shockwave propagating...'}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
