@@ -1,24 +1,19 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { ImpactMap } from "@/components/impact-simulator/impact-map";
+import { ImpactStats } from "@/components/impact-simulator/impact-stats";
+import { SimulationControls } from "@/components/impact-simulator/simulation-controls";
+import { AsteroidSelector } from "@/components/impact-simulator/asteroid-selector";
+import { LayerControls } from "@/components/impact-simulator/layer-controls";
+import { MapLegend } from "@/components/impact-simulator/map-legend";
+import { RegionSelector } from "@/components/impact-simulator/region-selector";
 import { computeImpactBundle, type TargetType } from "@/lib/calculations";
 import {
   type ImpactLocation,
   type SimulationState,
 } from "@/components/impact-simulator/types";
 import asteroids from "@/data/asteroids.json";
-
-// Import components directly
-import { ImpactMap } from "@/components/impact-simulator/impact-map-simple";
-import { ImpactStats } from "@/components/impact-simulator/impact-stats";
-import {
-  SimulationControls,
-  useSimulationKeyboard,
-} from "@/components/impact-simulator/simulation-controls";
-import { AsteroidSelector } from "@/components/impact-simulator/asteroid-selector";
-import { LayerControls } from "@/components/impact-simulator/layer-controls";
-import { MapLegend } from "@/components/impact-simulator/map-legend";
-import { RegionSelector } from "@/components/impact-simulator/region-selector";
 
 const TIME_STEPS = [
   { id: 0, label: "Pre-Impact", description: "Asteroid approaching" },
@@ -40,7 +35,7 @@ export default function ImpactSimulatorPage() {
   });
 
   const [impactResults, setImpactResults] = useState<any>(null);
-  const [animationProgress, setAnimationProgress] = useState(0);
+  const [animationProgress, setAnimationProgress] = useState(0); // 0-1 within current timestep
 
   const selectedAsteroid = asteroids.asteroids.find(
     (a) => a.id === state.selectedAsteroidId
@@ -54,6 +49,7 @@ export default function ImpactSimulatorPage() {
       setAnimationProgress((prev) => {
         const increment = 0.02 * state.playbackSpeed;
         if (prev >= 1) {
+          // Move to next timestep
           setState((s) => {
             if (s.timeStep >= TIME_STEPS.length - 1) {
               return { ...s, isPlaying: false };
@@ -71,8 +67,11 @@ export default function ImpactSimulatorPage() {
 
   const handleMapClick = useCallback(
     (lat: number, lon: number, terrain: TargetType) => {
+      // Estimate population density based on location (simplified)
       const populationDensity =
-        terrain === "land" ? Math.max(50, Math.random() * 2000) : 0;
+        terrain === "land"
+          ? Math.max(50, Math.random() * 2000) // 50-2050 per km²
+          : 0;
 
       const location: ImpactLocation = {
         lat,
@@ -89,9 +88,10 @@ export default function ImpactSimulatorPage() {
       }));
       setAnimationProgress(0);
 
+      // Calculate impact results
       const results = computeImpactBundle({
         massKg: selectedAsteroid.mass,
-        velocityMps: selectedAsteroid.velocity * 1000,
+        velocityMps: selectedAsteroid.velocity * 1000, // km/s to m/s
         target: terrain,
         avgPopPerKm2: populationDensity,
         shelterFactor: 0.15,
@@ -127,6 +127,7 @@ export default function ImpactSimulatorPage() {
     (asteroidId: string) => {
       setState((s) => ({ ...s, selectedAsteroidId: asteroidId }));
 
+      // Recalculate if we have an impact location
       if (state.impactLocation) {
         const asteroid = asteroids.asteroids.find((a) => a.id === asteroidId)!;
         const results = computeImpactBundle({
@@ -141,17 +142,6 @@ export default function ImpactSimulatorPage() {
       }
     },
     [state.impactLocation]
-  );
-
-  // Add keyboard shortcuts
-  useSimulationKeyboard(
-    state.impactLocation !== null,
-    state.isPlaying,
-    state.timeStep,
-    TIME_STEPS.length - 1,
-    handlePlayPause,
-    handleReset,
-    handleTimeStepChange
   );
 
   return (
@@ -195,23 +185,40 @@ export default function ImpactSimulatorPage() {
             onMapClick={handleMapClick}
           />
 
-          {/* Layer Controls - moved to top right */}
-          <div className="absolute top-4 right-4">
-            <LayerControls
-              activeLayer={state.activeLayer}
-              onLayerChange={(layer) =>
-                setState((s) => ({ ...s, activeLayer: layer }))
-              }
-            />
-          </div>
+          {/* Overlay Controls */}
+          <LayerControls
+            activeLayer={state.activeLayer}
+            onLayerChange={(layer) =>
+              setState((s) => ({ ...s, activeLayer: layer }))
+            }
+          />
+          <MapLegend
+            activeLayer={state.activeLayer}
+            showImpactEffects={state.impactLocation !== null}
+          />
 
-          {/* Map Legend - moved to bottom right */}
-          <div className="absolute bottom-4 right-4">
-            <MapLegend
-              activeLayer={state.activeLayer}
-              showImpactEffects={state.impactLocation !== null}
-            />
-          </div>
+          {/* Instructions */}
+          {!state.impactLocation && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg p-6 shadow-xl max-w-md">
+                <h3 className="font-semibold mb-2">How to Use</h3>
+                <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                  <li>Select an asteroid from the dropdown above</li>
+                  <li>Choose a region or use global view</li>
+                  <li>Click anywhere on the map to simulate an impact</li>
+                  <li>Use timeline controls to see effects over time</li>
+                  <li>Toggle layers to view different data overlays</li>
+                </ol>
+                <div className="mt-4 p-3 bg-muted/50 rounded text-xs">
+                  <p className="font-medium mb-1">⚠️ Scientific Accuracy</p>
+                  <p className="text-muted-foreground">
+                    Calculations based on established impact models with clear
+                    provenance indicators
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Stats Sidebar */}
@@ -223,29 +230,6 @@ export default function ImpactSimulatorPage() {
           animationProgress={animationProgress}
         />
       </div>
-
-      {/* Instructions Modal - moved outside map for better visibility */}
-      {!state.impactLocation && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-          <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg p-6 shadow-xl max-w-md mx-4">
-            <h3 className="font-semibold mb-2">How to Use</h3>
-            <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-              <li>Select an asteroid from the dropdown above</li>
-              <li>Choose a region or use global view</li>
-              <li>Click anywhere on the map to simulate an impact</li>
-              <li>Use timeline controls to see effects over time</li>
-              <li>Toggle layers to view different data overlays</li>
-            </ol>
-            <div className="mt-4 p-3 bg-muted/50 rounded text-xs">
-              <p className="font-medium mb-1">⚠️ Scientific Accuracy</p>
-              <p className="text-muted-foreground">
-                Calculations based on established impact models with clear
-                provenance indicators
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Timeline Controls */}
       <SimulationControls
