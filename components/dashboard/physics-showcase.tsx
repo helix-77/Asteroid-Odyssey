@@ -36,6 +36,8 @@ import {
 
 interface PhysicsShowcaseProps {
   selectedAsteroid?: UnifiedAsteroidData | null;
+  showEngineOnly?: boolean;
+  showCalculationsOnly?: boolean;
 }
 
 interface EnhancedCalculations {
@@ -64,7 +66,7 @@ interface EnhancedCalculations {
   };
 }
 
-export function PhysicsShowcase({ selectedAsteroid }: PhysicsShowcaseProps) {
+export function PhysicsShowcase({ selectedAsteroid, showEngineOnly, showCalculationsOnly }: PhysicsShowcaseProps) {
   const [calculations, setCalculations] = useState<EnhancedCalculations | null>(
     null
   );
@@ -271,6 +273,312 @@ export function PhysicsShowcase({ selectedAsteroid }: PhysicsShowcaseProps) {
 
   const confidence = getConfidenceLevel();
 
+  // Render only Physics Engine card for left panel
+  if (showEngineOnly) {
+    return (
+      <Card className="space-gradient">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-white">
+            <Calculator className="h-6 w-6 text-blue-400" />
+            Physics Engine
+          </CardTitle>
+          <div className="flex items-center justify-between">
+            <p className="text-blue-200 text-xs">
+              {selectedAsteroid
+                ? `Real-time calculations for ${selectedAsteroid.name}`
+                : "Select an asteroid to see real calculations"}
+            </p>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {selectedAsteroid ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <div className="font-bold text-white">
+                    {Number(selectedAsteroid.diameter).toFixed(1)}m
+                  </div>
+                  <div className="text-xs text-gray-400">Diameter</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-white">
+                    {(selectedAsteroid.mass / 1e9).toFixed(2)}T
+                  </div>
+                  <div className="text-xs text-gray-400">Mass (kg)</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-white">
+                    {selectedAsteroid.velocity.toFixed(1)} km/s
+                  </div>
+                  <div className="text-xs text-gray-400">Velocity</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-bold text-white capitalize">
+                    {selectedAsteroid.composition}
+                  </div>
+                  <div className="text-xs text-gray-400">Composition</div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-gray-400 mb-2">No asteroid selected</div>
+              <div className="text-xs text-gray-500">
+                Select an asteroid to see real calculations
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Render only Physics Calculations card for right panel  
+  if (showCalculationsOnly) {
+    return (
+      <Card className="space-gradient min-h-[600px]">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-white">Physics Calculations</CardTitle>
+            <Button
+              onClick={runCalculations}
+              disabled={isCalculating || !selectedAsteroid}
+              variant="outline"
+              className="text-blue-500 border-blue-500/20 shadow-2xl shadow-blue-200/20"
+            >
+              {isCalculating ? "Calculating..." : "Calculate Impact"}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {/* Error Display */}
+          {calculationErrors.length > 0 && (
+            <div className="mb-4 space-y-2">
+              {calculationErrors.map((error, index) => {
+                const formatted = formatCalculationError(error);
+                return (
+                  <div
+                    key={index}
+                    className={`p-3 rounded-lg border ${formatted.severity === "error"
+                      ? "bg-red-900/20 border-red-500/30 text-red-200"
+                      : "bg-yellow-900/20 border-yellow-500/30 text-yellow-200"
+                      }`}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="font-medium">{formatted.title}</span>
+                    </div>
+                    <p className="text-xs mb-2">{formatted.message}</p>
+                    {formatted.suggestions.length > 0 && (
+                      <ul className="text-xs space-y-1">
+                        {formatted.suggestions.map((suggestion, i) => (
+                          <li key={i} className="flex items-start gap-1">
+                            <span>•</span>
+                            <span>{suggestion}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Content continues with rest of calculations... */}
+          {!selectedAsteroid ? (
+            <div className="text-center py-8">
+              <p className="text-gray-400 mb-2">No asteroid selected</p>
+              <p>Select an asteroid to run physics calculations</p>
+            </div>
+          ) : isCalculating ? (
+            <div className="text-center py-8">
+              <p>Running composition-specific physics calculations...</p>
+            </div>
+          ) : calculations ? (
+            <div className="space-y-4">
+              {/* Calculation Warnings */}
+              {calculationWarnings.length > 0 && (
+                <div className="p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Info className="h-4 w-4 text-yellow-400" />
+                    <span className="text-yellow-400 font-medium">Calculation Warnings</span>
+                  </div>
+                  <ul className="text-xs text-yellow-300 space-y-1">
+                    {calculationWarnings.map((warning, i) => (
+                      <li key={i} className="flex items-start gap-1">
+                        <span>•</span>
+                        <span>{warning}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Energy Analysis */}
+              <div className="p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
+                <div className="flex items-center gap-2 mb-4">
+                  <Zap className="h-5 w-5 text-red-400" />
+                  <h3 className="text-white font-semibold text-lg">Energy Analysis</h3>
+                </div>
+                
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-sm text-gray-300">Kinetic Energy:</div>
+                    <div className="text-2xl font-bold text-red-400">
+                      {(calculations.kineticEnergy / 1e15).toFixed(2)}T J
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="text-sm text-gray-300">TNT Equivalent:</div>
+                    <div className="text-2xl font-bold text-red-400">
+                      {(calculations.tntEquivalent / 1e6).toFixed(2)}B kt TNT
+                    </div>
+                  </div>
+                  
+                  <div className="text-xs text-gray-400 mt-3">
+                    Based on {calculations.composition} composition (density: {calculations.density} kg/m³)
+                  </div>
+                </div>
+              </div>
+
+              {/* Crater Formation */}
+              <div className="p-4 bg-orange-900/20 border border-orange-500/30 rounded-lg">
+                <div className="flex items-center gap-2 mb-4">
+                  <Target className="h-5 w-5 text-orange-400" />
+                  <h3 className="text-white font-semibold text-lg">Crater Formation</h3>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-orange-400">
+                      {(calculations.crater.diameter / 1000).toFixed(2)}Km
+                    </div>
+                    <div className="text-xs text-gray-400">Diameter</div>
+                  </div>
+                  
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-orange-400">
+                      {calculations.crater.depth.toFixed(1)}m
+                    </div>
+                    <div className="text-xs text-gray-400">Depth</div>
+                  </div>
+                  
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-orange-400">
+                      {(calculations.crater.volume / 1e9).toFixed(2)}Bm³
+                    </div>
+                    <div className="text-xs text-gray-400">Volume</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Blast Effects */}
+              <div className="p-4 bg-purple-900/20 border border-purple-500/30 rounded-lg">
+                <div className="flex items-center gap-2 mb-4">
+                  <Zap className="h-5 w-5 text-purple-400" />
+                  <h3 className="text-white font-semibold text-lg">Blast Effects</h3>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-lg font-bold text-purple-400">
+                      {(calculations.effects.fireballRadius / 1000).toFixed(2)} km
+                    </div>
+                    <div className="text-xs text-gray-400">Fireball Radius</div>
+                  </div>
+                  
+                  <div>
+                    <div className="text-lg font-bold text-purple-400">
+                      {(calculations.effects.airblastRadius / 1000).toFixed(2)} km
+                    </div>
+                    <div className="text-xs text-gray-400">Airblast Radius</div>
+                  </div>
+                  
+                  <div>
+                    <div className="text-lg font-bold text-purple-400">
+                      {(calculations.effects.thermalRadiation / 1000).toFixed(2)} km
+                    </div>
+                    <div className="text-xs text-gray-400">Thermal Radiation</div>
+                  </div>
+                  
+                  <div>
+                    <div className="text-lg font-bold text-purple-400">
+                      {calculations.effects.seismicMagnitude.toFixed(1)}
+                    </div>
+                    <div className="text-xs text-gray-400">Seismic Magnitude</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Calculation Details */}
+              <div className="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                <div className="flex items-center gap-2 mb-4">
+                  <Info className="h-5 w-5 text-blue-400" />
+                  <h3 className="text-white font-semibold text-lg">Calculation Details</h3>
+                </div>
+                
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Mass:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-semibold">
+                        {(calculations.mass / 1e12).toFixed(2)}T kg
+                      </span>
+                      {isFieldEstimated("mass") && (
+                        <span className="text-yellow-400 text-xs">●</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Velocity:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-semibold">
+                        {calculations.velocity.toFixed(8)} km/s
+                      </span>
+                      <span className="text-green-400 text-xs">✓</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Diameter:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-semibold">
+                        {calculations.diameter.toFixed(10)} m
+                      </span>
+                      {isFieldEstimated("diameter") && (
+                        <span className="text-yellow-400 text-xs">●</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Composition:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-semibold capitalize">
+                        {calculations.composition}
+                      </span>
+                      {isFieldEstimated("composition") && (
+                        <span className="text-red-400 text-xs">⚠</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-400">Click "Calculate Impact" to run simulations</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Default: Render both cards (original behavior)
   return (
     <div className="space-y-6">
       <Card className="space-gradient">
@@ -413,7 +721,7 @@ export function PhysicsShowcase({ selectedAsteroid }: PhysicsShowcaseProps) {
         </CardContent>
       </Card>
 
-      <Card className="space-gradient">
+      <Card className="space-gradient min-h-[600px]">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-white">Physics Calculations</CardTitle>

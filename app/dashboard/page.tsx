@@ -140,7 +140,7 @@ export default function Dashboard() {
 
       {/* Main Dashboard Layout */}
       <div className="flex h-[calc(100vh-80px)]">
-        {/* Left Panel - Mission Control (30%) */}
+        {/* Left Panel - Mission Control + Physics Engine (30%) */}
         <div className="w-[30%] border-r border-border/20 glass-morphism overflow-y-auto">
           <AsteroidDataErrorBoundary>
             <MissionControl
@@ -150,6 +150,13 @@ export default function Dashboard() {
               onModeChange={handleModeChange}
             />
           </AsteroidDataErrorBoundary>
+          
+          {/* Physics Engine only (first card from PhysicsShowcase) */}
+          <div className="p-4">
+            <PhysicsCalculationErrorBoundary>
+              <PhysicsShowcase selectedAsteroid={selectedAsteroid} showEngineOnly={true} />
+            </PhysicsCalculationErrorBoundary>
+          </div>
         </div>
 
         {/* Center Panel - 3D Visualization (50%) */}
@@ -184,18 +191,6 @@ export default function Dashboard() {
                   className="text-white data-[state=active]:text-black"
                 >
                   Tracking
-                </TabsTrigger>
-                <TabsTrigger
-                  value="impact"
-                  className="text-white data-[state=active]:text-black"
-                >
-                  Impact
-                </TabsTrigger>
-                <TabsTrigger
-                  value="deflection"
-                  className="text-white data-[state=active]:text-black"
-                >
-                  Deflection
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -248,10 +243,10 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Right Panel - Physics Showcase (20%) */}
+        {/* Right Panel - Physics Calculations (25%) */}
         <div className="w-[25%] border-l border-border/20 glass-morphism overflow-y-auto p-4">
           <PhysicsCalculationErrorBoundary>
-            <PhysicsShowcase selectedAsteroid={selectedAsteroid} />
+            <PhysicsShowcase selectedAsteroid={selectedAsteroid} showCalculationsOnly={true} />
           </PhysicsCalculationErrorBoundary>
         </div>
       </div>

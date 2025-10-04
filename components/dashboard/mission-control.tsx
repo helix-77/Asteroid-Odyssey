@@ -17,8 +17,6 @@ import {
   AlertTriangle,
   Target,
   Shield,
-  Play,
-  Save,
   Loader2,
   RefreshCw,
 } from "lucide-react";
@@ -29,7 +27,6 @@ import {
 import {
   DataCompletenessIndicator,
   DataSourceBadge,
-  MissingDataWarning,
 } from "@/components/ui/data-completeness-indicator";
 
 interface MissionControlProps {
@@ -78,7 +75,7 @@ export default function MissionControl({
         const asteroidData = await asteroidDataManager.getAllAsteroids();
         const filtered = asteroidData.filter((a) => {
           const year = parseYear(a.nextApproach);
-          return year !== null && year >= 2015 && year <= 2050;
+          return year !== null && year >= 2025 && year <= 2070;
         });
         setAsteroids(filtered);
 
@@ -119,7 +116,7 @@ export default function MissionControl({
       const asteroidData = await asteroidDataManager.getAllAsteroids();
       const filtered = asteroidData.filter((a) => {
         const year = parseYear(a.nextApproach);
-        return year !== null && year >= 2000 && year <= 2050;
+        return year !== null && year >= 2025 && year <= 2070;
       });
       setAsteroids(filtered);
     } catch (err) {
@@ -192,7 +189,9 @@ export default function MissionControl({
                 onValueChange={handleAsteroidSelect}
               >
                 <SelectTrigger className="space-gradient border-white/20 text-white h-12 rounded-xl px-4">
-                  <SelectValue placeholder="Select an asteroid to track" />
+                  <SelectValue placeholder="Select an asteroid to track">
+                    {selectedAsteroid ? selectedAsteroid.name : "Select an asteroid to track"}
+                  </SelectValue>
                 </SelectTrigger>
 
                 <SelectContent className="space-gradient border-white/20">
@@ -204,31 +203,16 @@ export default function MissionControl({
                     >
                       <div className="flex items-center justify-between w-full">
                         <div className="flex flex-col items-start">
-                          <div className="flex items-center gap-2">
-                            <span>{asteroid.name}</span>
-                            <DataSourceBadge source={asteroid.source} />
-                          </div>
+                          <span>{asteroid.name}</span>
                           <div className="flex items-center gap-2 mt-1">
-                            <DataCompletenessIndicator
-                              asteroid={asteroid}
-                              compact={true}
-                            />
-                            {/* {asteroid.estimatedFields.length > 0 && (
-                              <Badge
-                                variant="outline"
-                                className="text-xs text-yellow-400 border-yellow-400"
-                              >
-                                {asteroid.estimatedFields.length} estimated
-                              </Badge>
-                            )} */}
+                            <DataSourceBadge source={asteroid.source} />
+                            <Badge
+                              variant={getThreatColor(asteroid.threatLevel) as any}
+                            >
+                              {asteroid.threatLevel}
+                            </Badge>
                           </div>
                         </div>
-                        <Badge
-                          variant={getThreatColor(asteroid.threatLevel) as any}
-                          className="ml-2"
-                        >
-                          {asteroid.threatLevel}
-                        </Badge>
                       </div>
                     </SelectItem>
                   ))}
@@ -248,87 +232,6 @@ export default function MissionControl({
                   {/* Asteroid Properties */}
                   <div className="space-y-1">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-300">Diameter:</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-white font-semibold">
-                          {Math.round(selectedAsteroid.diameter)}m
-                        </span>
-                        {selectedAsteroid.estimatedFields.includes(
-                          "diameter"
-                        ) && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs text-yellow-400 border-yellow-400"
-                            >
-                              est.
-                            </Badge>
-                          )}
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-300">Mass:</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-white font-semibold">
-                          {(selectedAsteroid.mass / 1e9).toExponential(2)} × 10⁹
-                          kg
-                        </span>
-                        {selectedAsteroid.estimatedFields.includes("mass") && (
-                          <Badge
-                            variant="outline"
-                            className="text-xs text-yellow-400 border-yellow-400"
-                          >
-                            est.
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-300">Velocity:</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-white font-semibold">
-                          {selectedAsteroid.velocity.toFixed(1)} km/s
-                        </span>
-                        {selectedAsteroid.estimatedFields.includes(
-                          "velocity"
-                        ) && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs text-yellow-400 border-yellow-400"
-                            >
-                              est.
-                            </Badge>
-                          )}
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-300">Composition:</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-white font-semibold capitalize">
-                          {selectedAsteroid.composition}
-                        </span>
-                        {selectedAsteroid.estimatedFields.includes(
-                          "composition"
-                        ) && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs text-yellow-400 border-yellow-400"
-                            >
-                              est.
-                            </Badge>
-                          )}
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-300">Threat Level:</span>
-                      <Badge
-                        variant={
-                          getThreatColor(selectedAsteroid.threatLevel) as any
-                        }
-                      >
-                        {selectedAsteroid.threatLevel}
-                      </Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
                       <span className="text-gray-300">Next Approach:</span>
                       <span className="text-white font-semibold text-xs">
                         {selectedAsteroid.nextApproach}
@@ -336,29 +239,7 @@ export default function MissionControl({
                     </div>
                   </div>
 
-                  {/* Data Quality Warnings */}
-                  {selectedAsteroid.estimatedFields.length > 0 && (
-                    <MissingDataWarning
-                      missingFields={selectedAsteroid.estimatedFields}
-                      severity={
-                        selectedAsteroid.dataCompleteness < 0.5
-                          ? "error"
-                          : "warning"
-                      }
-                    />
-                  )}
 
-                  {/* Low completeness warning */}
-                  {selectedAsteroid.dataCompleteness < 0.4 && (
-                    <div className="p-2 bg-red-900/20 rounded border border-red-500/20">
-                      <div className="flex items-center gap-2 text-red-400 text-xs">
-                        <AlertTriangle className="h-3 w-3" />
-                        <span>
-                          Low data quality may affect calculation accuracy
-                        </span>
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
             </>
@@ -497,69 +378,6 @@ export default function MissionControl({
       }
 
       <Separator className="bg-white/20" />
-
-      {/* Action Buttons */}
-      <div className="space-y-3">
-        <Button
-          className="w-full animate-pulse-glow text-white font-semibold"
-          disabled={!selectedAsteroid || isLoading}
-          onClick={() => {
-            if (simulationMode === "impact") {
-              // Run impact simulation with current parameters and selected asteroid
-              console.log("Running impact simulation with:", {
-                asteroid: selectedAsteroid,
-                params: impactParams,
-              });
-            } else if (simulationMode === "deflection") {
-              // Run deflection simulation with selected asteroid
-              console.log("Running deflection simulation with:", {
-                asteroid: selectedAsteroid,
-                strategy: selectedStrategy,
-              });
-            } else {
-              // Start tracking selected asteroid
-              console.log("Starting tracking for asteroid:", selectedAsteroid);
-            }
-          }}
-        >
-          <Play className="h-4 w-4 mr-2" />
-          {simulationMode === "impact"
-            ? "Simulate Impact"
-            : simulationMode === "deflection"
-              ? "Test Deflection"
-              : "Start Tracking"}
-        </Button>
-
-        <Button
-          variant="outline"
-          className="w-full bg-transparent border-white/30 text-white hover:bg-white/10"
-          disabled={!selectedAsteroid || isLoading}
-        >
-          <Save className="h-4 w-4 mr-2" />
-          Save Scenario
-        </Button>
-      </div>
-
-      {/* Quick Stats */}
-      <Card className="bg-black/20 border-white/10">
-        <CardHeader>
-          <CardTitle className="text-sm text-white">Mission Stats</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-xs">
-          <div className="flex justify-between">
-            <span className="text-gray-300">Scenarios Run:</span>
-            <span className="text-white font-semibold">23</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-300">Success Rate:</span>
-            <span className="text-white font-semibold">89%</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-300">Level:</span>
-            <span className="text-white font-semibold">12</span>
-          </div>
-        </CardContent>
-      </Card>
     </div >
   );
 }
