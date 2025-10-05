@@ -1,190 +1,143 @@
-# Asteroid Odyssey – Enhanced Impact Simulator
+# 🌠 Asteroid Odyssey
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/helix-77s-projects/v0-nasa)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/yDo0JWMuTDs)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-**Live Demo:** [https://vercel.com/helix-77s-projects/v0-nasa](https://vercel.com/helix-77s-projects/v0-nasa)
+Asteroid Odyssey is an advanced interactive simulation platform that visualizes asteroid impacts and their potential effects on Earth. This project combines real NASA data with sophisticated simulation algorithms to provide an educational and engaging experience about planetary defense and impact scenarios.
 
----
+## 🌟 Features
 
-## Overview
+### 🎯 Impact Simulation
+- Real-time 2D/3D visualization of asteroid impacts
+- Dynamic crater formation with realistic scaling
+- Multiple impact effect zones (thermal, blast, seismic)
+- Time-based progression from impact to long-term effects (0-50 years)
 
-Asteroid Odyssey is a scientifically grounded, data-driven asteroid impact simulator that visualizes global consequences over a 50-year timeline. We built this platform to help researchers, educators, and mission planners assess real-world mitigation strategies through interactive geospatial rendering and temporal effect modeling.
+### 🌍 Interactive Map
+- Global and regional views with zoom/pan functionality
+- Multiple data layers:
+  - Population density
+  - Habitability index
+  - Tsunami risk zones
+  - Tectonic activity
+  - Critical infrastructure
+- Country-specific impact analysis
 
----
+### 🛰️ NASA Data Integration
+- Real-time asteroid data from NASA's NEO Web Service
+- Impact probability calculations using Sentry API
+- Fireball and atmospheric entry data
+- Physical characteristics from JPL Small-Body Database
 
-## What We Built
+### 📊 Data Visualization
+- Interactive charts and graphs
+- Real-time statistics overlay
+- Impact parameter adjustments
+- Side-by-side scenario comparison
+- Downloadable reports
 
-An integrated impact simulator that combines high-resolution world data with modular physics engines to produce realistic disaster forecasts. The platform layers D3-powered cartography, canvas-based rendering, and React controls in an error-resilient architecture that delivers consistent feedback across different browser environments.
+## 🚀 Technologies
 
-### Core Features
+### Frontend
+- **Next.js 14** - React framework for server-rendered applications
+- **React Three Fiber** - 3D visualization
+- **D3.js** - Data-driven document visualization
+- **Tailwind CSS** - Utility-first CSS framework
+- **Radix UI** - Accessible UI components
+- **Zod** - TypeScript-first schema validation
 
-**Dynamic Impact Modeling**
-- Real-time crater formation, blast wave propagation, thermal radiation zones, and seismic magnitude calculations
-- 50-year temporal modeling from 6 months pre-impact through long-term recovery
-- Climate anomaly tracking, infrastructure degradation forecasting, and economic loss estimation
+### Backend
+- **Node.js** - JavaScript runtime
+- **Next.js API Routes** - Serverless API endpoints
+- **Vitest** - Testing framework
 
-**Geospatial Visualization**
-- Interactive globe with expanding blast and thermal zones
-- Real-time infrastructure damage visualization with importance-based sizing
-- Multiple thematic overlays: population density, habitability, tsunami risk, tectonic activity
+### Data Processing
+- **GeoJSON/TopoJSON** - Geographic data formats
+- **NASA APIs** - Real-time space data
+- **Custom Physics Engine** - Impact calculations
 
-**Comprehensive Analytics**
-- Live metrics dashboard tracking casualties, temperature shifts, CO₂ levels, sunlight reduction, and habitability scores
-- Timeline controls with play, pause, scrub, and reset functionality
-- Collapsible analytics sidebar that maximizes map viewing area
-
----
-
-## Technical Architecture
-
-### Key Components
+## 📂 Project Structure
 
 ```
-app/impact-simulator/page.tsx                    # Main simulator orchestration
-lib/calculations/enhanced-impact-calculator.ts   # Core physics engine
-lib/calculations/impact/temporal-effects.ts      # 50-year timeline modeling
-components/impact-simulator/EnhancedImpactMap.tsx # D3-powered globe visualization
-components/impact-simulator/StatsOverlay.tsx      # Real-time metrics overlay
+asteroid-odyssey/
+├── app/                    # Next.js app directory
+│   ├── api/                # API routes
+│   ├── dashboard/          # Dashboard page
+│   ├── deflection/         # Asteroid deflection simulation
+│   └── impact-simulator/   # Main impact simulation
+├── components/             # Reusable UI components
+│   ├── 3d/                 # 3D visualization components
+│   ├── dashboard/          # Dashboard components
+│   └── deflection/         # Deflection simulation components
+├── lib/                    # Core logic and utilities
+│   ├── calculations/       # Physics and impact calculations
+│   └── data/               # Data processing
+├── public/                 # Static assets
+│   └── data/               # GeoJSON and other data files
+└── scripts/                # Utility scripts
 ```
 
-### Data Sources
+## 🛠️ Installation
 
-**World Data** (`data/world_data.json`)
-- 100+ country profiles with population density, GDP, agricultural capacity
-- Habitability indices, tsunami vulnerability, and tectonic risk assessments
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/asteroid-odyssey.git
+   cd asteroid-odyssey
+   ```
 
-**Infrastructure** (`data/enhanced_infrastructure.json`)
-- 150+ critical facilities catalogued by type, importance, and location
-- Power plants, hospitals, water treatment, communication hubs, military bases
+2. Install dependencies:
+   ```bash
+   pnpm install
+   ```
 
-**Geographic Boundaries** (`public/data/world-geojson-develop/`)
-- Offline-ready GeoJSON for fast boundary rendering
-- High-resolution country and regional geometries
+3. Set up environment variables:
+   ```bash
+   cp .env.local.example .env.local
+   # Add your NASA API key and other configuration
+   ```
 
----
+4. Run the development server:
+   ```bash
+   pnpm dev
+   ```
 
-## Scientific Foundation
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-Our calculations implement established impact physics:
+## 🌐 Data Sources
 
-- **Crater Formation:** Holsapple & Housen (2007) scaling relations
-- **Blast Effects:** 5 psi overpressure radius for structural damage
-- **Thermal Radiation:** Energy-based flux calculations
-- **Seismic Activity:** Magnitude scaling from impact energy
-- **Climate Modeling:** Dust loading and atmospheric opacity calculations
+### NASA APIs
+- [NASA Sentry API](https://api.nasa.gov/#Sentry) - Near-Earth Object risk assessment
+- [NASA Fireball API](https://api.nasa.gov/#Fireball) - Atmospheric entry data
+- [NEO Web Service](https://api.nasa.gov/neo) - Asteroid orbit and composition
+- [JPL Small-Body Database](https://ssd.jpl.nasa.gov/tools/sbdb_query.html)
+- [Center for Near-Earth Object Studies](https://cneos.jpl.nasa.gov/)
 
-The temporal model captures:
-- **Immediate (0-24h):** Direct casualties, infrastructure destruction, crater formation
-- **Medium-term (1 week - 2 years):** Climate disruption, agricultural collapse, supply chain breakdown
-- **Long-term (2-50 years):** Economic recovery, ecosystem restoration, population adaptation
-
----
-
-## Tech Stack
-
-- **Framework:** Next.js with React 18
-- **Visualization:** D3.js v7
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **Package Manager:** pnpm
-- **Deployment:** Vercel
-- **Error Handling:** react-error-boundary
-
----
-
-## NASA Data Integration
-
-We integrated multiple NASA data sources and research:
-
-**APIs & Databases**
-- [NASA Sentry API](https://api.nasa.gov/#Sentry) – Near-Earth Object risk assessment
-- [NASA Fireball API](https://api.nasa.gov/#Fireball) – Atmospheric entry data
-- [NEO Web Service](https://api.nasa.gov/neo) – Asteroid orbit and composition
-- [JPL Small-Body Database](https://ssd.jpl.nasa.gov/tools/sbdb_query.html) – Physical characteristics
-
-**Research Foundation**
-- NASA EVA tool design requirements for rapid-response scenarios
-- Apollo mission and Desert RATS tooling research
-- Impact physics literature from NASA planetary defense studies
-
-**Additional Data Sources**
+### Geographic Data
 - [Mapscaping GeoJSON](https://mapscaping.com/geojson-every-country-in-the-world/)
-- [World Population Review](https://worldpopulationreview.com/country-rankings/countries-by-density)
-- [Our World in Data](https://ourworldindata.org/grapher/breakdown-habitable-land)
-- [NOAA Climate Data](https://www.ncei.noaa.gov/cdo-web/)
+- [World Population Review](https://worldpopulationreview.com/countries)
+- [Our World in Data](https://ourworldindata.org/)
+- [NOAA Climate Data](https://www.ncei.noaa.gov/)
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- NASA for their open data and research
+- The React and Next.js communities
+- All contributors and open-source projects that made this possible
+
+## 🌟 Contributors
+
+<!-- Add your name here! -->
+
+## 📬 Contact
+
+For questions or feedback, please open an issue or contact the project maintainers.
 
 ---
 
-## Getting Started
-
-```bash
-# Install dependencies
-pnpm install
-
-# Run development server
-pnpm dev
-
-# Build for production
-pnpm build
-
-# Start production server
-pnpm start
-```
-
-Navigate to `/impact-simulator` to access the main application.
-
----
-
-## Development Journey
-
-We evolved from initial map prototypes with data loading issues into a production-ready simulator. Each iteration improved dataset quality, physics accuracy, and visual storytelling. The current build integrates geography, infrastructure networks, and climate systems to show how asteroid impacts cascade through interconnected global systems.
-
-Key challenges we solved:
-- Asset delivery and map rendering stability
-- Real-time physics calculations without performance degradation
-- Multi-layer data visualization with graceful degradation
-- Cross-browser compatibility and error resilience
-
----
-
-## Use Cases
-
-**Research & Analysis**
-- Compare mitigation strategy effectiveness
-- Model regional vs. global impact scenarios
-- Assess critical infrastructure vulnerability
-
-**Education & Outreach**
-- Demonstrate planetary defense concepts
-- Visualize cascading disaster effects
-- Explore climate-impact connections
-
-**Mission Planning**
-- Evaluate deflection mission priorities
-- Identify high-risk population centers
-- Optimize emergency response allocation
-
----
-
-## Future Enhancements
-
-- Real-time NASA Sentry data integration
-- Multi-impact scenario modeling
-- Deflection mission success probability calculator
-- Community-submitted mitigation strategies
-- VR/AR visualization modes
-
----
-
-## License
-
-This project was built for the NASA Space Apps Challenge. See LICENSE for details.
-
----
-
-## Acknowledgments
-
-Built with inspiration from NASA's planetary defense research and the global community working to protect Earth from asteroid impacts.
-
-**Tags:** #AsteroidImpact #Simulation #GeoSpatial #DataVisualization #D3js #Nextjs #ScientificModeling #ClimateEffects #PlanetaryDefense #SpaceExploration
+Made with ❤️ for a safer solar system.
