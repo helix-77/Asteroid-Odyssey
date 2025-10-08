@@ -31,6 +31,7 @@ import {
   DataSourceBadge,
   MissingDataWarning,
 } from "@/components/ui/data-completeness-indicator";
+import { PhysicsShowcase } from "@/components/dashboard/physics-showcase";
 
 interface MissionControlProps {
   selectedAsteroid: UnifiedAsteroidData | null;
@@ -208,20 +209,6 @@ export default function MissionControl({
                             <span>{asteroid.name}</span>
                             <DataSourceBadge source={asteroid.source} />
                           </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <DataCompletenessIndicator
-                              asteroid={asteroid}
-                              compact={true}
-                            />
-                            {/* {asteroid.estimatedFields.length > 0 && (
-                              <Badge
-                                variant="outline"
-                                className="text-xs text-yellow-400 border-yellow-400"
-                              >
-                                {asteroid.estimatedFields.length} estimated
-                              </Badge>
-                            )} */}
-                          </div>
                         </div>
                         <Badge
                           variant={getThreatColor(asteroid.threatLevel) as any}
@@ -248,77 +235,6 @@ export default function MissionControl({
                   {/* Asteroid Properties */}
                   <div className="space-y-1">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-300">Diameter:</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-white font-semibold">
-                          {Math.round(selectedAsteroid.diameter)}m
-                        </span>
-                        {selectedAsteroid.estimatedFields.includes(
-                          "diameter"
-                        ) && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs text-yellow-400 border-yellow-400"
-                            >
-                              est.
-                            </Badge>
-                          )}
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-300">Mass:</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-white font-semibold">
-                          {(selectedAsteroid.mass / 1e9).toExponential(2)} × 10⁹
-                          kg
-                        </span>
-                        {selectedAsteroid.estimatedFields.includes("mass") && (
-                          <Badge
-                            variant="outline"
-                            className="text-xs text-yellow-400 border-yellow-400"
-                          >
-                            est.
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-300">Velocity:</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-white font-semibold">
-                          {selectedAsteroid.velocity.toFixed(1)} km/s
-                        </span>
-                        {selectedAsteroid.estimatedFields.includes(
-                          "velocity"
-                        ) && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs text-yellow-400 border-yellow-400"
-                            >
-                              est.
-                            </Badge>
-                          )}
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-300">Composition:</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-white font-semibold capitalize">
-                          {selectedAsteroid.composition}
-                        </span>
-                        {selectedAsteroid.estimatedFields.includes(
-                          "composition"
-                        ) && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs text-yellow-400 border-yellow-400"
-                            >
-                              est.
-                            </Badge>
-                          )}
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
                       <span className="text-gray-300">Threat Level:</span>
                       <Badge
                         variant={
@@ -337,7 +253,7 @@ export default function MissionControl({
                   </div>
 
                   {/* Data Quality Warnings */}
-                  {selectedAsteroid.estimatedFields.length > 0 && (
+                  {/* {selectedAsteroid.estimatedFields.length > 0 && (
                     <MissingDataWarning
                       missingFields={selectedAsteroid.estimatedFields}
                       severity={
@@ -346,7 +262,7 @@ export default function MissionControl({
                           : "warning"
                       }
                     />
-                  )}
+                  )} */}
 
                   {/* Low completeness warning */}
                   {selectedAsteroid.dataCompleteness < 0.4 && (
@@ -367,139 +283,138 @@ export default function MissionControl({
       </Card>
 
       {/* Impact Parameters (shown in impact mode) */}
-      {
-        simulationMode === "impact" && (
-          <Card className="bg-black/20 border-white/10">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-white">
-                <Target className="h-5 w-5" />
-                <span>Impact Parameters</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-white">
-                  Size (meters)
-                </label>
-                <Slider
-                  value={impactParams.size}
-                  onValueChange={(value) =>
-                    setImpactParams((prev) => ({ ...prev, size: value }))
-                  }
-                  max={500}
-                  min={10}
-                  step={5}
-                  className="w-full"
-                />
-                <div className="text-xs text-gray-200 text-right font-semibold">
-                  {impactParams.size[0]}m
-                </div>
+      {simulationMode === "impact" && (
+        <Card className="bg-black/20 border-white/10">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-white">
+              <Target className="h-5 w-5" />
+              <span>Impact Parameters</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white">
+                Size (meters)
+              </label>
+              <Slider
+                value={impactParams.size}
+                onValueChange={(value) =>
+                  setImpactParams((prev) => ({ ...prev, size: value }))
+                }
+                max={500}
+                min={10}
+                step={5}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-200 text-right font-semibold">
+                {impactParams.size[0]}m
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-white">
-                  Velocity (km/s)
-                </label>
-                <Slider
-                  value={impactParams.velocity}
-                  onValueChange={(value) =>
-                    setImpactParams((prev) => ({ ...prev, velocity: value }))
-                  }
-                  max={30}
-                  min={5}
-                  step={0.1}
-                  className="w-full"
-                />
-                <div className="text-xs text-gray-200 text-right font-semibold">
-                  {impactParams.velocity[0]} km/s
-                </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white">
+                Velocity (km/s)
+              </label>
+              <Slider
+                value={impactParams.velocity}
+                onValueChange={(value) =>
+                  setImpactParams((prev) => ({ ...prev, velocity: value }))
+                }
+                max={30}
+                min={5}
+                step={0.1}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-200 text-right font-semibold">
+                {impactParams.velocity[0]} km/s
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-white">
-                  Impact Angle (degrees)
-                </label>
-                <Slider
-                  value={impactParams.angle}
-                  onValueChange={(value) =>
-                    setImpactParams((prev) => ({ ...prev, angle: value }))
-                  }
-                  max={90}
-                  min={15}
-                  step={5}
-                  className="w-full"
-                />
-                <div className="text-xs text-gray-200 text-right font-semibold">
-                  {impactParams.angle[0]}°
-                </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white">
+                Impact Angle (degrees)
+              </label>
+              <Slider
+                value={impactParams.angle}
+                onValueChange={(value) =>
+                  setImpactParams((prev) => ({ ...prev, angle: value }))
+                }
+                max={90}
+                min={15}
+                step={5}
+                className="w-full"
+              />
+              <div className="text-xs text-gray-200 text-right font-semibold">
+                {impactParams.angle[0]}°
               </div>
-            </CardContent>
-          </Card>
-        )
-      }
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Deflection Strategy (shown in deflection mode) */}
-      {
-        simulationMode === "deflection" && (
-          <Card className="bg-black/20 border-white/10">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-white">
-                <Shield className="h-5 w-5" />
-                <span>Deflection Strategy</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Select
-                value={selectedStrategy}
-                onValueChange={setSelectedStrategy}
-              >
-                <SelectTrigger className="bg-black/30 border-white/20 text-white h-12 rounded-xl px-4">
-                  <SelectValue placeholder="Choose deflection method" />
-                </SelectTrigger>
-                <SelectContent className="bg-black/90 border-white/20">
-                  {deflectionStrategies.map((strategy) => (
-                    <SelectItem
-                      key={strategy.id}
-                      value={strategy.id}
-                      className="text-white hover:bg-white/10"
-                    >
-                      {strategy.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      {simulationMode === "deflection" && (
+        <Card className="bg-black/20 border-white/10">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-white">
+              <Shield className="h-5 w-5" />
+              <span>Deflection Strategy</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Select
+              value={selectedStrategy}
+              onValueChange={setSelectedStrategy}
+            >
+              <SelectTrigger className="bg-black/30 border-white/20 text-white h-12 rounded-xl px-4">
+                <SelectValue placeholder="Choose deflection method" />
+              </SelectTrigger>
+              <SelectContent className="bg-black/90 border-white/20">
+                {deflectionStrategies.map((strategy) => (
+                  <SelectItem
+                    key={strategy.id}
+                    value={strategy.id}
+                    className="text-white hover:bg-white/10"
+                  >
+                    {strategy.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-              {selectedStrategy && (
-                <div className="space-y-2 text-sm">
-                  {deflectionStrategies
-                    .filter((s) => s.id === selectedStrategy)
-                    .map((strategy) => (
-                      <div key={strategy.id} className="space-y-1">
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Cost:</span>
-                          <span className="text-white font-semibold">
-                            ${strategy.cost}M
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-300">Success Rate:</span>
-                          <span className="text-white font-semibold">
-                            {strategy.successRate}%
-                          </span>
-                        </div>
+            {selectedStrategy && (
+              <div className="space-y-2 text-sm">
+                {deflectionStrategies
+                  .filter((s) => s.id === selectedStrategy)
+                  .map((strategy) => (
+                    <div key={strategy.id} className="space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Cost:</span>
+                        <span className="text-white font-semibold">
+                          ${strategy.cost}M
+                        </span>
                       </div>
-                    ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )
-      }
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Success Rate:</span>
+                        <span className="text-white font-semibold">
+                          {strategy.successRate}%
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Separator className="bg-white/20" />
 
+      {/* Physics Showcase */}
+      <PhysicsShowcase selectedAsteroid={selectedAsteroid} />
+
       {/* Action Buttons */}
-      <div className="space-y-3">
+      {/* <div className="space-y-3">
         <Button
           className="w-full animate-pulse-glow text-white font-semibold"
           disabled={!selectedAsteroid || isLoading}
@@ -526,8 +441,8 @@ export default function MissionControl({
           {simulationMode === "impact"
             ? "Simulate Impact"
             : simulationMode === "deflection"
-              ? "Test Deflection"
-              : "Start Tracking"}
+            ? "Test Deflection"
+            : "Start Tracking"}
         </Button>
 
         <Button
@@ -538,10 +453,10 @@ export default function MissionControl({
           <Save className="h-4 w-4 mr-2" />
           Save Scenario
         </Button>
-      </div>
+      </div> */}
 
       {/* Quick Stats */}
-      <Card className="bg-black/20 border-white/10">
+      {/* <Card className="bg-black/20 border-white/10">
         <CardHeader>
           <CardTitle className="text-sm text-white">Mission Stats</CardTitle>
         </CardHeader>
@@ -559,7 +474,7 @@ export default function MissionControl({
             <span className="text-white font-semibold">12</span>
           </div>
         </CardContent>
-      </Card>
-    </div >
+      </Card> */}
+    </div>
   );
 }

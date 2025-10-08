@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MissionControl from "@/components/dashboard/mission-control";
-import { PhysicsShowcase } from "@/components/dashboard/physics-showcase";
+import { PhysicsCalculations } from "@/components/dashboard/physics-calculations";
 import ErrorBoundary, {
   AsteroidDataErrorBoundary,
   PhysicsCalculationErrorBoundary,
@@ -17,17 +17,14 @@ import Link from "next/link";
 import { UnifiedAsteroidData } from "@/lib/data/asteroid-manager";
 
 // Dynamically import Earth3D with no SSR to avoid Three.js/Canvas errors
-const Earth3D = dynamic(
-  () => import("@/components/3d/earth-3d"),
-  { 
-    ssr: false, 
-    loading: () => (
-      <div className="absolute inset-0 bg-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
-      </div>
-    )
-  }
-);
+const Earth3D = dynamic(() => import("@/components/3d/earth-3d"), {
+  ssr: false,
+  loading: () => (
+    <div className="absolute inset-0 bg-slate-900 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
+    </div>
+  ),
+});
 
 export default function Dashboard() {
   const [selectedAsteroid, setSelectedAsteroid] =
@@ -225,8 +222,9 @@ export default function Dashboard() {
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-2">
                       <div
-                        className={`w-2 h-2 rounded-full animate-pulse ${dashboardError ? "bg-red-500" : "bg-green-500"
-                          }`}
+                        className={`w-2 h-2 rounded-full animate-pulse ${
+                          dashboardError ? "bg-red-500" : "bg-green-500"
+                        }`}
                       ></div>
                       <span className="text-white font-medium">
                         {dashboardError ? "System Error" : "System Online"}
@@ -248,10 +246,10 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Right Panel - Physics Showcase (20%) */}
+        {/* Right Panel - Physics Calculations (25%) */}
         <div className="w-[25%] border-l border-border/20 glass-morphism overflow-y-auto p-4">
           <PhysicsCalculationErrorBoundary>
-            <PhysicsShowcase selectedAsteroid={selectedAsteroid} />
+            <PhysicsCalculations selectedAsteroid={selectedAsteroid} />
           </PhysicsCalculationErrorBoundary>
         </div>
       </div>
