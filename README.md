@@ -8,7 +8,7 @@ Asteroid Odyssey is a scientifically grounded, data-driven asteroid impact simul
 
 We are Team Odyssey, a group of five friends each bringing unique expertise. Meet the creative minds: Md. Atik Mouhtasim, our dedicated Team Leader and lead developer.
 
-Joining him are Md. Samir, our sharp Data & System Analyst; Mosammad Sadia Islam Prety, our creative UI/UX & graphics designer; Md. Iftiar Rafi, our talented video editor; and Kamruzzaman Khan Alvi, our active researcher.
+Joining him are Md. Samir, our sharp Data & System Analyst; Mosammad Sadia Islam Prety, our creative UI/UX & graphics designer; Md. Iftiar Rafi, our talented video editor; and Kamruzzaman Khan Alve, our active researcher.
 
 Asteroid Odyssey uses our passion for space and planetary defense to bridge the gap between science and public awareness of the asteroid threat.
 
